@@ -1,7 +1,8 @@
 import json
+import threading
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures import Future
 from typing import Any, Callable, List, Optional
 
 import requests
@@ -119,8 +120,7 @@ class JupyterExtension:
                 self._sandbox.filesystem.read("/root/.jupyter/kernel_id", timeout=timeout).strip()
             )
 
-        with ThreadPoolExecutor(thread_name_prefix="e2b-get-default-kernel-id") as executor:
-            executor.submit(set_kernel_id)
+        threading.Thread(target=set_kernel_id).start()
 
     def _connect_kernel(self, kernel_id: str, timeout: Optional[float] = TIMEOUT):
         return create_connection(

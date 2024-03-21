@@ -28,6 +28,6 @@ for i in range(iterations):
     sandbox.close()
 
 
-print(f"Average Create Sandbox Time: {createSandboxTime / iterations}ms")
-print(f"Average Execute Python x = 1 Time: {exec_python_x_equals_1_time / iterations}ms")
-print(f"Average Execute Python x+=1; x Time: {exec_python_x_plus_equals_1_time / iterations}ms")
+print(f"Average Create Sandbox Time: {createSandboxTime / iterations}s")
+print(f"Average Execute Python x = 1 Time: {exec_python_x_equals_1_time / iterations}s")
+print(f"Average Execute Python x+=1; x Time: {exec_python_x_plus_equals_1_time / iterations}s")
