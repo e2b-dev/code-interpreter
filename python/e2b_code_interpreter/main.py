@@ -48,7 +48,7 @@ class JupyterExtension:
     def __init__(self, sandbox: CodeInterpreter):
         self._sandbox = sandbox
         self._kernel_id_set = Future()
-        self._start_connectiong_to_default_kernel()
+        self._start_connecting_to_default_kernel()
 
     def exec_cell(
         self,
@@ -57,6 +57,14 @@ class JupyterExtension:
         on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
         on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
     ) -> Result:
+        """
+        Execute code in a notebook cell.
+        :param code: Code to execute
+        :param kernel_id: Kernel id to use, if not provided the default kernel will be used
+        :param on_stdout: Callback for stdout messages
+        :param on_stderr: Callback for stderr messages
+        :return: Result of the execution
+        """
         kernel_id = kernel_id or self.default_kernel_id
         ws = self._connected_kernels.get(kernel_id)
 
@@ -74,12 +82,30 @@ class JupyterExtension:
 
     @property
     def default_kernel_id(self) -> str:
+        """
+        Get the default kernel id
+        :return: Default kernel id
+        """
         if not self._default_kernel_id:
             self._default_kernel_id = self._kernel_id_set.result()
 
         return self._default_kernel_id
 
-    def create_kernel(self, cwd: str = "/home/user", kernel_name: Optional[str] = None, timeout: Optional[float] = TIMEOUT) -> str:
+    def create_kernel(
+            self,
+            cwd: str = "/home/user",
+            kernel_name: Optional[str] = None,
+            timeout: Optional[float] = TIMEOUT
+    ) -> str:
+        """
+        Create a new kernel, this can be useful if you want to have multiple independent code execution environments.
+        :param cwd: Sets the current working directory for the kernel
+        :param kernel_name:
+            Specifies which kernel should be used, useful if you have multiple kernel types.
+            If not provided, the default kernel will be used - "python3".
+        :param timeout: Sets timeout for the call
+        :return: Kernel id of the created kernel
+        """
         data = {"cwd": cwd}
         if kernel_name:
             data["kernel_name"] = kernel_name
@@ -100,6 +126,12 @@ class JupyterExtension:
     def restart_kernel(
         self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
     ) -> None:
+        """
+        Restart a kernel
+        :param kernel_id:
+        :param timeout:
+        :return:
+        """
         kernel_id = kernel_id or self.default_kernel_id
 
         self._connected_kernels[kernel_id].close()
@@ -115,6 +147,11 @@ class JupyterExtension:
     def shutdown_kernel(
         self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
     ) -> None:
+        """
+        Shutdown a kernel
+        :param kernel_id: Kernel id to shutdown
+        :param timeout: Timeout for the call
+        """
         kernel_id = kernel_id or self.default_kernel_id
 
         self._connected_kernels[kernel_id].close()
@@ -126,6 +163,11 @@ class JupyterExtension:
             raise KernelException(f"Failed to shutdown kernel {kernel_id}")
 
     def list_kernels(self, timeout: Optional[float] = TIMEOUT) -> List[str]:
+        """
+        List all the kernels
+        :param timeout: Timeout for the call
+        :return: List of kernel ids
+        """
         response = requests.get(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
             timeout=timeout,
@@ -135,6 +177,10 @@ class JupyterExtension:
         return [kernel["id"] for kernel in response.json()]
 
     def close(self):
+        """
+        Close all the websocket connections to the kernels. It doesn't shutdown the kernels.
+        :return:
+        """
         for ws in self._connected_kernels.values():
             ws.close()
 
@@ -145,7 +191,7 @@ class JupyterExtension:
         ws.connect()
         self._connected_kernels[kernel_id] = ws
 
-    def _start_connectiong_to_default_kernel(self, timeout: Optional[float] = TIMEOUT) -> None:
+    def _start_connecting_to_default_kernel(self, timeout: Optional[float] = TIMEOUT) -> None:
         def setup_default_kernel():
             kernel_id = self._sandbox.filesystem.read("/root/.jupyter/kernel_id", timeout=timeout).strip()
             self._connect_to_kernel_ws(kernel_id)
