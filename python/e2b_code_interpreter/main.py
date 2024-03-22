@@ -79,8 +79,11 @@ class JupyterExtension:
 
         return self._default_kernel_id
 
-    def create_kernel(self, cwd: Optional[str] = None,timeout: Optional[float] = TIMEOUT) -> str:
-        data = {"cwd": cwd} if cwd else None
+    def create_kernel(self, cwd: str = "/home/user", kernel_name: Optional[str] = None, timeout: Optional[float] = TIMEOUT) -> str:
+        data = {"cwd": cwd}
+        if kernel_name:
+            data["kernel_name"] = kernel_name
+
         response = requests.post(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
             json=data,
