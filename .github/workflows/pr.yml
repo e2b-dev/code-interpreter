@@ -1,0 +1,43 @@
+name: Test Python package
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  changes:
+    name: Repository changes
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get the last release
+        id: last_release
+        uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          latest: true
+          prerelease: false
+          draft: false
+
+      - name: Find changes since the last release
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: ${{ steps.last_release.outputs.tag_name }}
+          filters: |
+            python:
+              - 'python/**'
+
+  python-tests:
+    needs: [ changes ]
+    name: Tests python package
+    if: needs.changes.outputs.python == 'true'
+    uses: ./.github/workflows/python_tests.yml
