@@ -41,3 +41,4 @@ jobs:
     name: Tests python package
     if: needs.changes.outputs.python == 'true'
     uses: ./.github/workflows/python_tests.yml
+    secrets: inherit
