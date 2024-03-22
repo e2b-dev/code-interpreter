@@ -8,7 +8,7 @@ function start_jupyter_server() {
 	done
 	echo "Jupyter Server started"
 
-	response=$(curl -s -X POST "localhost:8888/api/kernels")
+	response=$(curl -s -X POST "localhost:8888/api/kernels" -H "Content-Type: application/json" -d '{"path": "/home/user"}')
 	status=$(echo "${response}" | jq -r '.execution_state')
 	if [[ ${status} != "starting" ]]; then
 		echo "Error creating kernel: ${response} ${status}"

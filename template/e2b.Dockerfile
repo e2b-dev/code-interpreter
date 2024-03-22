@@ -1,7 +1,7 @@
 FROM python:3.10
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq screen
+  build-essential curl git util-linux jq
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
