@@ -1,16 +1,13 @@
-import json
 import threading
-import time
-import uuid
 from concurrent.futures import Future
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Dict
 
 import requests
 from e2b import EnvVars, ProcessMessage, Sandbox
 from e2b.constants import TIMEOUT
-from websocket import create_connection
 
-from e2b_code_interpreter.models import Error, KernelException, Result
+from e2b_code_interpreter.messaging import JupyterKernelWebSocket
+from e2b_code_interpreter.models import KernelException, Result
 
 
 class CodeInterpreter(Sandbox):
@@ -40,15 +37,18 @@ class CodeInterpreter(Sandbox):
             **kwargs,
         )
         self.notebook = JupyterExtension(self)
+        # Close all the websocket connections when the interpreter is closed
+        self._process_cleanup.append(self.notebook.close)
 
 
 class JupyterExtension:
     _default_kernel_id: Optional[str] = None
+    _connected_kernels: Dict[str, JupyterKernelWebSocket] = {}
 
     def __init__(self, sandbox: CodeInterpreter):
         self._sandbox = sandbox
         self._kernel_id_set = Future()
-        self._set_default_kernel_id()
+        self._start_connectiong_to_default_kernel()
 
     def exec_cell(
         self,
@@ -58,12 +58,18 @@ class JupyterExtension:
         on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
     ) -> Result:
         kernel_id = kernel_id or self.default_kernel_id
-        ws = self._connect_kernel(kernel_id)
-        ws.send(json.dumps(self._send_execute_request(code)))
-        result = self._wait_for_result(ws, on_stdout, on_stderr)
+        ws = self._connected_kernels.get(kernel_id)
 
-        ws.close()
+        if not ws:
+            ws = JupyterKernelWebSocket(
+                url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
+            )
+            self._connected_kernels[kernel_id] = ws
+            ws.connect()
 
+        session_id = ws.send_execution_message(code, on_stdout, on_stderr)
+
+        result = ws.get_result(session_id)
         return result
 
     @property
@@ -73,19 +79,27 @@ class JupyterExtension:
 
         return self._default_kernel_id
 
-    def create_kernel(self, timeout: Optional[float] = TIMEOUT) -> str:
+    def create_kernel(self, cwd: Optional[str] = None,timeout: Optional[float] = TIMEOUT) -> str:
+        data = {"cwd": cwd} if cwd else None
         response = requests.post(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
+            json=data,
             timeout=timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
-        return response.json()["id"]
+
+        kernel_id = response.json()["id"]
+
+        threading.Thread(target=self._connect_to_kernel_ws, args=kernel_id).start()
+        return kernel_id
 
     def restart_kernel(
         self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
     ) -> None:
         kernel_id = kernel_id or self.default_kernel_id
+
+        self._connected_kernels[kernel_id].close()
         response = requests.post(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/restart",
             timeout=timeout,
@@ -93,11 +107,14 @@ class JupyterExtension:
         if not response.ok:
             raise KernelException(f"Failed to restart kernel {kernel_id}")
 
+        threading.Thread(target=self._connect_to_kernel_ws, args=kernel_id).start()
+
     def shutdown_kernel(
         self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
     ) -> None:
         kernel_id = kernel_id or self.default_kernel_id
 
+        self._connected_kernels[kernel_id].close()
         response = requests.delete(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}",
             timeout=timeout,
@@ -114,114 +131,21 @@ class JupyterExtension:
             raise KernelException(f"Failed to list kernels: {response.text}")
         return [kernel["id"] for kernel in response.json()]
 
-    def _set_default_kernel_id(self, timeout: Optional[float] = TIMEOUT) -> None:
-        def set_kernel_id():
-            self._kernel_id_set.set_result(
-                self._sandbox.filesystem.read("/root/.jupyter/kernel_id", timeout=timeout).strip()
-            )
+    def close(self):
+        for ws in self._connected_kernels.values():
+            ws.close()
 
-        threading.Thread(target=set_kernel_id).start()
-
-    def _connect_kernel(self, kernel_id: str, timeout: Optional[float] = TIMEOUT):
-        return create_connection(
-            f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
-            timeout=timeout,
+    def _connect_to_kernel_ws(self, kernel_id: str) -> None:
+        ws = JupyterKernelWebSocket(
+            url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
         )
+        ws.connect()
+        self._connected_kernels[kernel_id] = ws
 
-    @staticmethod
-    def _send_execute_request(code: str) -> dict:
-        msg_id = str(uuid.uuid4())
-        session = str(uuid.uuid4())
+    def _start_connectiong_to_default_kernel(self, timeout: Optional[float] = TIMEOUT) -> None:
+        def setup_default_kernel():
+            kernel_id = self._sandbox.filesystem.read("/root/.jupyter/kernel_id", timeout=timeout).strip()
+            self._connect_to_kernel_ws(kernel_id)
+            self._kernel_id_set.set_result(kernel_id)
 
-        return {
-            "header": {
-                "msg_id": msg_id,
-                "username": "e2b",
-                "session": session,
-                "msg_type": "execute_request",
-                "version": "5.3",
-            },
-            "parent_header": {},
-            "metadata": {},
-            "content": {
-                "code": code,
-                "silent": False,
-                "store_history": False,
-                "user_expressions": {},
-                "allow_stdin": False,
-            },
-        }
-
-    @staticmethod
-    def _wait_for_result(
-        ws,
-        on_stdout: Optional[Callable[[ProcessMessage], Any]],
-        on_stderr: Optional[Callable[[ProcessMessage], Any]],
-    ) -> Result:
-        result = Result()
-        input_accepted = False
-
-        while True:
-            response = json.loads(ws.recv())
-            if response["msg_type"] == "error":
-                result.error = Error(
-                    name=response["content"]["ename"],
-                    value=response["content"]["evalue"],
-                    traceback=response["content"]["traceback"],
-                )
-
-            elif response["msg_type"] == "stream":
-                if response["content"]["name"] == "stdout":
-                    result.stdout.append(response["content"]["text"])
-                    if on_stdout:
-                        on_stdout(
-                            ProcessMessage(
-                                line=response["content"]["text"],
-                                timestamp=time.time_ns(),
-                            )
-                        )
-
-                elif response["content"]["name"] == "stderr":
-                    result.stderr.append(response["content"]["text"])
-                    if on_stderr:
-                        on_stderr(
-                            ProcessMessage(
-                                line=response["content"]["text"],
-                                error=True,
-                                timestamp=time.time_ns(),
-                            )
-                        )
-
-            elif response["msg_type"] == "display_data":
-                result.display_data.append(response["content"]["data"])
-
-            elif response["msg_type"] == "execute_result":
-                result.output = response["content"]["data"]["text/plain"]
-
-            elif response["msg_type"] == "status":
-                if response["content"]["execution_state"] == "idle":
-                    if input_accepted:
-                        break
-                elif response["content"]["execution_state"] == "error":
-                    result.error = Error(
-                        name=response["content"]["ename"],
-                        value=response["content"]["evalue"],
-                        traceback=response["content"]["traceback"],
-                    )
-                    break
-
-            elif response["msg_type"] == "execute_reply":
-                if response["content"]["status"] == "error":
-                    result.error = Error(
-                        name=response["content"]["ename"],
-                        value=response["content"]["evalue"],
-                        traceback=response["content"]["traceback"],
-                    )
-                elif response["content"]["status"] == "ok":
-                    pass
-
-            elif response["msg_type"] == "execute_input":
-                input_accepted = True
-            else:
-                print("[UNHANDLED MESSAGE TYPE]:", response["msg_type"])
-        return result
+        threading.Thread(target=setup_default_kernel).start()
