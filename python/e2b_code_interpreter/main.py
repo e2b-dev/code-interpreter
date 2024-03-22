@@ -10,6 +10,7 @@ from e2b_code_interpreter.messaging import JupyterKernelWebSocket
 from e2b_code_interpreter.models import KernelException, Result
 
 
+# TODO: Add logging
 class CodeInterpreter(Sandbox):
     template = "code-interpreter-stateful"
 
