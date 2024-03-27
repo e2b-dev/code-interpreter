@@ -1,0 +1,73 @@
+{
+  "name": "e2b-code-interpreter",
+  "version": "0.0.0",
+  "description": "E2B Code Interpreter - Stateful code execution",
+  "homepage": "https://e2b.dev",
+  "license": "MIT",
+  "author": {
+    "name": "FoundryLabs, Inc.",
+    "email": "hello@e2b.dev",
+    "url": "https://e2b.dev"
+  },
+  "bugs": "https://github.com/e2b-dev/code-interpreter/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/e2b-dev/code-interpreter",
+    "directory": "js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "pnpm build",
+    "build": "tsc --noEmit && tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "check-deps": "knip",
+    "update-deps": "ncu -u && pnpm i"
+  },
+  "devDependencies": {
+    "@types/node": "^18.18.6",
+    "@types/ws": "^8.5.10",
+    "dotenv": "^16.4.5",
+    "knip": "^2.34.0",
+    "npm-check-updates": "^16.14.6",
+    "tsup": "^6.7.0",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "keywords": [
+    "e2b",
+    "ai-agents",
+    "agents",
+    "ai",
+    "code-interpreter",
+    "stateful-sandbox",
+    "stateful-serverrless",
+    "sandbox",
+    "code",
+    "runtime",
+    "vm"
+  ],
+  "dependencies": {
+    "e2b": "^0.13.1",
+    "isomorphic-ws": "^5.0.0",
+    "ws": "^8.15.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "browserslist": [
+    "defaults"
+  ]
+}
