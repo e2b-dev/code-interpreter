@@ -1,0 +1,247 @@
+import json
+import logging
+import threading
+import time
+import uuid
+from concurrent.futures import Future
+from queue import Queue
+from typing import Callable, Dict, List, Any, Optional
+
+from e2b import ProcessMessage
+from e2b.constants import TIMEOUT
+from e2b.sandbox import TimeoutException
+from e2b.sandbox.websocket_client import WebSocket
+from e2b.utils.future import DeferredFuture
+from pydantic import ConfigDict, PrivateAttr, BaseModel
+
+from e2b_code_interpreter.models import Cell, Error
+
+
+logger = logging.getLogger(__name__)
+
+
+class CellExecution:
+    """
+    Represents the execution of a cell in the Jupyter kernel.
+    It's an internal class used by JupyterKernelWebSocket.
+    """
+
+    input_accepted: bool = False
+    on_stdout: Optional[Callable[[Any], None]] = None
+    on_stderr: Optional[Callable[[Any], None]] = None
+
+    def __init__(
+        self,
+        on_stdout: Optional[Callable[[Any], None]] = None,
+        on_stderr: Optional[Callable[[Any], None]] = None,
+    ):
+        self.partial_result = Cell()
+        self.result = Future()
+        self.on_stdout = on_stdout
+        self.on_stderr = on_stderr
+
+
+class JupyterKernelWebSocket(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    url: str
+
+    _cells: Dict[str, CellExecution] = {}
+    _waiting_for_replies: Dict[str, DeferredFuture] = PrivateAttr(default_factory=dict)
+    _queue_in: Queue = PrivateAttr(default_factory=Queue)
+    _queue_out: Queue = PrivateAttr(default_factory=Queue)
+    _process_cleanup: List[Callable[[], Any]] = PrivateAttr(default_factory=list)
+    _closed: bool = PrivateAttr(default=False)
+
+    def process_messages(self):
+        while True:
+            data = self._queue_out.get()
+
+            logger.debug(f"WebSocket received message: {data}".strip())
+            self._receive_message(json.loads(data))
+            self._queue_out.task_done()
+
+    def connect(self, timeout: float = TIMEOUT):
+        started = threading.Event()
+        stopped = threading.Event()
+        self._process_cleanup.append(stopped.set)
+
+        threading.Thread(
+            target=self.process_messages, daemon=True, name="e2b-process-messages"
+        ).start()
+
+        threading.Thread(
+            target=WebSocket(
+                url=self.url,
+                queue_in=self._queue_in,
+                queue_out=self._queue_out,
+                started=started,
+                stopped=stopped,
+            ).run,
+            daemon=True,
+            name="e2b-code-interpreter-websocket",
+        ).start()
+
+        logger.debug("WebSocket waiting to start")
+
+        try:
+            start_time = time.time()
+            while (
+                not started.is_set()
+                and time.time() - start_time < timeout
+                and not self._closed
+            ):
+                time.sleep(0.1)
+
+            if not started.is_set():
+                raise TimeoutException("WebSocket failed to start")
+        except BaseException as e:
+            self.close()
+            raise Exception(f"WebSocket failed to start: {e}") from e
+
+        logger.debug("WebSocket started")
+
+    @staticmethod
+    def _get_execute_request(msg_id: str, code: str) -> str:
+        return json.dumps(
+            {
+                "header": {
+                    "msg_id": msg_id,
+                    "username": "e2b",
+                    "session": str(uuid.uuid4()),
+                    "msg_type": "execute_request",
+                    "version": "5.3",
+                },
+                "parent_header": {},
+                "metadata": {},
+                "content": {
+                    "code": code,
+                    "silent": False,
+                    "store_history": False,
+                    "user_expressions": {},
+                    "allow_stdin": False,
+                },
+            }
+        )
+
+    def send_execution_message(
+        self,
+        code: str,
+        on_stdout: Optional[Callable[[Any], None]] = None,
+        on_stderr: Optional[Callable[[Any], None]] = None,
+    ) -> str:
+        message_id = str(uuid.uuid4())
+        logger.debug(f"Sending execution message: {message_id}")
+
+        self._cells[message_id] = CellExecution(
+            on_stdout=on_stdout,
+            on_stderr=on_stderr,
+        )
+        request = self._get_execute_request(message_id, code)
+        self._queue_in.put(request)
+        return message_id
+
+    def get_result(self, message_id: str, timeout: Optional[float] = TIMEOUT) -> Cell:
+        result = self._cells[message_id].result.result(timeout=timeout)
+        logger.debug(f"Got result for message: {message_id}")
+        del self._cells[message_id]
+        return result
+
+    def _receive_message(self, data: dict):
+        """
+        Process messages from the WebSocket
+
+        Message types:
+        https://jupyter-client.readthedocs.io/en/stable/messaging.html
+
+        :param data: The message data
+        """
+        parent_msg_ig = data["parent_header"]["msg_id"]
+        logger.debug(f"Received message {data['msg_type']} for {parent_msg_ig}")
+
+        cell = self._cells.get(parent_msg_ig)
+        if not cell:
+            return
+
+        result = cell.partial_result
+
+        if data["msg_type"] == "error":
+            logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+            result.error = Error(
+                name=data["content"]["ename"],
+                value=data["content"]["evalue"],
+                traceback=data["content"]["traceback"],
+            )
+
+        elif data["msg_type"] == "stream":
+            if data["content"]["name"] == "stdout":
+                result.stdout.append(data["content"]["text"])
+                if cell.on_stdout:
+                    cell.on_stdout(
+                        ProcessMessage(
+                            line=data["content"]["text"],
+                            timestamp=time.time_ns(),
+                        )
+                    )
+
+            elif data["content"]["name"] == "stderr":
+                result.stderr.append(data["content"]["text"])
+                if cell.on_stderr:
+                    cell.on_stderr(
+                        ProcessMessage(
+                            line=data["content"]["text"],
+                            error=True,
+                            timestamp=time.time_ns(),
+                        )
+                    )
+
+        elif data["msg_type"] in "display_data":
+            result.display_data.append(data["content"]["data"])
+        elif data["msg_type"] == "execute_result":
+            result.result = data["content"]["data"]
+        elif data["msg_type"] == "status":
+            if data["content"]["execution_state"] == "idle":
+                if cell.input_accepted:
+                    logger.debug(f"Cell {parent_msg_ig} finished execution")
+                    cell.result.set_result(result)
+
+            elif data["content"]["execution_state"] == "error":
+                logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+                result.error = Error(
+                    name=data["content"]["ename"],
+                    value=data["content"]["evalue"],
+                    traceback=data["content"]["traceback"],
+                )
+                cell.result.set_result(result)
+
+        elif data["msg_type"] == "execute_reply":
+            if data["content"]["status"] == "error":
+                logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+                result.error = Error(
+                    name=data["content"]["ename"],
+                    value=data["content"]["evalue"],
+                    traceback=data["content"]["traceback"],
+                )
+            elif data["content"]["status"] == "ok":
+                pass
+
+        elif data["msg_type"] == "execute_input":
+            logger.debug(f"Input accepted for {parent_msg_ig}")
+            cell.input_accepted = True
+        else:
+            logger.error(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
+            print("[UNHANDLED MESSAGE TYPE]:", data["msg_type"])
+
+    def close(self):
+        logger.debug("Closing WebSocket")
+        self._closed = True
+
+        for cancel in self._process_cleanup:
+            cancel()
+
+        self._process_cleanup.clear()
+
+        for handler in self._waiting_for_replies.values():
+            logger.debug(f"Cancelling waiting for execution result for {handler}")
+            handler.cancel()
+            del handler
