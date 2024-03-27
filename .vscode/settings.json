@@ -1,0 +1,69 @@
+{
+  "files.autoSave": "afterDelay",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "restoreTerminals.terminals": [
+    {
+      "splitTerminals": [
+        {
+          "name": "Root"
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
+          "name": "Python",
+          "commands": [
+            "cd python"
+          ]
+        }
+      ]
+    },
+    {
+      "splitTerminals": [
+        {
+          "name": "JS",
+          "commands": [
+            "cd js"
+          ]
+        }
+      ]
+    }
+  ],
+  "prettier.semi": false,
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "none",
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#b24ddf",
+    "activityBar.background": "#b24ddf",
+    "activityBar.foreground": "#e7e7e7",
+    "activityBar.inactiveForeground": "#e7e7e799",
+    "activityBarBadge.background": "#ddad42",
+    "activityBarBadge.foreground": "#15202b",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#b24ddf",
+    "statusBar.background": "#9e26d3",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#b24ddf",
+    "statusBarItem.remoteBackground": "#9e26d3",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#9e26d3",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#9e26d399",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#9e26d3"
+}

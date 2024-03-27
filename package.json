@@ -1,0 +1,17 @@
+{
+  "name": "e2b-code-interpreter-root",
+  "private": true,
+  "scripts": {
+    "version": "changeset version && pnpm run -r postVersion",
+    "publish": "changeset publish && pnpm run -r postPublish",
+    "rm-node-modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+  },
+  "packageManager": "pnpm@8.7.6",
+  "dependencies": {
+    "@changesets/cli": "^2.26.2",
+    "@changesets/read": "^0.5.9"
+  },
+  "devDependencies": {
+    "changeset": "^0.2.6"
+  }
+}
