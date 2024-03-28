@@ -19,7 +19,7 @@ npm install e2b_code_interpreter
 ### Minimal example with the sharing context
 
 ```js
-import { CodeInterpreter } from '@e2b/code_interpreter'
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
 const sandbox = await CodeInterpreter.create()
 await sandbox.execPython('x = 1')
@@ -33,7 +33,7 @@ await sandbox.close()
 ### Get charts and any display-able data
 
 ```js
-import { CodeInterpreter } from '@e2b/code_interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter';
 
 const sandbox = await CodeInterpreter.create();
 
@@ -62,7 +62,7 @@ await sandbox.close();
 ### Streaming code output
 
 ```js
-import { CodeInterpreter } from '@e2b/code_interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter';
 
 code = `
 import time

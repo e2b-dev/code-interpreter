@@ -32,7 +32,7 @@ pip install e2b_code_interpreter
 ### JavaScript
 
 ```sh
-npm install @e2b/code_interpreter
+npm install @e2b/code-interpreter
 ```
 
 ## Examples
@@ -55,7 +55,7 @@ with CodeInterpreter() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from '@e2b/code_interpreter'
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
 const sandbox = await CodeInterpreter.create()
 await sandbox.execPython('x = 1')
@@ -111,7 +111,7 @@ with CodeInterpreter() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from '@e2b/code_interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter';
 
 const sandbox = await CodeInterpreter.create();
 
@@ -158,7 +158,7 @@ with CodeInterpreter() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from "@e2b/code_interpreter";
+import { CodeInterpreter } from "@e2b/code-interpreter";
 
 code = `
 import time
