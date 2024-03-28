@@ -13,7 +13,7 @@ jobs:
   publish:
     defaults:
       run:
-        working-directory: ./packages/python-sdk
+        working-directory: ./python
     name: Build and test SDK
     runs-on: ubuntu-20.04
     steps:

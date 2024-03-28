@@ -1,0 +1,177 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+
+jobs:
+  is_release:
+    name: Is release?
+    runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        id: pnpm-install
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Configure pnpm
+        run: |
+          pnpm config set auto-install-peers true
+          pnpm config set exclude-links-from-lockfile true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check if new version
+        id: version
+        run: |
+          IS_RELEASE=$(./.github/scripts/is_release.sh)
+          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
+
+  changes:
+    name: Repository changes
+    needs: [is_release]
+    if: needs.is_release.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      js: ${{ steps.filter.outputs.js }}
+      python: ${{ steps.filter.outputs.python }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get the last release
+        id: last_release
+        uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          latest: true
+          prerelease: false
+          draft: false
+
+      - name: Find changes since the last release
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          base: ${{ steps.last_release.outputs.tag_name }}
+          filters: |
+            js:
+              - 'js/**'
+            python:
+              - 'python/**'
+
+  python-tests:
+    name: Python Tests
+    needs: [changes]
+    if: needs.changes.outputs.python == 'true'
+    uses: ./.github/workflows/python_tests.yml
+    secrets: inherit
+
+  js-tests:
+    name: JS Tests
+    needs: [changes]
+    if: needs.changes.outputs.js == 'true'
+    uses: ./.github/workflows/js_tests.yml
+    secrets: inherit
+
+  release:
+    needs: [python-tests, js-tests]
+    if: always() && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - uses: pnpm/action-setup@v2
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: pnpm
+
+      - name: Configure pnpm
+        run: |
+          pnpm config set auto-install-peers true
+          pnpm config set exclude-links-from-lockfile true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create new versions
+        run: pnpm run version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release new versions
+        uses: changesets/action@v1
+        with:
+          publish: pnpm run publish
+          createGithubReleases: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Update lock file
+        run: pnpm i --no-link --no-frozen-lockfile
+
+      - name: Commit new versions
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "[skip ci] Release new versions" || exit 0
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  report-failure:
+    needs: [python, js, release]
+    if: failure()
+    name: Code Interpreter Release Failed - Slack Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Failed - Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_COLOR: "#ff0000"
+          SLACK_MESSAGE: ":here-we-go-again: :bob-the-destroyer: We need :fix-parrot: ASAP :pray:"
+          SLACK_TITLE: Code Interpreter Release Failed
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

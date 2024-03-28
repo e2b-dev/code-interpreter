@@ -35,10 +35,19 @@ jobs:
           filters: |
             python:
               - 'python/**'
+            js:
+              - 'js/**'
 
   python-tests:
     needs: [ changes ]
-    name: Tests python package
+    name: Tests Python package
     if: needs.changes.outputs.python == 'true'
     uses: ./.github/workflows/python_tests.yml
+    secrets: inherit
+
+  js-tests:
+    needs: [ changes ]
+    name: Tests JS package
+    if: needs.changes.outputs.js == 'true'
+    uses: ./.github/workflows/js_tests.yml
     secrets: inherit

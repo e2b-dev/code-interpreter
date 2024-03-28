@@ -1,0 +1,51 @@
+name: Test JS SDK
+
+on:
+  workflow_call:
+    secrets:
+      E2B_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    defaults:
+      run:
+        working-directory: ./js
+    name: Build and test SDK
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        id: pnpm-install
+        with:
+          version: 8
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Configure pnpm
+        run: |
+          pnpm config set auto-install-peers true
+          pnpm config set exclude-links-from-lockfile true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test build
+        run: pnpm build
+
+      - name: Run node tests
+        run: pnpm run test
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
