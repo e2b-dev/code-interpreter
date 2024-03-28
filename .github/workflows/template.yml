@@ -34,12 +34,15 @@ jobs:
 
       - name: Build and push to DockerHub
         run: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
           docker buildx build \
             --file e2b.Dockerfile \
             --platform linux/amd64,linux/arm64 \
             --push \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest .
 
+      - name: Install E2B CLI
+        run: npm install -g @e2b/cli
 
       - name: Build e2b
         run: e2b template build
