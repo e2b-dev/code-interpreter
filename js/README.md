@@ -19,13 +19,13 @@ npm install e2b_code_interpreter
 ### Minimal example with the sharing context
 
 ```js
-import { CodeInterpreterV2 } from 'e2b_code_interpreter'
+import { CodeInterpreter } from '@e2b/code_interpreter'
 
-const sandbox = await CodeInterpreterV2.create()
+const sandbox = await CodeInterpreter.create()
 await sandbox.execPython('x = 1')
 
 const result = await sandbox.execPython('x+=1; x')
-console.log(result.output)  # outputs 2
+console.log(result.output)  // outputs 2
 
 await sandbox.close()
 ```
@@ -33,9 +33,9 @@ await sandbox.close()
 ### Get charts and any display-able data
 
 ```js
-import { CodeInterpreterV2 } from "e2b_code_interpreter";
+import { CodeInterpreter } from '@e2b/code_interpreter';
 
-const sandbox = await CodeInterpreterV2.create();
+const sandbox = await CodeInterpreter.create();
 
 const code = `
 import matplotlib.pyplot as plt
@@ -62,7 +62,7 @@ await sandbox.close();
 ### Streaming code output
 
 ```js
-import { CodeInterpreterV2 } from "e2b_code_interpreter";
+import { CodeInterpreter } from '@e2b/code_interpreter';
 
 code = `
 import time
@@ -72,7 +72,7 @@ time.sleep(5)
 print("world")
 `;
 
-const sandbox = await CodeInterpreterV2.create();
+const sandbox = await CodeInterpreter.create();
 
 await sandbox.execPython(
   code,

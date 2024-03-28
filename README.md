@@ -32,7 +32,7 @@ pip install e2b_code_interpreter
 ### JavaScript
 
 ```sh
-npm install e2b_code_interpreter
+npm install @e2b/code_interpreter
 ```
 
 ## Examples
@@ -42,9 +42,9 @@ npm install e2b_code_interpreter
 #### Python
 
 ```python
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     sandbox.exec_cell("x = 1")
 
     result = sandbox.exec_cell("x+=1; x")
@@ -55,9 +55,9 @@ with CodeInterpreterV2() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreterV2 } from 'e2b_code_interpreter'
+import { CodeInterpreter } from '@e2b/code_interpreter'
 
-const sandbox = await CodeInterpreterV2.create()
+const sandbox = await CodeInterpreter.create()
 await sandbox.execPython('x = 1')
 
 const result = await sandbox.execPython('x+=1; x')
@@ -76,9 +76,9 @@ import io
 
 from matplotlib import image as mpimg, pyplot as plt
 
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     # you can install dependencies in "jupyter notebook style"
     sandbox.exec_cell("!pip install matplotlib")
 
@@ -111,9 +111,9 @@ with CodeInterpreterV2() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreterV2 } from "e2b_code_interpreter";
+import { CodeInterpreter } from '@e2b/code_interpreter';
 
-const sandbox = await CodeInterpreterV2.create();
+const sandbox = await CodeInterpreter.create();
 
 const code = `
 import matplotlib.pyplot as plt
@@ -142,7 +142,7 @@ await sandbox.close();
 #### Python
 
 ```python
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
 code = """
 import time
@@ -151,14 +151,14 @@ print("hello")
 time.sleep(5)
 print("world")
 """
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     sandbox.exec_cell(code, on_stdout=print, on_stderr=print)
 ```
 
 #### JavaScript
 
 ```js
-import { CodeInterpreterV2 } from "e2b_code_interpreter";
+import { CodeInterpreter } from "@e2b/code_interpreter";
 
 code = `
 import time
@@ -168,7 +168,7 @@ time.sleep(5)
 print("world")
 `;
 
-const sandbox = await CodeInterpreterV2.create();
+const sandbox = await CodeInterpreter.create();
 
 await sandbox.execPython(
   code,

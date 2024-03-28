@@ -19,9 +19,9 @@ pip install e2b_code_interpreter
 ### Minimal example with the sharing context
 
 ```python
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     sandbox.exec_cell("x = 1")
 
     result = sandbox.exec_cell("x+=1; x")
@@ -37,9 +37,9 @@ import io
 
 from matplotlib import image as mpimg, pyplot as plt
 
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     # you can install dependencies in "jupyter notebook style"
     sandbox.exec_cell("!pip install matplotlib")
 
@@ -72,7 +72,7 @@ with CodeInterpreterV2() as sandbox:
 ### Streaming code output
 
 ```python
-from e2b_code_interpreter import CodeInterpreterV2
+from e2b_code_interpreter import CodeInterpreter
 
 code = """
 import time
@@ -81,7 +81,7 @@ print("hello")
 time.sleep(5)
 print("world")
 """
-with CodeInterpreterV2() as sandbox:
+with CodeInterpreter() as sandbox:
     sandbox.exec_cell(code, on_stdout=print, on_stderr=print)
 ```
 
