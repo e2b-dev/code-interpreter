@@ -9,7 +9,7 @@ c = get_config()  # noqa
 #
 #          Takes precedence over allow_origin_pat.
 #  Default: ''
-c.ServerApp.allow_origin = '*'
+c.ServerApp.allow_origin = "*"
 
 
 # Allow requests where the Host header doesn't point to a local server
