@@ -1,6 +1,5 @@
 import IWebSocket from 'isomorphic-ws'
 import { ProcessMessage } from 'e2b'
-import { randomBytes } from 'crypto'
 
 export interface Error {
   name: string
@@ -195,7 +194,7 @@ export class JupyterKernelWebSocket {
     timeout?: number
   ) {
     return new Promise<Cell>((resolve, reject) => {
-      const msg_id = randomBytes(16).toString('hex')
+      const msg_id = crypto.randomUUID()
       const data = this.sendExecuteRequest(msg_id, code)
 
       // give limited time for response
@@ -257,7 +256,7 @@ export class JupyterKernelWebSocket {
    * @param code Code to be executed.
    */
   private sendExecuteRequest(msg_id: string, code: string) {
-    const session = randomBytes(16).toString('hex')
+    const session = crypto.randomUUID()
     return {
       header: {
         msg_id: msg_id,
