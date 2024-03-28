@@ -8,7 +8,7 @@ export interface Error {
   traceback: string[]
 }
 
-type MIMEType = string
+export type MIMEType = string
 
 /**
  * Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -17,7 +17,7 @@ type MIMEType = string
  * of various types of content such as text, images, and more. Each key in the interface is a MIME type
  * string, and its value is the data associated with that MIME type, formatted as a string.
  */
-interface DisplayData {
+export interface DisplayData {
   [key: MIMEType]: string
 }
 
