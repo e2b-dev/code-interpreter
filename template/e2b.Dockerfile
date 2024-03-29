@@ -12,5 +12,9 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 COPY ./jupyter_server_config.py /home/user/.jupyter/
+
+RUN mkdir -p /home/user/.ipython/profile_default
+COPY ipython_kernel_config.py /home/user/.ipython/profile_default/
+
 COPY ./start-up.sh /home/user/.jupyter/
 RUN chmod +x /home/user/.jupyter/start-up.sh
