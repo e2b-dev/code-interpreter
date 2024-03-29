@@ -24,7 +24,7 @@ with CodeInterpreter() as sandbox:
     sandbox.exec_cell("x = 1")
 
     result = sandbox.exec_cell("x += 1; x")
-    print(result.result)  # outputs 2
+    print(result.text)  # outputs 2
 
 ```
 

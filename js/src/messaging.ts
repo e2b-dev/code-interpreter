@@ -28,12 +28,18 @@ export interface DisplayData {
  * @property {string[]} stderr - List of strings printed to stderr by prints, subprocesses, etc.
  * @property {Error | null} error - An Error object if an error occurred, null otherwise.
  */
-export interface Cell {
-  result: DisplayData
-  displayData: DisplayData[]
-  stdout: string[]
-  stderr: string[]
-  error?: Error
+export class Cell {
+  constructor(
+    public result: DisplayData,
+    public displayData: DisplayData[],
+    public stdout: string[],
+    public stderr: string[],
+    public error?: Error
+  ) {}
+
+  public text() {
+    return this.result['text/plain']
+  }
 }
 
 /**
@@ -50,12 +56,7 @@ class CellExecution {
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
     onStderr?: (out: ProcessMessage) => Promise<void> | void
   ) {
-    this.result = {
-      stdout: [],
-      stderr: [],
-      displayData: [],
-      result: {}
-    }
+    this.result = new Cell({}, [], [], [])
     this.onStdout = onStdout
     this.onStderr = onStderr
   }

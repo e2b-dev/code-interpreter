@@ -6,4 +6,4 @@ def test_stateful():
         sandbox.notebook.exec_cell("x = 1")
 
         result = sandbox.notebook.exec_cell("x+=1; x")
-        assert result.result["text/plain"] == "2"
+        assert result.text == "2"

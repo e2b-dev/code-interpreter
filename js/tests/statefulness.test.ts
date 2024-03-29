@@ -9,7 +9,7 @@ test('statefulness', async () => {
 
   const output = await sandbox.notebook.execCell('x += 1; x')
 
-  expect(output.result['text/plain']).toEqual('2')
+  expect(output.text).toEqual('2')
 
   await sandbox.close()
 })

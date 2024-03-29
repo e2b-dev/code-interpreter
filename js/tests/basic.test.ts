@@ -7,7 +7,7 @@ test('basic', async () => {
 
   const output = await sandbox.notebook.execCell('x =1; x')
 
-  expect(output.result['text/plain']).toEqual('1')
+  expect(output.text).toEqual('1')
 
   await sandbox.close()
 })

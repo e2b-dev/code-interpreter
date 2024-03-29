@@ -1,5 +1,4 @@
 from typing import Dict, List, Optional
-from typing_extensions import TypedDict
 from pydantic import BaseModel
 
 
@@ -53,7 +52,7 @@ class Cell(BaseModel):
 
         :return: The text representation of the result.
         """
-        return self.result["text/plain"]
+        return self.result.get("text/plain", None)
 
 
 class KernelException(Exception):
