@@ -37,10 +37,10 @@ npm install @e2b/code-interpreter
 from e2b_code_interpreter import CodeInterpreter
 
 with CodeInterpreter() as sandbox:
-    sandbox.exec_cell("x = 1")
+    sandbox.notebook.exec_cell("x = 1")
 
-    result = sandbox.exec_cell("x+=1; x")
-    print(result.result)  # outputs 2
+    result = sandbox.notebook.exec_cell("x+=1; x")
+    print(result.text)  # outputs 2
 
 ```
 
@@ -50,10 +50,10 @@ with CodeInterpreter() as sandbox:
 import { CodeInterpreter } from '@e2b/code-interpreter'
 
 const sandbox = await CodeInterpreter.create()
-await sandbox.execPython('x = 1')
+await sandbox.notebook.execCell('x = 1')
 
-const result = await sandbox.execPython('x+=1; x')
-console.log(result.output)  # outputs 2
+const result = await sandbox.notebook.execCell('x+=1; x')
+console.log(result.text)  // outputs 2
 
 await sandbox.close()
 ```
@@ -70,42 +70,42 @@ from matplotlib import image as mpimg, pyplot as plt
 
 from e2b_code_interpreter import CodeInterpreter
 
+code = """
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 20, 100)
+y = np.sin(x)
+
+plt.plot(x, y)
+plt.show()
+"""
+
 with CodeInterpreter() as sandbox:
     # you can install dependencies in "jupyter notebook style"
-    sandbox.exec_cell("!pip install matplotlib")
+    sandbox.notebook.exec_cell("!pip install matplotlib")
 
     # plot random graph
-    result = sandbox.exec_cell(
-        """
-    import matplotlib.pyplot as plt
-    import numpy as np
+    result = sandbox.notebook.exec_cell(code)
 
-    x = np.linspace(0, 20, 100)
-    y = np.sin(x)
+# there's your image
+image = result.display_data[0]["image/png"]
 
-    plt.plot(x, y)
-    plt.show()
-    """
-    )
+# example how to show the image / prove it works
+i = base64.b64decode(image)
+i = io.BytesIO(i)
+i = mpimg.imread(i, format='PNG')
 
-    # there's your image
-    image = result.display_data[0]["image/png"]
-
-    # example how to show the image / prove it works
-    i = base64.b64decode(image)
-    i = io.BytesIO(i)
-    i = mpimg.imread(i, format='PNG')
-
-    plt.imshow(i, interpolation='nearest')
-    plt.show()
+plt.imshow(i, interpolation='nearest')
+plt.show()
 ```
 
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from '@e2b/code-interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
-const sandbox = await CodeInterpreter.create();
+const sandbox = await CodeInterpreter.create()
 
 const code = `
 import matplotlib.pyplot as plt
@@ -119,14 +119,14 @@ plt.show()
 `;
 
 // you can install dependencies in "jupyter notebook style"
-await sandbox.execPython("!pip install matplotlib");
+await sandbox.notebook.execCell("!pip install matplotlib")
 
-const result = await sandbox.execPython(code);
+const result = await sandbox.notebook.execCell(code)
 
 // this contains the image data, you can e.g. save it to file or send to frontend
-result.display_data[0]["image/png"];
+result.display_data[0]["image/png"]
 
-await sandbox.close();
+await sandbox.close()
 ```
 
 ### Streaming code output
@@ -144,13 +144,13 @@ time.sleep(5)
 print("world")
 """
 with CodeInterpreter() as sandbox:
-    sandbox.exec_cell(code, on_stdout=print, on_stderr=print)
+    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print)
 ```
 
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from "@e2b/code-interpreter";
+import { CodeInterpreter } from "@e2b/code-interpreter"
 
 code = `
 import time
@@ -158,15 +158,15 @@ import time
 print("hello")
 time.sleep(5)
 print("world")
-`;
+`
 
-const sandbox = await CodeInterpreter.create();
+const sandbox = await CodeInterpreter.create()
 
-await sandbox.execPython(
+await sandbox.notebook.execCell(
   code,
   (out) => console.log(out),
   (outErr) => console.error(outErr),
-);
+)
 ```
 
 ### Pre-installed Python packages inside the sandbox

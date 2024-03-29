@@ -23,7 +23,7 @@ from e2b_code_interpreter import CodeInterpreter
 with CodeInterpreter() as sandbox:
     sandbox.exec_cell("x = 1")
 
-    result = sandbox.exec_cell("x+=1; x")
+    result = sandbox.exec_cell("x += 1; x")
     print(result.result)  # outputs 2
 
 ```
@@ -38,23 +38,23 @@ from matplotlib import image as mpimg, pyplot as plt
 
 from e2b_code_interpreter import CodeInterpreter
 
+code = """
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 20, 100)
+y = np.sin(x)
+
+plt.plot(x, y)
+plt.show()
+"""
+
 with CodeInterpreter() as sandbox:
     # you can install dependencies in "jupyter notebook style"
     sandbox.exec_cell("!pip install matplotlib")
 
     # plot random graph
-    result = sandbox.exec_cell(
-        """
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    x = np.linspace(0, 20, 100)
-    y = np.sin(x)
-
-    plt.plot(x, y)
-    plt.show()
-    """
-    )
+    result = sandbox.exec_cell(code)
 
     # there's your image
     image = result.display_data[0]["image/png"]
@@ -80,6 +80,7 @@ print("hello")
 time.sleep(5)
 print("world")
 """
+
 with CodeInterpreter() as sandbox:
     sandbox.exec_cell(code, on_stdout=print, on_stderr=print)
 ```

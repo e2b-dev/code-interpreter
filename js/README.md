@@ -21,9 +21,9 @@ npm install e2b_code_interpreter
 import { CodeInterpreter } from '@e2b/code-interpreter'
 
 const sandbox = await CodeInterpreter.create()
-await sandbox.execPython('x = 1')
+await sandbox.notebook.execCell('x = 1')
 
-const result = await sandbox.execPython('x+=1; x')
+const result = await sandbox.notebook.execCell('x += 1; x')
 console.log(result.output)  // outputs 2
 
 await sandbox.close()
@@ -32,9 +32,9 @@ await sandbox.close()
 ### Get charts and any display-able data
 
 ```js
-import { CodeInterpreter } from '@e2b/code-interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
-const sandbox = await CodeInterpreter.create();
+const sandbox = await CodeInterpreter.create()
 
 const code = `
 import matplotlib.pyplot as plt
@@ -45,23 +45,23 @@ y = np.sin(x)
 
 plt.plot(x, y)
 plt.show()
-`;
+`
 
 // you can install dependencies in "jupyter notebook style"
-await sandbox.execPython("!pip install matplotlib");
+await sandbox.notebook.execCell("!pip install matplotlib")
 
-const result = await sandbox.execPython(code);
+const result = await sandbox.notebook.execCell(code)
 
 // this contains the image data, you can e.g. save it to file or send to frontend
-result.display_data[0]["image/png"];
+result.display_data[0]["image/png"]
 
-await sandbox.close();
+await sandbox.close()
 ```
 
 ### Streaming code output
 
 ```js
-import { CodeInterpreter } from '@e2b/code-interpreter';
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
 code = `
 import time
@@ -71,13 +71,13 @@ time.sleep(5)
 print("world")
 `;
 
-const sandbox = await CodeInterpreter.create();
+const sandbox = await CodeInterpreter.create()
 
-await sandbox.execPython(
+await sandbox.notebook.execCell(
   code,
   (out) => console.log(out),
   (outErr) => console.error(outErr),
-);
+)
 ```
 
 ### Pre-installed Python packages inside the sandbox
