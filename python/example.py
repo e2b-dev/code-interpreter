@@ -1,5 +1,3 @@
-import logging
-
 from e2b_code_interpreter.main import CodeInterpreter
 from dotenv import load_dotenv
 

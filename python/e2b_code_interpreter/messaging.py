@@ -14,8 +14,7 @@ from e2b.sandbox.websocket_client import WebSocket
 from e2b.utils.future import DeferredFuture
 from pydantic import ConfigDict, PrivateAttr, BaseModel
 
-from e2b_code_interpreter.models import Cell, Error
-
+from e2b_code_interpreter.models import Cell, DisplayData, Error
 
 logger = logging.getLogger(__name__)
 
@@ -170,7 +169,7 @@ class JupyterKernelWebSocket(BaseModel):
             result.error = Error(
                 name=data["content"]["ename"],
                 value=data["content"]["evalue"],
-                traceback=data["content"]["traceback"],
+                traceback_raw=data["content"]["traceback"],
             )
 
         elif data["msg_type"] == "stream":
@@ -196,9 +195,9 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
         elif data["msg_type"] in "display_data":
-            result.display_data.append(data["content"]["data"])
+            result.display_data.append(DisplayData(**data["content"]["data"]))
         elif data["msg_type"] == "execute_result":
-            result.result = data["content"]["data"]
+            result.result = DisplayData(**data["content"]["data"])
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if cell.input_accepted:
@@ -210,7 +209,7 @@ class JupyterKernelWebSocket(BaseModel):
                 result.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
-                    traceback=data["content"]["traceback"],
+                    traceback_raw=data["content"]["traceback"],
                 )
                 cell.result.set_result(result)
 
@@ -220,7 +219,7 @@ class JupyterKernelWebSocket(BaseModel):
                 result.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
-                    traceback=data["content"]["traceback"],
+                    traceback_raw=data["content"]["traceback"],
                 )
             elif data["content"]["status"] == "ok":
                 pass
