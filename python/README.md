@@ -5,13 +5,12 @@ The repository contains a template and modules for the code interpreter sandbox.
 ## Key Features
 
 - **Stateful Execution**: Unlike traditional sandboxes that treat each code execution independently, this package maintains context across executions.
-- **Jupyter Kernel Messaging Protocol**: Implements parts of the [Jupyter Kernel messaging protocol](https://jupyter-client.readthedocs.io/en/latest/messaging.html), enhancing support for interactive features like plotting charts.
-- **Easy Integration**: Designed for seamless integration into Python projects, enabling the execution of dynamic code blocks with context sharing.
+- **Displaying Graph & Data**: Implements parts of the [Jupyter Kernel messaging protocol](https://jupyter-client.readthedocs.io/en/latest/messaging.html), which support for interactive features like plotting charts, rendering DataFrames, etc.
 
 ## Installation
 
 ```sh
-pip install e2b_code_interpreter
+pip install e2b-code-interpreter
 ```
 
 ## Examples

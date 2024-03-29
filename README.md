@@ -13,20 +13,12 @@ Additionally, this new template also partly implements the [Jupyter Kernel messa
 
 The current code interpreter allows to run Python code but each run share the context. That means that subsequent runs can reference to variables, definitions, etc from past code execution runs.
 
-## Current state
-
-Known limited in features such as:
-
-- All executions share single kernel
-
-We'll be updating this module as we gather more user feedback.
-
 ## Installation
 
 ### Python
 
 ```sh
-pip install e2b_code_interpreter
+pip install e2b-code-interpreter
 ```
 
 ### JavaScript
