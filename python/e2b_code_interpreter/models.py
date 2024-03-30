@@ -1,4 +1,4 @@
-from typing import List, Optional, Iterable
+from typing import List, Optional, Iterable, Dict
 from pydantic import BaseModel
 
 
@@ -24,6 +24,12 @@ class Error(BaseModel):
         return "\n".join(self.traceback_raw)
 
 
+class MIMEType(str):
+    """
+    Represents a MIME type.
+    """
+
+
 class Data:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -38,7 +44,8 @@ class Data:
 
     text: str
     "Text representation of the data."
-    data: dict
+
+    raw: Dict[MIMEType, str]
     "Dictionary that maps MIME types to their corresponding string representations of the data."
 
     html: Optional[str] = None
@@ -52,19 +59,20 @@ class Data:
     javascript: Optional[str] = None
     extra: Optional[dict] = None
 
-    def __init__(self, is_main_result: bool, **kwargs: str):
+    def __init__(self, is_main_result: bool, data: [MIMEType, str]):
         self.is_main_result = is_main_result
-        self.data = kwargs
-        self.text = kwargs["text/plain"]
-        self.html = kwargs.get("text/html", None)
-        self.markdown = kwargs.get("text/markdown", None)
-        self.svg = kwargs.get("image/svg+xml", None)
-        self.png = kwargs.get("image/png", None)
-        self.jpeg = kwargs.get("image/jpeg", None)
-        self.pdf = kwargs.get("application/pdf", None)
-        self.latex = kwargs.get("text/latex", None)
-        self.json = kwargs.get("application/json", None)
-        self.javascript = kwargs.get("application/javascript", None)
+        self.raw = data
+
+        self.text = data["text/plain"]
+        self.html = data.get("text/html", None)
+        self.markdown = data.get("text/markdown", None)
+        self.svg = data.get("image/svg+xml", None)
+        self.png = data.get("image/png", None)
+        self.jpeg = data.get("image/jpeg", None)
+        self.pdf = data.get("application/pdf", None)
+        self.latex = data.get("text/latex", None)
+        self.json = data.get("application/json", None)
+        self.javascript = data.get("application/javascript", None)
 
     def keys(self) -> Iterable[str]:
         """
@@ -72,7 +80,7 @@ class Data:
 
         :return: The MIME types of the data.
         """
-        return self.data.keys()
+        return self.raw.keys()
 
     def __str__(self) -> str:
         """
@@ -190,7 +198,7 @@ class Execution(BaseModel):
         """
         for d in self.data:
             if d.is_main_result:
-                return d.data["text/plain"]
+                return d.raw["text/plain"]
 
 
 class KernelException(Exception):

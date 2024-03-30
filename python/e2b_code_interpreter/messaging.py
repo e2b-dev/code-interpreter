@@ -195,9 +195,9 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
         elif data["msg_type"] in "display_data":
-            result.data.append(Data(is_main_result=False, **data["content"]["data"]))
+            result.data.append(Data(is_main_result=False, data=data["content"]["data"]))
         elif data["msg_type"] == "execute_result":
-            result.data.append(Data(is_main_result=True, **data["content"]["data"]))
+            result.data.append(Data(is_main_result=True, data=data["content"]["data"]))
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if cell.input_accepted:
