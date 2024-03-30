@@ -42,12 +42,11 @@ class Data:
     is_main_result: bool
     "Whether this data is the main result of the cell."
 
-    text: str
-    "Text representation of the data."
-
     raw: Dict[MIMEType, str]
     "Dictionary that maps MIME types to their corresponding string representations of the data."
 
+    text: str
+    "Text representation of the data. Always present."
     html: Optional[str] = None
     markdown: Optional[str] = None
     svg: Optional[str] = None
