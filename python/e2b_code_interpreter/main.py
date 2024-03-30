@@ -64,6 +64,7 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
         on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
+        on_display_data: Optional[Callable[[Dict[str, Any]], Any]] = None,
         timeout: Optional[float] = TIMEOUT,
     ) -> Execution:
         """
@@ -73,6 +74,7 @@ class JupyterExtension:
         :param kernel_id: The ID of the kernel to execute the code on. If not provided, the default kernel is used.
         :param on_stdout: A callback function to handle standard output messages from the code execution.
         :param on_stderr: A callback function to handle standard error messages from the code execution.
+        :param on_display_data: A callback function to handle display data messages from the code execution.
         :param timeout: Timeout for the call
 
         :return: Result of the execution
@@ -89,7 +91,7 @@ class JupyterExtension:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
             ws = self._connect_to_kernel_ws(kernel_id, timeout=timeout)
 
-        session_id = ws.send_execution_message(code, on_stdout, on_stderr)
+        session_id = ws.send_execution_message(code, on_stdout, on_stderr, on_display_data)
         logger.debug(
             f"Sent execution message to kernel {kernel_id}, session_id: {session_id}"
         )

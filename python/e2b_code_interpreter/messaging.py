@@ -14,7 +14,7 @@ from e2b.sandbox.websocket_client import WebSocket
 from e2b.utils.future import DeferredFuture
 from pydantic import ConfigDict, PrivateAttr, BaseModel
 
-from e2b_code_interpreter.models import Execution, Data, Error
+from e2b_code_interpreter.models import Execution, Data, Error, MIMEType
 
 logger = logging.getLogger(__name__)
 
@@ -26,18 +26,21 @@ class CellExecution:
     """
 
     input_accepted: bool = False
-    on_stdout: Optional[Callable[[Any], None]] = None
-    on_stderr: Optional[Callable[[Any], None]] = None
+    on_stdout: Optional[Callable[[ProcessMessage], None]] = None
+    on_stderr: Optional[Callable[[ProcessMessage], None]] = None
+    on_display_data: Optional[Callable[[Dict[MIMEType, str]], None]] = None
 
     def __init__(
         self,
-        on_stdout: Optional[Callable[[Any], None]] = None,
-        on_stderr: Optional[Callable[[Any], None]] = None,
+        on_stdout: Optional[Callable[[ProcessMessage], None]] = None,
+        on_stderr: Optional[Callable[[ProcessMessage], None]] = None,
+        on_display_data: Optional[Callable[[Dict[MIMEType, str]], None]] = None,
     ):
         self.partial_result = Execution()
         self.result = Future()
         self.on_stdout = on_stdout
         self.on_stderr = on_stderr
+        self.on_display_data = on_display_data
 
 
 class JupyterKernelWebSocket(BaseModel):
@@ -126,8 +129,9 @@ class JupyterKernelWebSocket(BaseModel):
     def send_execution_message(
         self,
         code: str,
-        on_stdout: Optional[Callable[[Any], None]] = None,
-        on_stderr: Optional[Callable[[Any], None]] = None,
+        on_stdout: Optional[Callable[[ProcessMessage], None]] = None,
+        on_stderr: Optional[Callable[[ProcessMessage], None]] = None,
+        on_display_data: Optional[Callable[[Dict[MIMEType, str]], None]] = None,
     ) -> str:
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution message: {message_id}")
@@ -135,6 +139,7 @@ class JupyterKernelWebSocket(BaseModel):
         self._cells[message_id] = CellExecution(
             on_stdout=on_stdout,
             on_stderr=on_stderr,
+            on_display_data=on_display_data,
         )
         request = self._get_execute_request(message_id, code)
         self._queue_in.put(request)
@@ -196,6 +201,8 @@ class JupyterKernelWebSocket(BaseModel):
 
         elif data["msg_type"] in "display_data":
             result.data.append(Data(is_main_result=False, data=data["content"]["data"]))
+            if cell.on_display_data:
+                cell.on_display_data(data["content"]["data"])
         elif data["msg_type"] == "execute_result":
             result.data.append(Data(is_main_result=True, data=data["content"]["data"]))
         elif data["msg_type"] == "status":
