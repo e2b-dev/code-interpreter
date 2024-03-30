@@ -8,7 +8,7 @@ from e2b import EnvVars, ProcessMessage, Sandbox
 from e2b.constants import TIMEOUT
 
 from e2b_code_interpreter.messaging import JupyterKernelWebSocket
-from e2b_code_interpreter.models import KernelException, Cell
+from e2b_code_interpreter.models import KernelException, Execution
 
 
 logger = logging.getLogger(__name__)
@@ -65,7 +65,7 @@ class JupyterExtension:
         on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
         on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
         timeout: Optional[float] = TIMEOUT,
-    ) -> Cell:
+    ) -> Execution:
         """
         Execute code in a notebook cell.
 

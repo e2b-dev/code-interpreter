@@ -14,7 +14,7 @@ from e2b.sandbox.websocket_client import WebSocket
 from e2b.utils.future import DeferredFuture
 from pydantic import ConfigDict, PrivateAttr, BaseModel
 
-from e2b_code_interpreter.models import Cell, DisplayData, Error
+from e2b_code_interpreter.models import Execution, Data, Error
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class CellExecution:
         on_stdout: Optional[Callable[[Any], None]] = None,
         on_stderr: Optional[Callable[[Any], None]] = None,
     ):
-        self.partial_result = Cell()
+        self.partial_result = Execution()
         self.result = Future()
         self.on_stdout = on_stdout
         self.on_stderr = on_stderr
@@ -140,7 +140,7 @@ class JupyterKernelWebSocket(BaseModel):
         self._queue_in.put(request)
         return message_id
 
-    def get_result(self, message_id: str, timeout: Optional[float] = TIMEOUT) -> Cell:
+    def get_result(self, message_id: str, timeout: Optional[float] = TIMEOUT) -> Execution:
         result = self._cells[message_id].result.result(timeout=timeout)
         logger.debug(f"Got result for message: {message_id}")
         del self._cells[message_id]
@@ -174,7 +174,7 @@ class JupyterKernelWebSocket(BaseModel):
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                result.stdout.append(data["content"]["text"])
+                result.logs.stdout.append(data["content"]["text"])
                 if cell.on_stdout:
                     cell.on_stdout(
                         ProcessMessage(
@@ -184,7 +184,7 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
             elif data["content"]["name"] == "stderr":
-                result.stderr.append(data["content"]["text"])
+                result.logs.stderr.append(data["content"]["text"])
                 if cell.on_stderr:
                     cell.on_stderr(
                         ProcessMessage(
@@ -195,9 +195,9 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
         elif data["msg_type"] in "display_data":
-            result.display_data.append(DisplayData(**data["content"]["data"]))
+            result.data.append(Data(is_main_result=False, **data["content"]["data"]))
         elif data["msg_type"] == "execute_result":
-            result.result = DisplayData(**data["content"]["data"])
+            result.data.append(Data(is_main_result=True, **data["content"]["data"]))
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if cell.input_accepted:

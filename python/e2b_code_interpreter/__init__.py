@@ -1,2 +1,2 @@
 from .main import CodeInterpreter, JupyterExtension
-from .models import Cell, Error, DisplayData, KernelException
+from .models import Execution, Error, Data, KernelException
