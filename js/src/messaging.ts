@@ -4,23 +4,27 @@ import { ProcessMessage } from 'e2b'
 /**
  * Represents an error that occurred during the execution of a cell.
  * The error contains the name of the error, the value of the error, and the traceback.
- *
- * @property {string} name - Name of the error.
- * @property {string} value - Value of the error.
- * @property {string} traceback - The traceback of the error.
  */
 export class ExecutionError {
-  name: string
-  value: string
-  tracebackRaw: string[]
+  constructor(
+    /**
+     * Name of the error.
+     **/
+    public name: string,
+    /**
+     * Value of the error.
+     **/
+    public value: string,
+    /**
+     * The raw traceback of the error.
+     **/
+    public tracebackRaw: string[],
+  ) { }
 
-  constructor(name: string, value: string, tracebackRaw: string[]) {
-    this.name = name
-    this.value = value
-    this.tracebackRaw = tracebackRaw
-  }
-
-  public traceback(): string {
+  /**
+   * Returns the traceback of the error as a string.
+   */
+  traceback(): string {
     return this.tracebackRaw.join('\n')
   }
 }
@@ -45,40 +49,56 @@ export type RawData = {
  * The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
  * as a string, and the result can contain multiple types of data. The text representation is always present, and
  * the other representations are optional.
- *
- * @property {string} text - Text representation of the data. Always present.
- * @property {string} [html] - HTML representation of the data.
- * @property {string} [markdown] - Markdown representation of the data.
- * @property {string} [svg] - SVG representation of the data.
- * @property {string} [png] - PNG representation of the data.
- * @property {string} [jpeg] - JPEG representation of the data.
- * @property {string} [pdf] - PDF representation of the data.
- * @property {string} [latex] - LaTeX representation of the data.
- * @property {string} [json] - JSON representation of the data.
- * @property {string} [javascript] - JavaScript representation of the data.
- * @property {any} [extra] - Extra data that can be included. Not part of the standard types.
- * @property {boolean} isMainResult - Whether this data is the main result of the cell. There can be multiple display calls in a cell.
- * @property {RawData} raw - Dictionary that maps MIME types to their corresponding string representations of the data.
  */
-
 export class Data {
+  /**
+   * Text representation of the data. Always present.
+   */
   readonly text: string
+  /**
+   * HTML representation of the data.
+   */
   readonly html?: string
+  /**
+   * Markdown representation of the data.
+   */
   readonly markdown?: string
+  /**
+   * SVG representation of the data.
+   */
   readonly svg?: string
+  /**
+   * PNG representation of the data.
+   */
   readonly png?: string
+  /**
+   * JPEG representation of the data.
+   */
   readonly jpeg?: string
+  /**
+   * PDF representation of the data.
+   */
   readonly pdf?: string
+  /**
+   * LaTeX representation of the data.
+   */
   readonly latex?: string
+  /**
+   * JSON representation of the data.
+   */
   readonly json?: string
+  /**
+   * JavaScript representation of the data.
+   */
   readonly javascript?: string
+  /**
+   * Extra data that can be included. Not part of the standard types.
+   */
   readonly extra?: any
 
-  isMainResult: boolean
+  readonly raw: RawData
 
-  raw: RawData
-
-  constructor(data: RawData, isMainResult: boolean) {
+  constructor(data: RawData, public readonly isMainResult: boolean) {
     this.text = data['text/plain']
     this.html = data['text/html']
     this.markdown = data['text/markdown']
@@ -93,6 +113,7 @@ export class Data {
     this.raw = data
 
     this.extra = {}
+    // TODO: For in check
     for (const key in data) {
       if (![
         'text/plain',
@@ -114,28 +135,41 @@ export class Data {
 
 /**
  * Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
- *
- * @property {string[]} stdout - List of strings printed to stdout by prints, subprocesses, etc.
- * @property {string[]} stderr - List of strings printed to stderr by prints, subprocesses, etc.
  */
 export type Logs = {
+  /**
+   * List of strings printed to stdout by prints, subprocesses, etc.
+   */
   stdout: string[]
+  /**
+   * List of strings printed to stderr by prints, subprocesses, etc.
+   */
   stderr: string[]
 }
+
 /**
  * Represents the result of a cell execution.
- * @property {Data} data - List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots.
- * @property {Logs} logs - "Logs printed to stdout and stderr during execution."
- * @property {ExecutionError | null} error - An Error object if an error occurred, null otherwise.
  */
 export class Result {
   constructor(
+    /**
+     * List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots.
+     */
     public data: Data[],
+    /**
+     * Logs printed to stdout and stderr during execution.
+     */
     public logs: Logs,
-    public error?: ExecutionError
+    /**
+     * An Error object if an error occurred, null otherwise.
+     */
+    public error?: ExecutionError,
   ) { }
 
-  public get text(): string | undefined {
+  /**
+   * Returns the text representation of the main result of the cell.
+   */
+  get text(): string | undefined {
     for (const data of this.data) {
       if (data.isMainResult) {
         return data.text
@@ -149,10 +183,10 @@ export class Result {
  * It's an internal class used by JupyterKernelWebSocket.
  */
 class CellExecution {
-  public result: Result
-  public onStdout?: (out: ProcessMessage) => Promise<void> | void
-  public onStderr?: (out: ProcessMessage) => Promise<void> | void
-  public inputAccepted: boolean = false
+  result: Result
+  onStdout?: (out: ProcessMessage) => Promise<void> | void
+  onStderr?: (out: ProcessMessage) => Promise<void> | void
+  inputAccepted: boolean = false
 
   constructor(
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
@@ -170,8 +204,19 @@ interface Cells {
 
 export class JupyterKernelWebSocket {
   // native websocket
-  private ws: IWebSocket
-  private readonly url: string
+  private _ws?: IWebSocket
+
+  private set ws(ws: IWebSocket) {
+    this._ws = ws
+  }
+
+  private get ws() {
+    if (!this._ws) {
+      throw new Error('WebSocket is not connected.')
+    }
+    return this._ws
+  }
+
   private idAwaiter: {
     [id: string]: (data?: any) => void
   } = {}
@@ -183,17 +228,14 @@ export class JupyterKernelWebSocket {
    * Does not start WebSocket connection!
    * You need to call connect() method first.
    */
-  public constructor(url: string) {
-    this.ws = undefined as any
-    this.url = url
-  }
+  constructor(private readonly url: string) { }
 
   // public
   /**
    * Starts WebSocket connection.
    */
-  public connect() {
-    this.ws = new IWebSocket(this.url)
+  connect() {
+    this._ws = new IWebSocket(this.url)
     return this.listen()
   }
 
@@ -334,8 +376,8 @@ export class JupyterKernelWebSocket {
    */
   private listen() {
     return new Promise((resolve, reject) => {
-      // @ts-ignore
-      this.ws.onopen = (e: IWebSocket.OpenEvent) => {
+
+      this.ws.onopen = (e: unknown) => {
         resolve(e)
       }
 
@@ -382,7 +424,7 @@ export class JupyterKernelWebSocket {
   /**
    * Closes WebSocket connection.
    */
-  public close() {
+  close() {
     this.ws.close()
   }
 }
