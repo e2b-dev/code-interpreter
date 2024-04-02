@@ -4,7 +4,8 @@ from pydantic import BaseModel
 
 class Error(BaseModel):
     """
-    Represents an error that occurred during execution.
+    Represents an error that occurred during the execution of a cell.
+    The error contains the name of the error, the value of the error, and the traceback.
     """
 
     name: str
@@ -54,9 +55,10 @@ class Data:
     json: Optional[dict] = None
     javascript: Optional[str] = None
     extra: Optional[dict] = None
+    "Extra data that can be included. Not part of the standard types."
 
     is_main_result: bool
-    "Whether this data is the main result of the cell. There can be multiple display calls in a cell."
+    "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
 
     raw: Dict[MIMEType, str]
     "Dictionary that maps MIME types to their corresponding string representations of the data."
@@ -185,7 +187,7 @@ class Result(BaseModel):
         arbitrary_types_allowed = True
 
     data: List[Data] = []
-    "List of display calls, e.g. matplotlib plots."
+    "List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots."
     logs: Logs = Logs()
     "Logs printed to stdout and stderr during execution."
     error: Optional[Error] = None
