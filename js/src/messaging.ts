@@ -15,13 +15,13 @@ export class ExecutionError {
   tracebackRaw: string[]
 
   constructor(name: string, value: string, tracebackRaw: string[]) {
-      this.name = name
-      this.value = value
-      this.tracebackRaw = tracebackRaw
+    this.name = name
+    this.value = value
+    this.tracebackRaw = tracebackRaw
   }
 
   public traceback(): string {
-      return this.tracebackRaw.join('\n')
+    return this.tracebackRaw.join('\n')
   }
 }
 
@@ -56,7 +56,7 @@ export type RawData = {
  * @property {string} [latex] - LaTeX representation of the data.
  * @property {string} [json] - JSON representation of the data.
  * @property {string} [javascript] - JavaScript representation of the data.
- * @property {object} [extra] - Extra data that can be included. Not part of the standard types.
+ * @property {any} [extra] - Extra data that can be included. Not part of the standard types.
  * @property {boolean} isMainResult - Whether this data is the main result of the cell. There can be multiple display calls in a cell.
  * @property {RawData} raw - Dictionary that maps MIME types to their corresponding string representations of the data.
  */
@@ -65,51 +65,51 @@ export class Data {
   readonly text: string
   readonly html?: string
   readonly markdown?: string
-  readonly svg?  : string
+  readonly svg?: string
   readonly png?: string
   readonly jpeg?: string
   readonly pdf?: string
   readonly latex?: string
   readonly json?: string
   readonly javascript?: string
-  readonly extra?: object
+  readonly extra?: any
 
   isMainResult: boolean
 
   raw: RawData
 
-    constructor(data: RawData, isMainResult: boolean) {
-        this.text = data['text/plain']
-        this.html = data['text/html']
-        this.markdown = data['text/markdown']
-        this.svg = data['image/svg+xml']
-        this.png = data['image/png']
-        this.jpeg = data['image/jpeg']
-        this.pdf = data['application/pdf']
-        this.latex = data['text/latex']
-        this.json = data['application/json']
-        this.javascript = data['application/javascript']
-        this.isMainResult = isMainResult
-        this.raw = data
+  constructor(data: RawData, isMainResult: boolean) {
+    this.text = data['text/plain']
+    this.html = data['text/html']
+    this.markdown = data['text/markdown']
+    this.svg = data['image/svg+xml']
+    this.png = data['image/png']
+    this.jpeg = data['image/jpeg']
+    this.pdf = data['application/pdf']
+    this.latex = data['text/latex']
+    this.json = data['application/json']
+    this.javascript = data['application/javascript']
+    this.isMainResult = isMainResult
+    this.raw = data
 
-        this.extra = {}
-        for (const key in data) {
-          if (![
-            'text/plain',
-            'text/html',
-            'text/markdown',
-            'image/svg+xml',
-            'image/png',
-            'image/jpeg',
-            'application/pdf',
-            'text/latex',
-            'application/json',
-            'application/javascript'
-          ].includes(key)) {
-            this.extra[key] = data[key]
-          }
-        }
+    this.extra = {}
+    for (const key in data) {
+      if (![
+        'text/plain',
+        'text/html',
+        'text/markdown',
+        'image/svg+xml',
+        'image/png',
+        'image/jpeg',
+        'application/pdf',
+        'text/latex',
+        'application/json',
+        'application/javascript'
+      ].includes(key)) {
+        this.extra[key] = data[key]
+      }
     }
+  }
 }
 
 /**
@@ -120,7 +120,7 @@ export class Data {
  */
 export type Logs = {
   stdout: string[]
-    stderr: string[]
+  stderr: string[]
 }
 /**
  * Represents the result of a cell execution.
@@ -133,7 +133,7 @@ export class Result {
     public data: Data[],
     public logs: Logs,
     public error?: ExecutionError
-  ) {}
+  ) { }
 
   public get text(): string | undefined {
     for (const data of this.data) {
