@@ -231,8 +231,7 @@ export class JupyterExtension {
    * Close all the websocket connections to the kernels. It doesn't shutdown the kernels.
    */
   async close() {
-    // TODO: For in check
-    for (const kernelID in this.connectedKernels) {
+    for (const kernelID of Object.keys(this.connectedKernels)) {
       this.connectedKernels[kernelID].close()
     }
   }

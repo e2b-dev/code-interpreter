@@ -113,8 +113,7 @@ export class Data {
     this.raw = data
 
     this.extra = {}
-    // TODO: For in check
-    for (const key in data) {
+    for (const key of Object.keys(data)) {
       if (![
         'text/plain',
         'text/html',
