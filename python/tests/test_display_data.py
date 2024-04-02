@@ -18,6 +18,6 @@ def test_display_data():
         )
 
         # there's your image
-        data = result.display_data[0]
+        data = result.data[0]
         assert "image/png" in data
         assert "text/plain" in data
