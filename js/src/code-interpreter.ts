@@ -37,22 +37,19 @@ export class CodeInterpreter extends Sandbox {
 }
 
 export class JupyterExtension {
-  private readonly defaultKernelID: Promise<string>
-  private readonly setDefaultKernelID: (kernelID: string) => void
-  private connectedKernels: Kernels = {}
-  private sandbox: CodeInterpreter
+  private readonly connectedKernels: Kernels = {}
 
-  constructor(sandbox: CodeInterpreter) {
-    this.sandbox = sandbox
-    const { promise, resolve } = createDeferredPromise<string>()
-    this.defaultKernelID = promise
-    this.setDefaultKernelID = resolve
+  private readonly kernelIDPromise = createDeferredPromise<string>()
+  private readonly setDefaultKernelID = this.kernelIDPromise.resolve
+
+  private get defaultKernelID() {
+    return this.kernelIDPromise.promise
   }
 
+  constructor(private sandbox: CodeInterpreter) { }
+
   async connect(timeout?: number) {
-    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, {
-      timeout,
-    })
+    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, { timeout })
   }
 
   /**
@@ -72,24 +69,15 @@ export class JupyterExtension {
     onStdout?: (msg: ProcessMessage) => any,
     onStderr?: (msg: ProcessMessage) => any
   ): Promise<Result> {
-    kernelID = kernelID || (await this.defaultKernelID)
-    let ws = this.connectedKernels[kernelID]
-
-    if (!ws) {
-      const url = `${this.sandbox.getProtocol(
-        'ws'
-      )}://${this.sandbox.getHostname(8888)}/api/kernels/${kernelID}/channels`
-      ws = new JupyterKernelWebSocket(url)
-      await ws.connect()
-      this.connectedKernels[kernelID] = ws
-    }
+    kernelID = kernelID || await this.defaultKernelID
+    const ws = this.connectedKernels[kernelID] || await this.connectToKernelWS(kernelID)
 
     return await ws.sendExecutionMessage(code, onStdout, onStderr)
   }
 
   private async startConnectingToDefaultKernel(
     resolve: (value: string) => void,
-    opts?: { timeout?: number }
+    opts?: { timeout?: number },
   ) {
     const kernelID = (
       await this.sandbox.filesystem.read('/root/.jupyter/kernel_id', opts)
@@ -116,6 +104,8 @@ export class JupyterExtension {
     const ws = new JupyterKernelWebSocket(url)
     await ws.connect()
     this.connectedKernels[kernelID] = ws
+
+    return ws
   }
 
   /**
@@ -241,6 +231,7 @@ export class JupyterExtension {
    * Close all the websocket connections to the kernels. It doesn't shutdown the kernels.
    */
   async close() {
+    // TODO: For in check
     for (const kernelID in this.connectedKernels) {
       this.connectedKernels[kernelID].close()
     }
