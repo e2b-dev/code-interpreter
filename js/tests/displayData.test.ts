@@ -17,10 +17,9 @@ test('display data', async () => {
         plt.show()
         `)
 
-  // there's your image
-  const image = result.displayData[0]
-  expect(image['image/png']).toBeDefined()
-  expect(image['text/plain']).toBeDefined()
+  const image = result.data[0]
+  expect(image.png).toBeDefined()
+  expect(image.text).toBeDefined()
 
   await sandbox.close()
 })

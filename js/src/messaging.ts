@@ -9,7 +9,7 @@ import { ProcessMessage } from 'e2b'
  * @property {string} value - Value of the error.
  * @property {string} traceback - The traceback of the error.
  */
-export class Error {
+export class ExecutionError {
   name: string
   value: string
   tracebackRaw: string[]
@@ -77,6 +77,39 @@ export class Data {
   isMainResult: boolean
 
   raw: RawData
+
+    constructor(data: RawData, isMainResult: boolean) {
+        this.text = data['text/plain']
+        this.html = data['text/html']
+        this.markdown = data['text/markdown']
+        this.svg = data['image/svg+xml']
+        this.png = data['image/png']
+        this.jpeg = data['image/jpeg']
+        this.pdf = data['application/pdf']
+        this.latex = data['text/latex']
+        this.json = data['application/json']
+        this.javascript = data['application/javascript']
+        this.isMainResult = isMainResult
+        this.raw = data
+
+        this.extra = {}
+        for (const key in data) {
+          if (![
+            'text/plain',
+            'text/html',
+            'text/markdown',
+            'image/svg+xml',
+            'image/png',
+            'image/jpeg',
+            'application/pdf',
+            'text/latex',
+            'application/json',
+            'application/javascript'
+          ].includes(key)) {
+            this.extra[key] = data[key]
+          }
+        }
+    }
 }
 
 /**
@@ -93,16 +126,16 @@ export type Logs = {
  * Represents the result of a cell execution.
  * @property {Data} data - List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots.
  * @property {Logs} logs - "Logs printed to stdout and stderr during execution."
- * @property {Error | null} error - An Error object if an error occurred, null otherwise.
+ * @property {ExecutionError | null} error - An Error object if an error occurred, null otherwise.
  */
 export class Result {
   constructor(
     public data: Data[],
     public logs: Logs,
-    public error?: Error
+    public error?: ExecutionError
   ) {}
 
-  public text(): string | undefined {
+  public get text(): string | undefined {
     for (const data of this.data) {
       if (data.isMainResult) {
         return data.text
@@ -183,14 +216,14 @@ export class JupyterKernelWebSocket {
 
       const result = cell.result
       if (message.msg_type == 'error') {
-        result.error = {
-          name: message.content.ename,
-          value: message.content.evalue,
-          tracebackRaw: message.content.traceback
-        }
+        result.error = new ExecutionError(
+          message.content.ename,
+          message.content.evalue,
+          message.content.traceback,
+        )
       } else if (message.msg_type == 'stream') {
         if (message.content.name == 'stdout') {
-          result.stdout.push(message.content.text)
+          result.logs.stdout.push(message.content.text)
           if (cell?.onStdout) {
             cell.onStdout(
               new ProcessMessage(
@@ -201,7 +234,7 @@ export class JupyterKernelWebSocket {
             )
           }
         } else if (message.content.name == 'stderr') {
-          result.stderr.push(message.content.text)
+          result.logs.stderr.push(message.content.text)
           if (cell?.onStderr) {
             cell.onStderr(
               new ProcessMessage(
@@ -213,29 +246,29 @@ export class JupyterKernelWebSocket {
           }
         }
       } else if (message.msg_type == 'display_data') {
-        result.displayData.push(message.content.data)
+        result.data.push(new Data(message.content.data, false))
       } else if (message.msg_type == 'execute_result') {
-        result.result = message.content.data
+        result.data.push(new Data(message.content.data, true))
       } else if (message.msg_type == 'status') {
         if (message.content.execution_state == 'idle') {
           if (cell.inputAccepted) {
             this.idAwaiter[parentMsgId](result)
           }
         } else if (message.content.execution_state == 'error') {
-          result.error = {
-            name: message.content.ename,
-            value: message.content.evalue,
-            tracebackRaw: message.content.traceback
-          }
+          result.error = new ExecutionError(
+            message.content.ename,
+            message.content.evalue,
+            message.content.traceback,
+          )
           this.idAwaiter[parentMsgId](result)
         }
       } else if (message.msg_type == 'execute_reply') {
         if (message.content.status == 'error') {
-          result.error = {
-            name: message.content.ename,
-            value: message.content.evalue,
-            tracebackRaw: message.content.traceback
-          }
+          result.error = new ExecutionError(
+            message.content.ename,
+            message.content.evalue,
+            message.content.traceback,
+          )
         } else if (message.content.status == 'ok') {
           return
         }
@@ -248,7 +281,6 @@ export class JupyterKernelWebSocket {
   }
 
   // communication
-
   /**
    * Sends code to be executed by Jupyter kernel.
    * @param code Code to be executed.

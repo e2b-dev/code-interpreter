@@ -1,3 +1,4 @@
+import copy
 from typing import List, Optional, Iterable, Dict
 from pydantic import BaseModel
 
@@ -65,18 +66,19 @@ class Data:
 
     def __init__(self, is_main_result: bool, data: [MIMEType, str]):
         self.is_main_result = is_main_result
-        self.raw = data
+        self.raw = copy.deepcopy(data)
 
-        self.text = data["text/plain"]
-        self.html = data.get("text/html", None)
-        self.markdown = data.get("text/markdown", None)
-        self.svg = data.get("image/svg+xml", None)
-        self.png = data.get("image/png", None)
-        self.jpeg = data.get("image/jpeg", None)
-        self.pdf = data.get("application/pdf", None)
-        self.latex = data.get("text/latex", None)
-        self.json = data.get("application/json", None)
-        self.javascript = data.get("application/javascript", None)
+        self.text = data.pop("text/plain")
+        self.html = data.pop("text/html", None)
+        self.markdown = data.pop("text/markdown", None)
+        self.svg = data.pop("image/svg+xml", None)
+        self.png = data.pop("image/png", None)
+        self.jpeg = data.pop("image/jpeg", None)
+        self.pdf = data.pop("application/pdf", None)
+        self.latex = data.pop("text/latex", None)
+        self.json = data.pop("application/json", None)
+        self.javascript = data.pop("application/javascript", None)
+        self.extra = data
 
     def keys(self) -> Iterable[str]:
         """
