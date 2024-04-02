@@ -53,7 +53,7 @@ await sandbox.notebook.execCell("!pip install matplotlib")
 const result = await sandbox.notebook.execCell(code)
 
 // this contains the image data, you can e.g. save it to file or send to frontend
-result.display_data[0]["image/png"]
+result.data[0].png
 
 await sandbox.close()
 ```
