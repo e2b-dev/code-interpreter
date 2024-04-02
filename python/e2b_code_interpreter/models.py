@@ -33,18 +33,15 @@ class MIMEType(str):
 class Data:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
+    This is result returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
 
-    Dictionary that maps MIME types to their corresponding string representations of the data.
-    MIME types are used to specify the nature and format of the data, allowing for the representation
-    of various types of content such as text, images, and more. Each key in the interface is a MIME type
-    string, and its value is the data associated with that MIME type, formatted as a string.
+
+    The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
+    as a string, and the result can contain multiple types of data. The text representation is always present, and
+    the other representations are optional.
+
+    The class also provides methods to display the data in a Jupyter notebook.
     """
-    is_main_result: bool
-    "Whether this data is the main result of the cell."
-
-    raw: Dict[MIMEType, str]
-    "Dictionary that maps MIME types to their corresponding string representations of the data."
-
     text: str
     "Text representation of the data. Always present."
     html: Optional[str] = None
@@ -57,6 +54,12 @@ class Data:
     json: Optional[dict] = None
     javascript: Optional[str] = None
     extra: Optional[dict] = None
+
+    is_main_result: bool
+    "Whether this data is the main result of the cell. There can be multiple display calls in a cell."
+
+    raw: Dict[MIMEType, str]
+    "Dictionary that maps MIME types to their corresponding string representations of the data."
 
     def __init__(self, is_main_result: bool, data: [MIMEType, str]):
         self.is_main_result = is_main_result
@@ -173,7 +176,7 @@ class Logs(BaseModel):
     "List of strings printed to stderr by prints, subprocesses, etc."
 
 
-class Execution(BaseModel):
+class Result(BaseModel):
     """
     Represents the result of a cell execution.
     """
@@ -197,7 +200,7 @@ class Execution(BaseModel):
         """
         for d in self.data:
             if d.is_main_result:
-                return d.raw["text/plain"]
+                return d.text
 
 
 class KernelException(Exception):
