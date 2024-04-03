@@ -80,7 +80,7 @@ const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell(code, {
   onStdout: (out) => console.log(out),
   onStderr: (outErr) => console.error(outErr),
-  onDisplayData: (outData) => console.log(outData.text)
+  onResult: (result) => console.log(result.text)
 })
 
 await sandbox.close()

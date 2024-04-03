@@ -149,7 +149,7 @@ print("world")
 """
 
 with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_display_data=(lambda data: print(data.text)))
+    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_result=(lambda result: print(result.text)))
 
 ```
 
@@ -175,7 +175,7 @@ const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell(code, {
   onStdout: (out) => console.log(out),
   onStderr: (outErr) => console.error(outErr),
-  onDisplayData: (outData) => console.log(outData.text)
+  onResult: (result) => console.log(result.text)
 })
 
 await sandbox.close()

@@ -63,7 +63,7 @@ export class JupyterExtension {
    * @param kernelID The ID of the kernel to execute the code on. If not provided, the default kernel is used.
    * @param onStdout A callback function to handle standard output messages from the code execution.
    * @param onStderr A callback function to handle standard error messages from the code execution.
-   * @param onDisplayData A callback function to handle display data messages from the code execution.
+   * @param onResult A callback function to handle display data messages from the code execution.
    * @param timeout The maximum time to wait for the code execution to complete, in milliseconds.
    * @returns A promise that resolves with the result of the code execution.
    */
@@ -73,13 +73,13 @@ export class JupyterExtension {
       kernelID,
       onStdout,
       onStderr,
-      onDisplayData,
+      onResult,
       timeout
     }: {
       kernelID?: string
-      onStdout?: (msg: ProcessMessage) => Promise<void> | void
-      onStderr?: (msg: ProcessMessage) => Promise<void> | void
-      onDisplayData?: (data: Result) => Promise<void> | void
+      onStdout?: (msg: ProcessMessage) => any
+      onStderr?: (msg: ProcessMessage) => any
+      onResult?: (data: Result) => any
       timeout?: number
     } = {}
   ): Promise<Execution> {
@@ -92,7 +92,7 @@ export class JupyterExtension {
       code,
       onStdout,
       onStderr,
-      onDisplayData,
+      onResult,
       timeout
     )
   }

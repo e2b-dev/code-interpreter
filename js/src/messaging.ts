@@ -186,20 +186,20 @@ export class Execution {
  */
 class CellExecution {
   execution: Execution
-  onStdout?: (out: ProcessMessage) => Promise<void> | void
-  onStderr?: (out: ProcessMessage) => Promise<void> | void
-  onDisplayData?: (data: Result) => Promise<void> | void
+  onStdout?: (out: ProcessMessage) => any
+  onStderr?: (out: ProcessMessage) => any
+  onResult?: (data: Result) => any
   inputAccepted: boolean = false
 
   constructor(
-    onStdout?: (out: ProcessMessage) => Promise<void> | void,
-    onStderr?: (out: ProcessMessage) => Promise<void> | void,
-    onDisplayData?: (data: Result) => Promise<void> | void
+    onStdout?: (out: ProcessMessage) => any,
+    onStderr?: (out: ProcessMessage) => any,
+    onResult?: (data: Result) => any
   ) {
     this.execution = new Execution([], { stdout: [], stderr: [] })
     this.onStdout = onStdout
     this.onStderr = onStderr
-    this.onDisplayData = onDisplayData
+    this.onResult = onResult
   }
 }
 
@@ -295,11 +295,15 @@ export class JupyterKernelWebSocket {
       } else if (message.msg_type == 'display_data') {
         const result = new Result(message.content.data, false)
         execution.results.push(result)
-        if (cell.onDisplayData) {
-          cell.onDisplayData(result)
+        if (cell.onResult) {
+          cell.onResult(result)
         }
       } else if (message.msg_type == 'execute_result') {
-        execution.results.push(new Result(message.content.data, true))
+        const result = new Result(message.content.data, true)
+        execution.results.push(result)
+        if (cell.onResult) {
+          cell.onResult(result)
+        }
       } else if (message.msg_type == 'status') {
         if (message.content.execution_state == 'idle') {
           if (cell.inputAccepted) {
@@ -337,15 +341,15 @@ export class JupyterKernelWebSocket {
    * @param code Code to be executed.
    * @param onStdout Callback for stdout messages.
    * @param onStderr Callback for stderr messages.
-   * @param onDisplayData Callback for display data messages.
+   * @param onResult Callback function to handle the result and display calls of the code execution.
    * @param timeout Time in milliseconds to wait for response.
    * @returns Promise with execution result.
    */
   public sendExecutionMessage(
     code: string,
-    onStdout?: (out: ProcessMessage) => Promise<void> | void,
-    onStderr?: (out: ProcessMessage) => Promise<void> | void,
-    onDisplayData?: (data: Result) => Promise<void> | void,
+    onStdout?: (out: ProcessMessage) => any,
+    onStderr?: (out: ProcessMessage) => any,
+    onResult?: (data: Result) => any,
     timeout?: number
   ) {
     return new Promise<Execution>((resolve, reject) => {
@@ -367,7 +371,7 @@ export class JupyterKernelWebSocket {
       }
 
       // expect response
-      this.cells[msg_id] = new CellExecution(onStdout, onStderr, onDisplayData)
+      this.cells[msg_id] = new CellExecution(onStdout, onStderr, onResult)
       this.idAwaiter[msg_id] = (responseData: Execution) => {
         // stop timeout
         clearInterval(timeoutSet as number)

@@ -86,7 +86,7 @@ print("world")
 """
 
 with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_display_data=(lambda data: print(data.text)))
+    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_result=(lambda result: print(result.text)))
 ```
 
 ### Pre-installed Python packages inside the sandbox
