@@ -163,7 +163,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   report-failure:
-    needs: [python, js, release]
+    needs: [python-tests, js-tests, release]
     if: failure()
     name: Code Interpreter Release Failed - Slack Notification
     runs-on: ubuntu-latest
