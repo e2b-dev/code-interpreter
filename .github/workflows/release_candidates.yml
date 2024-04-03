@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') || contains( github.event.pull_request.labels.*.name, 'python-rc') }}
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
