@@ -16,163 +16,40 @@ export interface CreateKernelProps {
  */
 export class CodeInterpreter extends Sandbox {
   private static template = 'code-interpreter-stateful'
-  public notebook: JupyterExtension
+
+  readonly notebook = new JupyterExtension(this)
 
   constructor(opts?: SandboxOpts) {
     super({ template: opts?.template || CodeInterpreter.template, ...opts })
-    this.notebook = new JupyterExtension(this)
   }
 
-  /**
-   * Creates a new CodeInterpreter sandbox.
-   * @returns New CodeInterpreter sandbox
-   *
-   * @example
-   * ```ts
-   * const sandbox = await CodeInterpreter.create()
-   * ```
-   * @constructs CodeInterpreter
-   */
-  static async create<S extends typeof CodeInterpreter>(
-    this: S
-  ): Promise<InstanceType<S>>
-  /**
-   * Creates a new CodeInterpreter sandbox from the template with the specified ID.
-   * @param template Sandbox template ID or name (this extension has some specific requirements for the template, refer to docs for more info)
-   * @returns New CodeInterpreter sandbox
-   *
-   * @example
-   * ```ts
-   * const sandbox = await CodeInterpreter.create("sandboxTemplateID")
-   * ```
-   */
-  static async create<S extends typeof CodeInterpreter>(
-    this: S,
-    template: string
-  ): Promise<InstanceType<S>>
-  /**
-   * Creates a new CodeInterpreter from the specified options.
-   * @param opts Sandbox options
-   * @returns New CodeInterpreter
-   *
-   * @example
-   * ```ts
-   * const sandbox = await CodeInterpreter.create({
-   *   onStdout: console.log,
-   * })
-   * ```
-   */
-  static async create<S extends typeof CodeInterpreter>(
-    this: S,
-    opts: SandboxOpts
-  ): Promise<InstanceType<S>>
-  static async create(optsOrTemplate?: string | SandboxOpts) {
-    const opts: SandboxOpts | undefined =
-      typeof optsOrTemplate === 'string'
-        ? { template: optsOrTemplate }
-        : optsOrTemplate
-    const sandbox = new this(opts)
-    await sandbox._open({ timeout: opts?.timeout })
+  override async _open(opts?: { timeout?: number }) {
+    await super._open({ timeout: opts?.timeout })
+    await this.notebook.connect(opts?.timeout)
 
-    // Connect to the default kernel, do this in the background
-    sandbox.notebook.connect()
-
-    return sandbox
+    return this
   }
 
-  /**
-   * Reconnects to an existing CodeInterpreter.
-   * @param sandboxID Sandbox ID
-   * @returns Existing CodeInterpreter
-   *
-   * @example
-   * ```ts
-   * const sandbox = await CodeInterpreter.create()
-   * const sandboxID = sandbox.id
-   *
-   * await sandbox.keepAlive(300 * 1000)
-   * await sandbox.close()
-   *
-   * const reconnectedSandbox = await CodeInterpreter.reconnect(sandboxID)
-   * ```
-   */
-  static async reconnect<S extends typeof CodeInterpreter>(
-    this: S,
-    sandboxID: string
-  ): Promise<InstanceType<S>>
-  /**
-   * Reconnects to an existing CodeInterpreter.
-   * @param opts Sandbox options
-   * @returns Existing CodeInterpreter
-   *
-   * @example
-   * ```ts
-   * const sandbox = await CodeInterpreter.create()
-   * const sandboxID = sandbox.id
-   *
-   * await sandbox.keepAlive(300 * 1000)
-   * await sandbox.close()
-   *
-   * const reconnectedSandbox = await CodeInterpreter.reconnect({
-   *   sandboxID,
-   * })
-   * ```
-   */
-  static async reconnect<S extends typeof CodeInterpreter>(
-    this: S,
-    opts: Omit<SandboxOpts, 'id' | 'template'> & { sandboxID: string }
-  ): Promise<InstanceType<S>>
-  static async reconnect<S extends typeof CodeInterpreter>(
-    this: S,
-    sandboxIDorOpts:
-      | string
-      | (Omit<SandboxOpts, 'id' | 'template'> & { sandboxID: string })
-  ): Promise<InstanceType<S>> {
-    let id: string
-    let opts: SandboxOpts
-    if (typeof sandboxIDorOpts === 'string') {
-      id = sandboxIDorOpts
-      opts = {}
-    } else {
-      id = sandboxIDorOpts.sandboxID
-      opts = sandboxIDorOpts
-    }
-
-    const sandboxIDAndClientID = id.split('-')
-    const sandboxID = sandboxIDAndClientID[0]
-    const clientID = sandboxIDAndClientID[1]
-    opts.__sandbox = { sandboxID, clientID, templateID: 'unknown' }
-
-    const sandbox = new this(opts) as InstanceType<S>
-    await sandbox._open({ timeout: opts?.timeout })
-
-    sandbox.notebook.connect()
-    return sandbox
-  }
-
-  async close() {
+  override async close() {
     await this.notebook.close()
     await super.close()
   }
 }
 
 export class JupyterExtension {
-  private readonly defaultKernelID: Promise<string>
-  private readonly setDefaultKernelID: (kernelID: string) => void
-  private connectedKernels: Kernels = {}
-  private sandbox: CodeInterpreter
+  private readonly connectedKernels: Kernels = {}
 
-  constructor(sandbox: CodeInterpreter) {
-    this.sandbox = sandbox
-    const { promise, resolve } = createDeferredPromise<string>()
-    this.defaultKernelID = promise
-    this.setDefaultKernelID = resolve
+  private readonly kernelIDPromise = createDeferredPromise<string>()
+  private readonly setDefaultKernelID = this.kernelIDPromise.resolve
+
+  private get defaultKernelID() {
+    return this.kernelIDPromise.promise
   }
 
+  constructor(private sandbox: CodeInterpreter) { }
+
   async connect(timeout?: number) {
-    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, {
-      timeout: timeout
-    })
+    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, { timeout })
   }
 
   /**
@@ -192,24 +69,15 @@ export class JupyterExtension {
     onStdout?: (msg: ProcessMessage) => any,
     onStderr?: (msg: ProcessMessage) => any
   ): Promise<Result> {
-    kernelID = kernelID || (await this.defaultKernelID)
-    let ws = this.connectedKernels[kernelID]
-
-    if (!ws) {
-      const url = `${this.sandbox.getProtocol(
-        'ws'
-      )}://${this.sandbox.getHostname(8888)}/api/kernels/${kernelID}/channels`
-      ws = new JupyterKernelWebSocket(url)
-      await ws.connect()
-      this.connectedKernels[kernelID] = ws
-    }
+    kernelID = kernelID || await this.defaultKernelID
+    const ws = this.connectedKernels[kernelID] || await this.connectToKernelWS(kernelID)
 
     return await ws.sendExecutionMessage(code, onStdout, onStderr)
   }
 
   private async startConnectingToDefaultKernel(
     resolve: (value: string) => void,
-    opts?: { timeout?: number }
+    opts?: { timeout?: number },
   ) {
     const kernelID = (
       await this.sandbox.filesystem.read('/root/.jupyter/kernel_id', opts)
@@ -236,6 +104,8 @@ export class JupyterExtension {
     const ws = new JupyterKernelWebSocket(url)
     await ws.connect()
     this.connectedKernels[kernelID] = ws
+
+    return ws
   }
 
   /**
@@ -361,7 +231,7 @@ export class JupyterExtension {
    * Close all the websocket connections to the kernels. It doesn't shutdown the kernels.
    */
   async close() {
-    for (const kernelID in this.connectedKernels) {
+    for (const kernelID of Object.keys(this.connectedKernels)) {
       this.connectedKernels[kernelID].close()
     }
   }
