@@ -13,7 +13,7 @@ test('independence of kernels', async () => {
   const sandbox = await CodeInterpreter.create()
   await sandbox.notebook.execCell('x = 1')
   const kernelID = await sandbox.notebook.createKernel()
-  const output = await sandbox.notebook.execCell('x', kernelID)
+  const output = await sandbox.notebook.execCell('x', { kernelID })
 
   expect(output.error!.value).toEqual("name 'x' is not defined")
 

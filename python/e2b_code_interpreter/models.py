@@ -35,7 +35,7 @@ class MIMEType(str):
 class Result:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
-    This is result returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
+    The result is similar to the structure returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
 
     The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
     as a string, and the result can contain multiple types of data. The text representation is always present, and

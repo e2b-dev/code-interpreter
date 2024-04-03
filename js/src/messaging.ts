@@ -1,5 +1,6 @@
 import IWebSocket from 'isomorphic-ws'
 import { ProcessMessage } from 'e2b'
+import { id } from './utils'
 
 /**
  * Represents an error that occurred during the execution of a cell.
@@ -43,7 +44,7 @@ export type RawData = {
 
 /**
  * Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
- * This is result returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
+ * The result is similar to the structure returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
  *
  *
  * The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
@@ -348,7 +349,7 @@ export class JupyterKernelWebSocket {
     timeout?: number
   ) {
     return new Promise<Execution>((resolve, reject) => {
-      const msg_id = crypto.randomUUID()
+      const msg_id = id(16)
       const data = this.sendExecuteRequest(msg_id, code)
 
       // give limited time for response
@@ -409,7 +410,7 @@ export class JupyterKernelWebSocket {
    * @param code Code to be executed.
    */
   private sendExecuteRequest(msg_id: string, code: string) {
-    const session = crypto.randomUUID()
+    const session = id(16)
     return {
       header: {
         msg_id: msg_id,
