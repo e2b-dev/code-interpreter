@@ -39,8 +39,8 @@ from e2b_code_interpreter import CodeInterpreter
 with CodeInterpreter() as sandbox:
     sandbox.notebook.exec_cell("x = 1")
 
-    result = sandbox.notebook.exec_cell("x+=1; x")
-    print(result.text)  # outputs 2
+    execution = sandbox.notebook.exec_cell("x+=1; x")
+    print(execution.text)  # outputs 2
 
 ```
 
@@ -52,8 +52,8 @@ import { CodeInterpreter } from '@e2b/code-interpreter'
 const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell('x = 1')
 
-const result = await sandbox.notebook.execCell('x+=1; x')
-console.log(result.text)  // outputs 2
+const execution = await sandbox.notebook.execCell('x+=1; x')
+console.log(execution.text)  // outputs 2
 
 await sandbox.close()
 ```
@@ -86,10 +86,10 @@ with CodeInterpreter() as sandbox:
     sandbox.notebook.exec_cell("!pip install matplotlib")
 
     # plot random graph
-    result = sandbox.notebook.exec_cell(code)
+    execution = sandbox.notebook.exec_cell(code)
 
 # there's your image
-image = result.data[0].png
+image = execution.results[0].png
 
 # example how to show the image / prove it works
 i = base64.b64decode(image)
@@ -121,10 +121,10 @@ plt.show()
 // you can install dependencies in "jupyter notebook style"
 await sandbox.notebook.execCell("!pip install matplotlib")
 
-const result = await sandbox.notebook.execCell(code)
+const execution = await sandbox.notebook.execCell(code)
 
 // this contains the image data, you can e.g. save it to file or send to frontend
-result.data[0].png
+execution.results[0].png
 
 await sandbox.close()
 ```
@@ -138,35 +138,47 @@ from e2b_code_interpreter import CodeInterpreter
 
 code = """
 import time
+import pandas as pd
 
 print("hello")
-time.sleep(5)
+time.sleep(3)
+data = pd.DataFrame(data=[[1, 2], [3, 4]], columns=["A", "B"])
+display(data.head(10))
+time.sleep(3)
 print("world")
 """
+
 with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print)
+    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_display_data=(lambda data: print(data.text)))
+
 ```
 
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from "@e2b/code-interpreter"
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
-code = `
+const code = `
 import time
+import pandas as pd
 
 print("hello")
-time.sleep(5)
+time.sleep(3)
+data = pd.DataFrame(data=[[1, 2], [3, 4]], columns=["A", "B"])
+display(data.head(10))
+time.sleep(3)
 print("world")
 `
 
 const sandbox = await CodeInterpreter.create()
 
-await sandbox.notebook.execCell(
-  code,
-  (out) => console.log(out),
-  (outErr) => console.error(outErr),
-)
+await sandbox.notebook.execCell(code, {
+  onStdout: (out) => console.log(out),
+  onStderr: (outErr) => console.error(outErr),
+  onDisplayData: (outData) => console.log(outData.text)
+})
+
+await sandbox.close()
 ```
 
 ### Pre-installed Python packages inside the sandbox

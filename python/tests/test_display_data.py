@@ -18,6 +18,6 @@ def test_display_data():
         )
 
         # there's your image
-        data = result.data[0]
+        data = result.results[0]
         assert data.png
         assert data.text

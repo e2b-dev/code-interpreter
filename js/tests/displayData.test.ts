@@ -17,7 +17,7 @@ test('display data', async () => {
         plt.show()
         `)
 
-  const image = result.data[0]
+  const image = result.results[0]
   expect(image.png).toBeDefined()
   expect(image.text).toBeDefined()
 

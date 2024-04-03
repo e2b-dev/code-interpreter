@@ -14,7 +14,7 @@ from e2b.sandbox.websocket_client import WebSocket
 from e2b.utils.future import DeferredFuture
 from pydantic import ConfigDict, PrivateAttr, BaseModel
 
-from e2b_code_interpreter.models import Result, Data, Error, MIMEType
+from e2b_code_interpreter.models import Execution, Result, Error, MIMEType
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +36,8 @@ class CellExecution:
         on_stderr: Optional[Callable[[ProcessMessage], None]] = None,
         on_display_data: Optional[Callable[[Dict[MIMEType, str]], None]] = None,
     ):
-        self.partial_result = Result()
-        self.result = Future()
+        self.partial_result = Execution()
+        self.execution = Future()
         self.on_stdout = on_stdout
         self.on_stderr = on_stderr
         self.on_display_data = on_display_data
@@ -145,8 +145,10 @@ class JupyterKernelWebSocket(BaseModel):
         self._queue_in.put(request)
         return message_id
 
-    def get_result(self, message_id: str, timeout: Optional[float] = TIMEOUT) -> Result:
-        result = self._cells[message_id].result.result(timeout=timeout)
+    def get_result(
+        self, message_id: str, timeout: Optional[float] = TIMEOUT
+    ) -> Execution:
+        result = self._cells[message_id].execution.result(timeout=timeout)
         logger.debug(f"Got result for message: {message_id}")
         del self._cells[message_id]
         return result
@@ -167,11 +169,11 @@ class JupyterKernelWebSocket(BaseModel):
         if not cell:
             return
 
-        result = cell.partial_result
+        execution = cell.partial_result
 
         if data["msg_type"] == "error":
             logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-            result.error = Error(
+            execution.error = Error(
                 name=data["content"]["ename"],
                 value=data["content"]["evalue"],
                 traceback_raw=data["content"]["traceback"],
@@ -179,7 +181,7 @@ class JupyterKernelWebSocket(BaseModel):
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                result.logs.stdout.append(data["content"]["text"])
+                execution.logs.stdout.append(data["content"]["text"])
                 if cell.on_stdout:
                     cell.on_stdout(
                         ProcessMessage(
@@ -189,7 +191,7 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
             elif data["content"]["name"] == "stderr":
-                result.logs.stderr.append(data["content"]["text"])
+                execution.logs.stderr.append(data["content"]["text"])
                 if cell.on_stderr:
                     cell.on_stderr(
                         ProcessMessage(
@@ -200,30 +202,33 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
         elif data["msg_type"] in "display_data":
-            result.data.append(Data(is_main_result=False, data=data["content"]["data"]))
+            result = Result(is_main_result=False, data=data["content"]["data"])
+            execution.results.append(result)
             if cell.on_display_data:
-                cell.on_display_data(data["content"]["data"])
+                cell.on_display_data(result)
         elif data["msg_type"] == "execute_result":
-            result.data.append(Data(is_main_result=True, data=data["content"]["data"]))
+            execution.results.append(
+                Result(is_main_result=True, data=data["content"]["data"])
+            )
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if cell.input_accepted:
                     logger.debug(f"Cell {parent_msg_ig} finished execution")
-                    cell.result.set_result(result)
+                    cell.execution.set_result(execution)
 
             elif data["content"]["execution_state"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                result.error = Error(
+                execution.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
                     traceback_raw=data["content"]["traceback"],
                 )
-                cell.result.set_result(result)
+                cell.execution.set_result(execution)
 
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                result.error = Error(
+                execution.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
                     traceback_raw=data["content"]["traceback"],
@@ -235,8 +240,7 @@ class JupyterKernelWebSocket(BaseModel):
             logger.debug(f"Input accepted for {parent_msg_ig}")
             cell.input_accepted = True
         else:
-            logger.error(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
-            print("[UNHANDLED MESSAGE TYPE]:", data["msg_type"])
+            logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 
     def close(self):
         logger.debug("Closing WebSocket")

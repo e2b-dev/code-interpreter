@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') || contains( github.event.pull_request.labels.*.name, 'python-rc') }}
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org
@@ -43,7 +43,7 @@ jobs:
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
           npm version prerelease --preid=${{ github.head_ref }}
-          npm publish --tag rc
+          npm publish --tag rc || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -57,14 +57,14 @@ jobs:
         uses: snok/install-poetry@v1
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         with:
-          version: 1.5.1
+          version: 1.8.1
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
 
       - name: Release Candidate
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
-        working-directory: /python
+        working-directory: python
         run: |
           poetry version prerelease
           poetry build

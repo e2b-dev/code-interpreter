@@ -8,10 +8,10 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   clean: true,
   entry: {
-    index: './src/index.ts',
+    index: './src/index.ts'
   },
   esbuildOptions: (options) => {
     options.legalComments = 'none'
     return options
-  },
+  }
 })

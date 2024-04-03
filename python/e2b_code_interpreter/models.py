@@ -32,11 +32,10 @@ class MIMEType(str):
     """
 
 
-class Data:
+class Result:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
     This is result returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
-
 
     The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
     as a string, and the result can contain multiple types of data. The text representation is always present, and
@@ -44,8 +43,9 @@ class Data:
 
     The class also provides methods to display the data in a Jupyter notebook.
     """
+
     text: str
-    "Text representation of the data. Always present."
+    "Text representation of the result. Always present."
     html: Optional[str] = None
     markdown: Optional[str] = None
     svg: Optional[str] = None
@@ -180,7 +180,7 @@ class Logs(BaseModel):
     "List of strings printed to stderr by prints, subprocesses, etc."
 
 
-class Result(BaseModel):
+class Execution(BaseModel):
     """
     Represents the result of a cell execution.
     """
@@ -188,8 +188,8 @@ class Result(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    data: List[Data] = []
-    "List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots."
+    results: List[Result] = []
+    "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
     logs: Logs = Logs()
     "Logs printed to stdout and stderr during execution."
     error: Optional[Error] = None
@@ -202,7 +202,7 @@ class Result(BaseModel):
 
         :return: The text representation of the result.
         """
-        for d in self.data:
+        for d in self.results:
             if d.is_main_result:
                 return d.text
 

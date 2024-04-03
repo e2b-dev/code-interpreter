@@ -1,5 +1,5 @@
 import { ProcessMessage, Sandbox, SandboxOpts } from 'e2b'
-import {Data, JupyterKernelWebSocket, Result} from './messaging'
+import { Result, JupyterKernelWebSocket, Execution } from './messaging'
 import { createDeferredPromise } from './utils'
 
 interface Kernels {
@@ -46,10 +46,12 @@ export class JupyterExtension {
     return this.kernelIDPromise.promise
   }
 
-  constructor(private sandbox: CodeInterpreter) { }
+  constructor(private sandbox: CodeInterpreter) {}
 
   async connect(timeout?: number) {
-    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, { timeout })
+    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, {
+      timeout
+    })
   }
 
   /**
@@ -61,24 +63,43 @@ export class JupyterExtension {
    * @param kernelID The ID of the kernel to execute the code on. If not provided, the default kernel is used.
    * @param onStdout A callback function to handle standard output messages from the code execution.
    * @param onStderr A callback function to handle standard error messages from the code execution.
+   * @param onDisplayData A callback function to handle display data messages from the code execution.
+   * @param timeout The maximum time to wait for the code execution to complete, in milliseconds.
    * @returns A promise that resolves with the result of the code execution.
    */
   async execCell(
     code: string,
-    kernelID?: string,
-    onStdout?: (msg: ProcessMessage) => any,
-    onStderr?: (msg: ProcessMessage) => any,
-    onDisplayData?: (data: Data) => any
-  ): Promise<Result> {
-    kernelID = kernelID || await this.defaultKernelID
-    const ws = this.connectedKernels[kernelID] || await this.connectToKernelWS(kernelID)
+    {
+      kernelID,
+      onStdout,
+      onStderr,
+      onDisplayData,
+      timeout
+    }: {
+      kernelID?: string
+      onStdout?: (msg: ProcessMessage) => Promise<void> | void
+      onStderr?: (msg: ProcessMessage) => Promise<void> | void
+      onDisplayData?: (data: Result) => Promise<void> | void
+      timeout?: number
+    } = {}
+  ): Promise<Execution> {
+    kernelID = kernelID || (await this.defaultKernelID)
+    const ws =
+      this.connectedKernels[kernelID] ||
+      (await this.connectToKernelWS(kernelID))
 
-    return await ws.sendExecutionMessage(code, onStdout, onStderr, onDisplayData)
+    return await ws.sendExecutionMessage(
+      code,
+      onStdout,
+      onStderr,
+      onDisplayData,
+      timeout
+    )
   }
 
   private async startConnectingToDefaultKernel(
     resolve: (value: string) => void,
-    opts?: { timeout?: number },
+    opts?: { timeout?: number }
   ) {
     const kernelID = (
       await this.sandbox.filesystem.read('/root/.jupyter/kernel_id', opts)

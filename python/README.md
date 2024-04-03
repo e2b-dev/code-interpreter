@@ -21,10 +21,10 @@ pip install e2b-code-interpreter
 from e2b_code_interpreter import CodeInterpreter
 
 with CodeInterpreter() as sandbox:
-    sandbox.exec_cell("x = 1")
+    sandbox.notebook.exec_cell("x = 1")
 
-    result = sandbox.exec_cell("x += 1; x")
-    print(result.text)  # outputs 2
+    execution = sandbox.notebook.exec_cell("x+=1; x")
+    print(execution.text)  # outputs 2
 
 ```
 
@@ -51,21 +51,21 @@ plt.show()
 
 with CodeInterpreter() as sandbox:
     # you can install dependencies in "jupyter notebook style"
-    sandbox.exec_cell("!pip install matplotlib")
+    sandbox.notebook.exec_cell("!pip install matplotlib")
 
     # plot random graph
-    result = sandbox.exec_cell(code)
+    execution = sandbox.notebook.exec_cell(code)
 
-    # there's your image
-    image = result.display_data[0]["image/png"]
+# there's your image
+image = execution.results[0].png
 
-    # example how to show the image / prove it works
-    i = base64.b64decode(image)
-    i = io.BytesIO(i)
-    i = mpimg.imread(i, format='PNG')
+# example how to show the image / prove it works
+i = base64.b64decode(image)
+i = io.BytesIO(i)
+i = mpimg.imread(i, format='PNG')
 
-    plt.imshow(i, interpolation='nearest')
-    plt.show()
+plt.imshow(i, interpolation='nearest')
+plt.show()
 ```
 
 ### Streaming code output
@@ -75,14 +75,18 @@ from e2b_code_interpreter import CodeInterpreter
 
 code = """
 import time
+import pandas as pd
 
 print("hello")
-time.sleep(5)
+time.sleep(3)
+data = pd.DataFrame(data=[[1, 2], [3, 4]], columns=["A", "B"])
+display(data.head(10))
+time.sleep(3)
 print("world")
 """
 
 with CodeInterpreter() as sandbox:
-    sandbox.exec_cell(code, on_stdout=print, on_stderr=print)
+    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_display_data=(lambda data: print(data.text)))
 ```
 
 ### Pre-installed Python packages inside the sandbox

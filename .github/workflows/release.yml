@@ -114,17 +114,17 @@ jobs:
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.5.1
+          version: 1.8.1
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
 
       - uses: pnpm/action-setup@v2
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           cache: pnpm
 
       - name: Configure pnpm

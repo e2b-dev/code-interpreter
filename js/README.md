@@ -23,8 +23,8 @@ import { CodeInterpreter } from '@e2b/code-interpreter'
 const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell('x = 1')
 
-const result = await sandbox.notebook.execCell('x += 1; x')
-console.log(result.text)  // outputs 2
+const execution = await sandbox.notebook.execCell('x+=1; x')
+console.log(execution.text)  // outputs 2
 
 await sandbox.close()
 ```
@@ -45,15 +45,15 @@ y = np.sin(x)
 
 plt.plot(x, y)
 plt.show()
-`
+`;
 
 // you can install dependencies in "jupyter notebook style"
 await sandbox.notebook.execCell("!pip install matplotlib")
 
-const result = await sandbox.notebook.execCell(code)
+const execution = await sandbox.notebook.execCell(code)
 
 // this contains the image data, you can e.g. save it to file or send to frontend
-result.data[0].png
+execution.results[0].png
 
 await sandbox.close()
 ```
@@ -63,21 +63,27 @@ await sandbox.close()
 ```js
 import { CodeInterpreter } from '@e2b/code-interpreter'
 
-code = `
+const code = `
 import time
+import pandas as pd
 
 print("hello")
-time.sleep(5)
+time.sleep(3)
+data = pd.DataFrame(data=[[1, 2], [3, 4]], columns=["A", "B"])
+display(data.head(10))
+time.sleep(3)
 print("world")
-`;
+`
 
 const sandbox = await CodeInterpreter.create()
 
-await sandbox.notebook.execCell(
-  code,
-  (out) => console.log(out),
-  (outErr) => console.error(outErr),
-)
+await sandbox.notebook.execCell(code, {
+  onStdout: (out) => console.log(out),
+  onStderr: (outErr) => console.error(outErr),
+  onDisplayData: (outData) => console.log(outData.text)
+})
+
+await sandbox.close()
 ```
 
 ### Pre-installed Python packages inside the sandbox
