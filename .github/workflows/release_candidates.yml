@@ -64,7 +64,7 @@ jobs:
 
       - name: Release Candidate
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
-        working-directory: /python
+        working-directory: python
         run: |
           poetry version prerelease
           poetry build
