@@ -61,14 +61,23 @@ export class JupyterExtension {
    * @param kernelID The ID of the kernel to execute the code on. If not provided, the default kernel is used.
    * @param onStdout A callback function to handle standard output messages from the code execution.
    * @param onStderr A callback function to handle standard error messages from the code execution.
+   * @param onDisplayData A callback function to handle display data messages from the code execution.
    * @returns A promise that resolves with the result of the code execution.
    */
   async execCell(
     code: string,
-    kernelID?: string,
-    onStdout?: (msg: ProcessMessage) => any,
-    onStderr?: (msg: ProcessMessage) => any,
-    onDisplayData?: (data: Data) => any
+    {
+      kernelID,
+      onStdout,
+      onStderr,
+      onDisplayData,
+    }: {
+      kernelID?: string
+      onStdout?: (msg: ProcessMessage) => Promise<void> | void
+      onStderr?: (msg: ProcessMessage) => Promise<void> | void
+      onDisplayData?: (data: Data) => Promise<void> | void
+    }
+
   ): Promise<Result> {
     kernelID = kernelID || await this.defaultKernelID
     const ws = this.connectedKernels[kernelID] || await this.connectToKernelWS(kernelID)
