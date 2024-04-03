@@ -10,7 +10,7 @@ The repository contains a template and modules for the code interpreter sandbox.
 ## Installation
 
 ```sh
-npm install e2b_code_interpreter
+npm install @e2b/code-interpreter
 ```
 
 ## Examples
