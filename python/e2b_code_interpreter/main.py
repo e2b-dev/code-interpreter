@@ -282,6 +282,7 @@ class JupyterExtension:
             if kernel_id is None and not self._sandbox.is_open:
                 return
 
+            kernel_id = kernel_id.strip()
             logger.debug(f"Default kernel id: {kernel_id}")
             self._connect_to_kernel_ws(kernel_id, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
