@@ -37,7 +37,7 @@ class CellExecution:
         on_display_data: Optional[Callable[[Dict[MIMEType, str]], None]] = None,
     ):
         self.partial_result = Execution()
-        self.result = Future()
+        self.execution = Future()
         self.on_stdout = on_stdout
         self.on_stderr = on_stderr
         self.on_display_data = on_display_data
@@ -148,7 +148,7 @@ class JupyterKernelWebSocket(BaseModel):
     def get_result(
         self, message_id: str, timeout: Optional[float] = TIMEOUT
     ) -> Execution:
-        result = self._cells[message_id].result.result(timeout=timeout)
+        result = self._cells[message_id].execution.result(timeout=timeout)
         logger.debug(f"Got result for message: {message_id}")
         del self._cells[message_id]
         return result
@@ -169,11 +169,11 @@ class JupyterKernelWebSocket(BaseModel):
         if not cell:
             return
 
-        result = cell.partial_result
+        execution = cell.partial_result
 
         if data["msg_type"] == "error":
             logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-            result.error = Error(
+            execution.error = Error(
                 name=data["content"]["ename"],
                 value=data["content"]["evalue"],
                 traceback_raw=data["content"]["traceback"],
@@ -181,7 +181,7 @@ class JupyterKernelWebSocket(BaseModel):
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                result.logs.stdout.append(data["content"]["text"])
+                execution.logs.stdout.append(data["content"]["text"])
                 if cell.on_stdout:
                     cell.on_stdout(
                         ProcessMessage(
@@ -191,7 +191,7 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
             elif data["content"]["name"] == "stderr":
-                result.logs.stderr.append(data["content"]["text"])
+                execution.logs.stderr.append(data["content"]["text"])
                 if cell.on_stderr:
                     cell.on_stderr(
                         ProcessMessage(
@@ -202,34 +202,33 @@ class JupyterKernelWebSocket(BaseModel):
                     )
 
         elif data["msg_type"] in "display_data":
-            result.results.append(
-                Result(is_main_result=False, data=data["content"]["data"])
-            )
+            result = Result(is_main_result=False, data=data["content"]["data"])
+            execution.results.append(result)
             if cell.on_display_data:
-                cell.on_display_data(data["content"]["data"])
+                cell.on_display_data(result)
         elif data["msg_type"] == "execute_result":
-            result.results.append(
+            execution.results.append(
                 Result(is_main_result=True, data=data["content"]["data"])
             )
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if cell.input_accepted:
                     logger.debug(f"Cell {parent_msg_ig} finished execution")
-                    cell.result.set_result(result)
+                    cell.execution.set_result(execution)
 
             elif data["content"]["execution_state"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                result.error = Error(
+                execution.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
                     traceback_raw=data["content"]["traceback"],
                 )
-                cell.result.set_result(result)
+                cell.execution.set_result(execution)
 
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                result.error = Error(
+                execution.error = Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
                     traceback_raw=data["content"]["traceback"],

@@ -10,7 +10,7 @@ export default defineConfig({
     bail: 1,
     server: {},
     deps: {
-      interopDefault: true,
-    },
-  },
+      interopDefault: true
+    }
+  }
 })

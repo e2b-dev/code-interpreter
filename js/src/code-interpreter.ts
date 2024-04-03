@@ -81,7 +81,7 @@ export class JupyterExtension {
       onStderr?: (msg: ProcessMessage) => Promise<void> | void
       onDisplayData?: (data: Result) => Promise<void> | void
       timeout?: number
-    }
+    } = {}
   ): Promise<Execution> {
     kernelID = kernelID || (await this.defaultKernelID)
     const ws =

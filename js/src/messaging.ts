@@ -184,7 +184,7 @@ export class Execution {
  * It's an internal class used by JupyterKernelWebSocket.
  */
 class CellExecution {
-  result: Execution
+  execution: Execution
   onStdout?: (out: ProcessMessage) => Promise<void> | void
   onStderr?: (out: ProcessMessage) => Promise<void> | void
   onDisplayData?: (data: Result) => Promise<void> | void
@@ -195,7 +195,7 @@ class CellExecution {
     onStderr?: (out: ProcessMessage) => Promise<void> | void,
     onDisplayData?: (data: Result) => Promise<void> | void
   ) {
-    this.result = new Execution([], { stdout: [], stderr: [] })
+    this.execution = new Execution([], { stdout: [], stderr: [] })
     this.onStdout = onStdout
     this.onStderr = onStderr
     this.onDisplayData = onDisplayData
@@ -260,16 +260,16 @@ export class JupyterKernelWebSocket {
         return
       }
 
-      const result = cell.result
+      const execution = cell.execution
       if (message.msg_type == 'error') {
-        result.error = new ExecutionError(
+        execution.error = new ExecutionError(
           message.content.ename,
           message.content.evalue,
           message.content.traceback
         )
       } else if (message.msg_type == 'stream') {
         if (message.content.name == 'stdout') {
-          result.logs.stdout.push(message.content.text)
+          execution.logs.stdout.push(message.content.text)
           if (cell?.onStdout) {
             cell.onStdout(
               new ProcessMessage(
@@ -280,7 +280,7 @@ export class JupyterKernelWebSocket {
             )
           }
         } else if (message.content.name == 'stderr') {
-          result.logs.stderr.push(message.content.text)
+          execution.logs.stderr.push(message.content.text)
           if (cell?.onStderr) {
             cell.onStderr(
               new ProcessMessage(
@@ -292,28 +292,29 @@ export class JupyterKernelWebSocket {
           }
         }
       } else if (message.msg_type == 'display_data') {
-        result.results.push(new Result(message.content.data, false))
+        const result = new Result(message.content.data, false)
+        execution.results.push(result)
         if (cell.onDisplayData) {
-          cell.onDisplayData(new Result(message.content.data, false))
+          cell.onDisplayData(result)
         }
       } else if (message.msg_type == 'execute_result') {
-        result.results.push(new Result(message.content.data, true))
+        execution.results.push(new Result(message.content.data, true))
       } else if (message.msg_type == 'status') {
         if (message.content.execution_state == 'idle') {
           if (cell.inputAccepted) {
-            this.idAwaiter[parentMsgId](result)
+            this.idAwaiter[parentMsgId](execution)
           }
         } else if (message.content.execution_state == 'error') {
-          result.error = new ExecutionError(
+          execution.error = new ExecutionError(
             message.content.ename,
             message.content.evalue,
             message.content.traceback
           )
-          this.idAwaiter[parentMsgId](result)
+          this.idAwaiter[parentMsgId](execution)
         }
       } else if (message.msg_type == 'execute_reply') {
         if (message.content.status == 'error') {
-          result.error = new ExecutionError(
+          execution.error = new ExecutionError(
             message.content.ename,
             message.content.evalue,
             message.content.traceback
