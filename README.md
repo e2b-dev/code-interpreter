@@ -89,7 +89,7 @@ with CodeInterpreter() as sandbox:
     result = sandbox.notebook.exec_cell(code)
 
 # there's your image
-image = result.display_data[0]["image/png"]
+image = result.data[0].png
 
 # example how to show the image / prove it works
 i = base64.b64decode(image)
