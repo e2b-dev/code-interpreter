@@ -278,7 +278,10 @@ class JupyterExtension:
         def setup_default_kernel():
             kernel_id = self._sandbox.filesystem.read(
                 "/root/.jupyter/kernel_id", timeout=timeout
-            ).strip()
+            )
+            if kernel_id is None and not self._sandbox.is_open:
+                return
+
             logger.debug(f"Default kernel id: {kernel_id}")
             self._connect_to_kernel_ws(kernel_id, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
