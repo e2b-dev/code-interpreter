@@ -18,8 +18,8 @@ export class ExecutionError {
     /**
      * The raw traceback of the error.
      **/
-    public tracebackRaw: string[],
-  ) { }
+    public tracebackRaw: string[]
+  ) {}
 
   /**
    * Returns the traceback of the error as a string.
@@ -50,9 +50,9 @@ export type RawData = {
  * as a string, and the result can contain multiple types of data. The text representation is always present, and
  * the other representations are optional.
  */
-export class Data {
+export class Result {
   /**
-   * Text representation of the data. Always present.
+   * Text representation of the result. Always present.
    */
   readonly text: string
   /**
@@ -114,18 +114,20 @@ export class Data {
 
     this.extra = {}
     for (const key of Object.keys(data)) {
-      if (![
-        'text/plain',
-        'text/html',
-        'text/markdown',
-        'image/svg+xml',
-        'image/png',
-        'image/jpeg',
-        'application/pdf',
-        'text/latex',
-        'application/json',
-        'application/javascript'
-      ].includes(key)) {
+      if (
+        ![
+          'text/plain',
+          'text/html',
+          'text/markdown',
+          'image/svg+xml',
+          'image/png',
+          'image/jpeg',
+          'application/pdf',
+          'text/latex',
+          'application/json',
+          'application/javascript'
+        ].includes(key)
+      ) {
         this.extra[key] = data[key]
       }
     }
@@ -149,12 +151,12 @@ export type Logs = {
 /**
  * Represents the result of a cell execution.
  */
-export class Result {
+export class Execution {
   constructor(
     /**
-     * List of result of the cell (interactively interpreted last line), display calls, e.g. matplotlib plots.
+     * List of result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots).
      */
-    public data: Data[],
+    public results: Result[],
     /**
      * Logs printed to stdout and stderr during execution.
      */
@@ -162,14 +164,14 @@ export class Result {
     /**
      * An Error object if an error occurred, null otherwise.
      */
-    public error?: ExecutionError,
-  ) { }
+    public error?: ExecutionError
+  ) {}
 
   /**
    * Returns the text representation of the main result of the cell.
    */
   get text(): string | undefined {
-    for (const data of this.data) {
+    for (const data of this.results) {
       if (data.isMainResult) {
         return data.text
       }
@@ -182,18 +184,18 @@ export class Result {
  * It's an internal class used by JupyterKernelWebSocket.
  */
 class CellExecution {
-  result: Result
+  result: Execution
   onStdout?: (out: ProcessMessage) => Promise<void> | void
   onStderr?: (out: ProcessMessage) => Promise<void> | void
-  onDisplayData?: (data: Data) => Promise<void> | void
+  onDisplayData?: (data: Result) => Promise<void> | void
   inputAccepted: boolean = false
 
   constructor(
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
     onStderr?: (out: ProcessMessage) => Promise<void> | void,
-    onDisplayData?: (data: Data) => Promise<void> | void
+    onDisplayData?: (data: Result) => Promise<void> | void
   ) {
-    this.result = new Result([], { stdout: [], stderr: [] })
+    this.result = new Execution([], { stdout: [], stderr: [] })
     this.onStdout = onStdout
     this.onStderr = onStderr
     this.onDisplayData = onDisplayData
@@ -230,7 +232,7 @@ export class JupyterKernelWebSocket {
    * Does not start WebSocket connection!
    * You need to call connect() method first.
    */
-  constructor(private readonly url: string) { }
+  constructor(private readonly url: string) {}
 
   // public
   /**
@@ -263,7 +265,7 @@ export class JupyterKernelWebSocket {
         result.error = new ExecutionError(
           message.content.ename,
           message.content.evalue,
-          message.content.traceback,
+          message.content.traceback
         )
       } else if (message.msg_type == 'stream') {
         if (message.content.name == 'stdout') {
@@ -290,12 +292,12 @@ export class JupyterKernelWebSocket {
           }
         }
       } else if (message.msg_type == 'display_data') {
-        result.data.push(new Data(message.content.data, false))
+        result.results.push(new Result(message.content.data, false))
         if (cell.onDisplayData) {
-          cell.onDisplayData(new Data(message.content.data, false))
+          cell.onDisplayData(new Result(message.content.data, false))
         }
       } else if (message.msg_type == 'execute_result') {
-        result.data.push(new Data(message.content.data, true))
+        result.results.push(new Result(message.content.data, true))
       } else if (message.msg_type == 'status') {
         if (message.content.execution_state == 'idle') {
           if (cell.inputAccepted) {
@@ -305,7 +307,7 @@ export class JupyterKernelWebSocket {
           result.error = new ExecutionError(
             message.content.ename,
             message.content.evalue,
-            message.content.traceback,
+            message.content.traceback
           )
           this.idAwaiter[parentMsgId](result)
         }
@@ -314,7 +316,7 @@ export class JupyterKernelWebSocket {
           result.error = new ExecutionError(
             message.content.ename,
             message.content.evalue,
-            message.content.traceback,
+            message.content.traceback
           )
         } else if (message.content.status == 'ok') {
           return
@@ -322,7 +324,7 @@ export class JupyterKernelWebSocket {
       } else if (message.msg_type == 'execute_input') {
         cell.inputAccepted = true
       } else {
-        console.log('[UNHANDLED MESSAGE TYPE]:', message.msg_type)
+        console.warn('[UNHANDLED MESSAGE TYPE]:', message.msg_type)
       }
     }
   }
@@ -341,10 +343,10 @@ export class JupyterKernelWebSocket {
     code: string,
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
     onStderr?: (out: ProcessMessage) => Promise<void> | void,
-    onDisplayData?: (data: Data) => Promise<void> | void,
+    onDisplayData?: (data: Result) => Promise<void> | void,
     timeout?: number
   ) {
-    return new Promise<Result>((resolve, reject) => {
+    return new Promise<Execution>((resolve, reject) => {
       const msg_id = crypto.randomUUID()
       const data = this.sendExecuteRequest(msg_id, code)
 
@@ -364,7 +366,7 @@ export class JupyterKernelWebSocket {
 
       // expect response
       this.cells[msg_id] = new CellExecution(onStdout, onStderr, onDisplayData)
-      this.idAwaiter[msg_id] = (responseData: Result) => {
+      this.idAwaiter[msg_id] = (responseData: Execution) => {
         // stop timeout
         clearInterval(timeoutSet as number)
         // stop waiting for response
@@ -383,7 +385,6 @@ export class JupyterKernelWebSocket {
    */
   private listen() {
     return new Promise((resolve, reject) => {
-
       this.ws.onopen = (e: unknown) => {
         resolve(e)
       }

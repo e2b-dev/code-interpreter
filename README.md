@@ -89,7 +89,7 @@ with CodeInterpreter() as sandbox:
     result = sandbox.notebook.exec_cell(code)
 
 # there's your image
-image = result.data[0].png
+image = result.results[0].png
 
 # example how to show the image / prove it works
 i = base64.b64decode(image)
@@ -150,7 +150,7 @@ with CodeInterpreter() as sandbox:
 #### JavaScript
 
 ```js
-import { CodeInterpreter } from "@e2b/code-interpreter"
+import { CodeInterpreter } from '@e2b/code-interpreter'
 
 code = `
 import time
@@ -162,11 +162,12 @@ print("world")
 
 const sandbox = await CodeInterpreter.create()
 
-await sandbox.notebook.execCell(
-  code,
-  (out) => console.log(out),
-  (outErr) => console.error(outErr),
-)
+await sandbox.notebook.execCell(code, {
+  onStdout: (out) => console.log(out),
+  onStderr: (outErr) => console.error(outErr)
+  onDisplayData: (outData) => console.log(data.text)
+})
+
 ```
 
 ### Pre-installed Python packages inside the sandbox

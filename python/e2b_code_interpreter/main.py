@@ -10,7 +10,7 @@ from e2b import EnvVars, ProcessMessage, Sandbox
 from e2b.constants import TIMEOUT
 
 from e2b_code_interpreter.messaging import JupyterKernelWebSocket
-from e2b_code_interpreter.models import KernelException, Result
+from e2b_code_interpreter.models import KernelException, Execution
 
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class JupyterExtension:
         on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
         on_display_data: Optional[Callable[[Dict[str, Any]], Any]] = None,
         timeout: Optional[float] = TIMEOUT,
-    ) -> Result:
+    ) -> Execution:
         """
         Execute code in a notebook cell.
 
@@ -93,7 +93,9 @@ class JupyterExtension:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
             ws = self._connect_to_kernel_ws(kernel_id, timeout=timeout)
 
-        session_id = ws.send_execution_message(code, on_stdout, on_stderr, on_display_data)
+        session_id = ws.send_execution_message(
+            code, on_stdout, on_stderr, on_display_data
+        )
         logger.debug(
             f"Sent execution message to kernel {kernel_id}, session_id: {session_id}"
         )
