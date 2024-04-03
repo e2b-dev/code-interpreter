@@ -43,7 +43,7 @@ jobs:
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
           npm version prerelease --preid=${{ github.head_ref }}
-          npm publish --tag rc
+          npm publish --tag rc || true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
