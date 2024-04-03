@@ -1,5 +1,5 @@
 import { ProcessMessage, Sandbox, SandboxOpts } from 'e2b'
-import { JupyterKernelWebSocket, Result } from './messaging'
+import {Data, JupyterKernelWebSocket, Result} from './messaging'
 import { createDeferredPromise } from './utils'
 
 interface Kernels {
@@ -67,12 +67,13 @@ export class JupyterExtension {
     code: string,
     kernelID?: string,
     onStdout?: (msg: ProcessMessage) => any,
-    onStderr?: (msg: ProcessMessage) => any
+    onStderr?: (msg: ProcessMessage) => any,
+    onDisplayData?: (data: Data) => any
   ): Promise<Result> {
     kernelID = kernelID || await this.defaultKernelID
     const ws = this.connectedKernels[kernelID] || await this.connectToKernelWS(kernelID)
 
-    return await ws.sendExecutionMessage(code, onStdout, onStderr)
+    return await ws.sendExecutionMessage(code, onStdout, onStderr, onDisplayData)
   }
 
   private async startConnectingToDefaultKernel(

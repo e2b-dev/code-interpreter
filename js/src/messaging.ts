@@ -185,15 +185,18 @@ class CellExecution {
   result: Result
   onStdout?: (out: ProcessMessage) => Promise<void> | void
   onStderr?: (out: ProcessMessage) => Promise<void> | void
+  onDisplayData?: (data: Data) => Promise<void> | void
   inputAccepted: boolean = false
 
   constructor(
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
-    onStderr?: (out: ProcessMessage) => Promise<void> | void
+    onStderr?: (out: ProcessMessage) => Promise<void> | void,
+    onDisplayData?: (data: Data) => Promise<void> | void
   ) {
     this.result = new Result([], { stdout: [], stderr: [] })
     this.onStdout = onStdout
     this.onStderr = onStderr
+    this.onDisplayData = onDisplayData
   }
 }
 
@@ -288,6 +291,9 @@ export class JupyterKernelWebSocket {
         }
       } else if (message.msg_type == 'display_data') {
         result.data.push(new Data(message.content.data, false))
+        if (cell.onDisplayData) {
+          cell.onDisplayData(new Data(message.content.data, false))
+        }
       } else if (message.msg_type == 'execute_result') {
         result.data.push(new Data(message.content.data, true))
       } else if (message.msg_type == 'status') {
@@ -327,6 +333,7 @@ export class JupyterKernelWebSocket {
    * @param code Code to be executed.
    * @param onStdout Callback for stdout messages.
    * @param onStderr Callback for stderr messages.
+   * @param onDisplayData Callback for display data messages.
    * @param timeout Time in milliseconds to wait for response.
    * @returns Promise with execution result.
    */
@@ -334,6 +341,7 @@ export class JupyterKernelWebSocket {
     code: string,
     onStdout?: (out: ProcessMessage) => Promise<void> | void,
     onStderr?: (out: ProcessMessage) => Promise<void> | void,
+    onDisplayData?: (data: Data) => Promise<void> | void,
     timeout?: number
   ) {
     return new Promise<Result>((resolve, reject) => {
@@ -355,7 +363,7 @@ export class JupyterKernelWebSocket {
       }
 
       // expect response
-      this.cells[msg_id] = new CellExecution(onStdout, onStderr)
+      this.cells[msg_id] = new CellExecution(onStdout, onStderr, onDisplayData)
       this.idAwaiter[msg_id] = (responseData: Result) => {
         // stop timeout
         clearInterval(timeoutSet as number)
