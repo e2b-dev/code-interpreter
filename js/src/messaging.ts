@@ -25,7 +25,7 @@ export class ExecutionError {
   /**
    * Returns the traceback of the error as a string.
    */
-  traceback(): string {
+  get traceback(): string {
     return this.tracebackRaw.join('\n')
   }
 }
