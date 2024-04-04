@@ -133,6 +133,48 @@ export class Result {
       }
     }
   }
+
+  /**
+   * Returns all the formats available for the result.
+   *
+   * @returns Array of strings representing the formats available for the result.
+   */
+  formats(): string[] {
+    const formats = []
+    if (this.html) {
+      formats.push('html')
+    }
+    if (this.markdown) {
+      formats.push('markdown')
+    }
+    if (this.svg) {
+      formats.push('svg')
+    }
+    if (this.png) {
+      formats.push('png')
+    }
+    if (this.jpeg) {
+      formats.push('jpeg')
+    }
+    if (this.pdf) {
+      formats.push('pdf')
+    }
+    if (this.latex) {
+      formats.push('latex')
+    }
+    if (this.json) {
+      formats.push('json')
+    }
+    if (this.javascript) {
+      formats.push('javascript')
+    }
+
+    for (const key of Object.keys(this.extra)) {
+      formats.push(key)
+    }
+
+    return formats
+  }
 }
 
 /**

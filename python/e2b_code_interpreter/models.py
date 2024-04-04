@@ -80,13 +80,36 @@ class Result:
         self.javascript = data.pop("application/javascript", None)
         self.extra = data
 
-    def keys(self) -> Iterable[str]:
+    def formats(self) -> Iterable[str]:
         """
-        Returns the MIME types of the data.
+        Returns all available formats of the result.
 
-        :return: The MIME types of the data.
+        :return: All available formats of the result in MIME types.
         """
-        return self.raw.keys()
+        formats = []
+        if self.html:
+            formats.append("html")
+        if self.markdown:
+            formats.append("markdown")
+        if self.svg:
+            formats.append("svg")
+        if self.png:
+            formats.append("png")
+        if self.jpeg:
+            formats.append("jpeg")
+        if self.pdf:
+            formats.append("pdf")
+        if self.latex:
+            formats.append("latex")
+        if self.json:
+            formats.append("json")
+        if self.javascript:
+            formats.append("javascript")
+
+        for key in self.extra:
+            formats.append(key)
+
+        return formats
 
     def __str__(self) -> str:
         """
