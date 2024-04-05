@@ -79,6 +79,12 @@ class Result:
         self.javascript = data.pop("application/javascript", None)
         self.extra = data
 
+    # Allows to iterate over formats()
+    def __getitem__(self, item):
+        if item in self.raw:
+            return self.raw[item]
+        return getattr(self, item)
+
     def formats(self) -> Iterable[str]:
         """
         Returns all available formats of the result.
