@@ -38,14 +38,13 @@ class Result:
     The result is similar to the structure returned by ipython kernel: https://ipython.readthedocs.io/en/stable/development/execution.html#execution-semantics
 
     The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
-    as a string, and the result can contain multiple types of data. The text representation is always present, and
-    the other representations are optional.
+    as a string, and the result can contain multiple types of data. The display calls don't have to have text representation,
+    for the actual result the representation is always present for the result, the other representations are always optional.
 
     The class also provides methods to display the data in a Jupyter notebook.
     """
 
-    text: str
-    "Text representation of the result. Always present."
+    text: Optional[str] = None
     html: Optional[str] = None
     markdown: Optional[str] = None
     svg: Optional[str] = None
@@ -68,7 +67,7 @@ class Result:
         self.is_main_result = is_main_result
         self.raw = copy.deepcopy(data)
 
-        self.text = data.pop("text/plain")
+        self.text = data.pop("text/plain", None)
         self.html = data.pop("text/html", None)
         self.markdown = data.pop("text/markdown", None)
         self.svg = data.pop("image/svg+xml", None)
@@ -111,7 +110,7 @@ class Result:
 
         return formats
 
-    def __str__(self) -> str:
+    def __str__(self) -> Optional[str]:
         """
         Returns the text representation of the data.
 
@@ -119,7 +118,7 @@ class Result:
         """
         return self.text
 
-    def _repr_html_(self) -> str:
+    def _repr_html_(self) -> Optional[str]:
         """
         Returns the HTML representation of the data.
 
@@ -127,7 +126,7 @@ class Result:
         """
         return self.html
 
-    def _repr_markdown_(self) -> str:
+    def _repr_markdown_(self) -> Optional[str]:
         """
         Returns the Markdown representation of the data.
 
@@ -135,7 +134,7 @@ class Result:
         """
         return self.markdown
 
-    def _repr_svg_(self) -> str:
+    def _repr_svg_(self) -> Optional[str]:
         """
         Returns the SVG representation of the data.
 
@@ -143,7 +142,7 @@ class Result:
         """
         return self.svg
 
-    def _repr_png_(self) -> str:
+    def _repr_png_(self) -> Optional[str]:
         """
         Returns the base64 representation of the PNG data.
 
@@ -151,7 +150,7 @@ class Result:
         """
         return self.png
 
-    def _repr_jpeg_(self) -> str:
+    def _repr_jpeg_(self) -> Optional[str]:
         """
         Returns the base64 representation of the JPEG data.
 
@@ -159,7 +158,7 @@ class Result:
         """
         return self.jpeg
 
-    def _repr_pdf_(self) -> str:
+    def _repr_pdf_(self) -> Optional[str]:
         """
         Returns the PDF representation of the data.
 
@@ -167,7 +166,7 @@ class Result:
         """
         return self.pdf
 
-    def _repr_latex_(self) -> str:
+    def _repr_latex_(self) -> Optional[str]:
         """
         Returns the LaTeX representation of the data.
 
@@ -175,7 +174,7 @@ class Result:
         """
         return self.latex
 
-    def _repr_json_(self) -> dict:
+    def _repr_json_(self) -> Optional[dict]:
         """
         Returns the JSON representation of the data.
 
@@ -183,7 +182,7 @@ class Result:
         """
         return self.json
 
-    def _repr_javascript_(self) -> str:
+    def _repr_javascript_(self) -> Optional[str]:
         """
         Returns the JavaScript representation of the data.
 

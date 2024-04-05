@@ -48,14 +48,14 @@ export type RawData = {
  *
  *
  * The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
- * as a string, and the result can contain multiple types of data. The text representation is always present, and
- * the other representations are optional.
+ * as a string, and the result can contain multiple types of data. The display calls don't have to have text representation,
+ * for the actual result the representation is always present for the result, the other representations are always optional.
  */
 export class Result {
   /**
-   * Text representation of the result. Always present.
+   * Text representation of the result.
    */
-  readonly text: string
+  readonly text?: string
   /**
    * HTML representation of the data.
    */
