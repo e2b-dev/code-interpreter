@@ -1,4 +1,4 @@
-name: Build and push Code Interpreter templates
+name: Build and push Code Interpreter template
 
 on:
   push:
