@@ -27,3 +27,13 @@ RUN chmod +x /home/user/.jupyter/start-up.sh
 ```yaml
 start_cmd = "/home/user/.jupyter/start-up.sh"
 ```  
+
+## Use E2B code interpreter image
+
+Alternatively you can use prebuilt E2B Code Interpreter image. You can find it on Docker Hub: [e2b/code-interpreter](https://hub.docker.com/r/e2bdev/code-interpreter). You can simply write
+
+```Dockerfile
+FROM e2bdev/code-interpreter:latest
+```
+
+instead of the step `1` and `2` above. You still HAVE TO add the `start_cmd` option to your `e2b.toml` or `e2b template build` command.
