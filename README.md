@@ -1,4 +1,4 @@
-# Stateful code interpreter
+# Code Interpreter SDK
 
 The repository contains a template and modules for the code interpreter sandbox. It is based on the Jupyter server and implements the Jupyter Kernel messaging protocol. This allows for sharing context between code executions and improves support for plotting charts and other display-able data.
 
