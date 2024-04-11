@@ -8,6 +8,8 @@ The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2
 - ✅ Runs on serverless and edge functions
 - ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
 
+Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
+
 <img width="1200" alt="Post-02" src="https://github.com/e2b-dev/code-interpreter/assets/5136688/2fa8c371-f03c-4186-b0b6-4151e68b0539">
 
 ## Installation
