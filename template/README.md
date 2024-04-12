@@ -6,7 +6,7 @@ This template runs a Jupyter server with a Python kernel. The jupyter server is 
 
 If you want to add another packages, another kernels or simply change some configuration and still use CodeInterpreter SDK, you will need to follow these steps:
 
-1. Copy `jupyter_server_config.py`, `ipython_kernel_config.py` and `start-up.sh` from this folder.
+1. Copy `jupyter_server_config.py`, `ipython_kernel_config.py` and `start-up.sh` from [this folder](./).
 2. Add following commands in your Dockerfile
 
 ```Dockerfile
