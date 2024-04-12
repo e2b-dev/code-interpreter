@@ -16,7 +16,7 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
 
 4. Run the following in the same directory where's your `e2b.toml`
     ```sh
-    e2b template build -c "/home/user/.jupyter/start-up.sh"` 
+    e2b template build -c "/home/user/.jupyter/start-up.sh"
     ```
 
 5. Use your custom sandbox with Code Interpreter SDK
