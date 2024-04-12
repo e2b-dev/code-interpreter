@@ -28,7 +28,7 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
    execution = sandbox.notebook.exec_cell("print('hello')")
    sandbox.close()
 
-   # Or you can use `with`
+   # Or you can use `with` which handles closing the sandbox for you
    with CodeInterpreter("your-custom-sandbox-name") as sandbox:
        execution = sandbox.notebook.exec_cell("print('hello')")
    ```
