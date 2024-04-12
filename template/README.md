@@ -6,7 +6,7 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
 ## Step-by-step guide
 1. Create custom sandbox by following [this guide](https://e2b.dev/docs/guide/custom-sandbox)
 
-2. Use prebuilt [E2B Code Interpreter image](https://hub.docker.com/r/e2bdev/code-interpreter) by adding the following to your `e2b.Dockerfile`
+2. Use prebuilt [E2B Code Interpreter image](https://hub.docker.com/r/e2bdev/code-interpreter) by replacing the `FROM` command in your `e2b.Dockerfile` with following
 
     ```Dockerfile
     FROM e2bdev/code-interpreter:latest
