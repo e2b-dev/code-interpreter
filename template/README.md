@@ -1,39 +1,39 @@
-# Code Interpreter template
+# Using custom sandbox with Code Interpreter SDK
 
-This template runs a Jupyter server with a Python kernel. The jupyter server is started in `start_cmd`, this way the server will be already running when the sandbox is started.
+If you want to customize the Code Interprerter sandbox (e.g.: add a preinstlled package) you can do that by using a [custom sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
 
-## Customization
+1. Create custom sandbox by following [this guide](https://e2b.dev/docs/guide/custom-sandbox)
 
-If you want to add another packages, another kernels or simply change some configuration and still use CodeInterpreter SDK, you will need to follow these steps:
+2. Use prebuilt [E2B Code Interpreter image](https://hub.docker.com/r/e2bdev/code-interpreter). Add this to your `e2b.Dockerfile`
 
-1. Copy `jupyter_server_config.py`, `ipython_kernel_config.py` and `start-up.sh` from [this folder](./).
-2. Add following commands in your Dockerfile
+    ```Dockerfile
+    FROM e2bdev/code-interpreter:latest
+    ```
 
-```Dockerfile
-# Installs jupyter server and kernel
-RUN pip install jupyter-server ipykernel ipython
-RUN ipython kernel install --name "python3" --user
+3. Copy [`start-up.sh`](./start-up.sh) to the same directory where's your `e2b.toml`
 
-# Copies jupyter server config
-COPY ./jupyter_server_config.py /home/user/.jupyter/
+4. Run the following in the directory with `e2b.toml`
+    ```sh
+    e2b template build -c "/home/user/.jupyter/start-up.sh"` 
+    ```
 
-# Setups jupyter server
-COPY ./start-up.sh /home/user/.jupyter/
-RUN chmod +x /home/user/.jupyter/start-up.sh
-```
+5. Use your custom sandbox with Code Interpreter SDK
 
-3. Add the following option `-c "/home/user/.jupyter/start-up.sh"` to `e2b template build` command or add this line to your `e2b.toml`.
+   **Python**
+   ```python
+   from e2b_code_interpreter import CodeInterpreter
+   sandbox = CodeInterpreter("your-custom-sandbox-name")
+   execution = sandbox.notebook.exec_cell("print('hello')")
 
-```yaml
-start_cmd = "/home/user/.jupyter/start-up.sh"
-```  
+   # Or you can use `with`
+   with CodeInterpreter("your-custom-sandbox-name") as sandbox:
+       execution = sandbox.notebook.exec_cell("print('hello')")
+   ```
+   
 
-## Use E2B code interpreter image
-
-Alternatively you can use prebuilt E2B Code Interpreter image. You can find it on Docker Hub: [e2b/code-interpreter](https://hub.docker.com/r/e2bdev/code-interpreter). You can simply write
-
-```Dockerfile
-FROM e2bdev/code-interpreter:latest
-```
-
-instead of the step `1` and `2` above. You still HAVE TO add the `start_cmd` option to your `e2b.toml` or `e2b template build` command.
+   **JavaScript/TypeScript**
+   ```js
+   import { CodeInterpreter } from '@e2b/code-interpreter'
+   const sandbox = await CodeInterpreter.create('your-custom-sandbox-name')
+   const execution = await sandbox.notebook.execCell('print("hello")')
+   ```
