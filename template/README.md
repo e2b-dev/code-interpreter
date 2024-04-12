@@ -1,6 +1,6 @@
 # Using custom sandbox with Code Interpreter SDK
 
-If you want to customize the Code Interprerter sandbox (e.g.: add a preinstlled package) you can do that by using a [custom sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
+If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled package) you can do that by using a [custom sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
 
 1. Create custom sandbox by following [this guide](https://e2b.dev/docs/guide/custom-sandbox)
 
