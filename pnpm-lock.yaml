@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: ^0.13.1
-        version: 0.13.1(openai@4.29.2)
+        specifier: ^0.13.2
+        version: 0.13.2(openai@4.29.2)
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.16.0)
@@ -2175,8 +2175,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /e2b@0.13.1(openai@4.29.2):
-    resolution: {integrity: sha512-JHm3FUaGNzErrhbD8YrRLZO5pOPGUSm8b9HeEWqutgPmIgVg8v2x/9/8t0Wepwyzep2zmNU+lVQrEB8HlFNjHQ==}
+  /e2b@0.13.2(openai@4.29.2):
+    resolution: {integrity: sha512-j7odssVvVCmLGWQ4gxP5EeoKyDUSA/AMUHdOJZvUNV2ziNr7LYsdUlVRgV021841PyaeZuBOMzsV3SW5bujH7Q==}
     engines: {node: '>=18'}
     peerDependencies:
       openai: ^4.17.4

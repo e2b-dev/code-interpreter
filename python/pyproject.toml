@@ -12,7 +12,7 @@ packages = [{ include = "e2b_code_interpreter" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 
-e2b = ">=0.14.11"
+e2b = ">=0.14.14"
 pydantic = ">1, <3"
 websocket-client = "^1.7.0"
 
