@@ -12,23 +12,62 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
 
 <img width="1200" alt="Post-02" src="https://github.com/e2b-dev/code-interpreter/assets/5136688/2fa8c371-f03c-4186-b0b6-4151e68b0539">
 
-## Custom E2B sandbox with Code Interpreter SDK
+## Getting started
 
-Follow [this guide](./template/README.md) if you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled package). The customization is done via [custom E2B sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
+### 1. Get your E2B API key
+1. [Sign up](https://e2b.dev/docs/sign-in?view=sign-up)
+2. [Get your API key](https://e2b.dev/docs/getting-started/api-key)
 
-## Installation
+### 2. Install the SDK
 
-### Python
+**Python**
 
 ```sh
 pip install e2b-code-interpreter
 ```
 
-### JavaScript
+**JavaScript**
 
 ```sh
 npm install @e2b/code-interpreter
 ```
+
+### 3. Run the code interpreter
+
+**Python**
+
+```python
+from e2b_code_interpreter import CodeInterpreter
+
+with CodeInterpreter() as sandbox:
+    sandbox.notebook.exec_cell("x = 1")
+
+    execution = sandbox.notebook.exec_cell("x+=1; x")
+    print(execution.text)  # outputs 2
+
+```
+
+**JavaScript**
+
+```js
+import { CodeInterpreter } from '@e2b/code-interpreter'
+
+const sandbox = await CodeInterpreter.create()
+await sandbox.notebook.execCell('x = 1')
+
+const execution = await sandbox.notebook.execCell('x+=1; x')
+console.log(execution.text)  // outputs 2
+
+await sandbox.close()
+```
+
+---
+
+## How to customize the code interpreter sandbox
+
+Follow [this guide](./template/README.md) if you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled package). The customization is done via [custom E2B sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
+
+---
 
 ## Examples
 
