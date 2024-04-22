@@ -16,6 +16,10 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
 
 ## Getting started
 
+### 🧑‍🍳 0. Cookbook
+- [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter/claude_code_interpreter.ipynb)
+- 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter)
+
 ### 1. Get your E2B API key
 1. [Sign up](https://e2b.dev/docs/sign-in?view=sign-up)
 2. [Get your API key](https://e2b.dev/docs/getting-started/api-key)
