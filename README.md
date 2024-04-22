@@ -1,4 +1,6 @@
 # Code Interpreter SDK
+Built with [E2B](https://github.com/e2b-dev/e2b).
+
 
 This Code Interpreter SDK allows you to run AI-generated Python code and each run share the context. That means that subsequent runs can reference to variables, definitions, etc from past code execution runs.
 The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2b) - an open-source secure micro VM made for running untrusted AI-generated code and AI agents.
