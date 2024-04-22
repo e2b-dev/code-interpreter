@@ -18,6 +18,10 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
 - [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter/claude_code_interpreter.ipynb)
 - 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter)
 
+## 💻 Supported runtime languages
+- ✅ Python
+- (soon) JavaScript/TypeScript 
+
 ## 🚀 Getting started
 
 ### 1. Get your E2B API key
