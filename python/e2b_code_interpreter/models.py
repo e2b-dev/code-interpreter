@@ -1,6 +1,6 @@
 import copy
 from typing import List, Optional, Iterable, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 
 class Error(BaseModel):
@@ -233,6 +233,25 @@ class Execution(BaseModel):
         for d in self.results:
             if d.is_main_result:
                 return d.text
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Execution object.
+        """
+        return self.model_dump_json(exclude_none=True)
+
+    @field_serializer("results", when_used="json")
+    def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
+        """
+        Serializes the results to JSON.
+        This method is used by the Pydantic JSON encoder.
+        """
+        serialized = []
+        for result in results:
+            serialized_dict = {key: result[key] for key in result.formats()}
+            serialized_dict['text'] = result.text
+            serialized.append(serialized_dict)
+        return serialized
 
 
 class KernelException(Exception):
