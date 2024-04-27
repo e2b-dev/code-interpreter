@@ -1,13 +1,18 @@
 # Code Interpreter SDK
-Built with [E2B](https://github.com/e2b-dev/e2b).
+E2B's [Code Interpreter SDK](https://github.com/e2b-dev/code-interpreter) allows you to add code interpreting capabilities to your AI apps.
 
+With code interpreting, you can build apps like:
+- AI code execution
+- Data analysis with AI
+- AI tutors
+- Reasoning modules for LLM
 
-This Code Interpreter SDK allows you to run AI-generated Python code and each run share the context. That means that subsequent runs can reference to variables, definitions, etc from past code execution runs.
 The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2b) - an open-source secure micro VM made for running untrusted AI-generated code and AI agents.
 - ✅ Works with any LLM and AI framework
 - ✅ Supports streaming content like charts and stdout, stderr
 - ✅ Python & JS SDK
 - ✅ Runs on serverless and edge functions
+- ✅ Runs AI-generated code in a secure sandboxed environment powered by [E2B](https://github.com/e2b-dev/e2b)
 - ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
 
 Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
