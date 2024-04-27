@@ -34,12 +34,12 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
 - ✅ Python
 - (soon) JavaScript/TypeScript 
 
-## 🚀 Getting started with E2B
+## 🚀 Getting started
 
-#### 1. Get API key
+### 1. Get API key
 [Sign up](https://e2b.dev/docs/sign-in?view=sign-up) and [get your E2B API key](https://e2b.dev/docs/getting-started/api-key).
 
-#### 2. Install code interpreter SDK
+### 2. Install code interpreter SDK
 JavaScript
 ```js
 npm i @e2b/code-interpreter
@@ -50,9 +50,9 @@ Python
 pip install e2b_code_interpreter
 ```
 
-#### 3. Check out Hello World example
+### 3. Check out Hello World example
 Check out the [TypeScript](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-js) and [Python](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-python) hello world examples.
 
-#### 4. Explore documentation
+### 4. Explore documentation
 Visit our docs at [e2b.dev/docs](https://e2b.dev/docs).
 
