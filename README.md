@@ -12,7 +12,7 @@ The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2
 - ✅ Supports streaming content like charts and stdout, stderr
 - ✅ Python & JS SDK
 - ✅ Runs on serverless and edge functions
-- ✅ Runs AI-generated code in a secure sandboxed environment powered by [E2B](https://github.com/e2b-dev/e2b)
+- ✅ Runs AI-generated code in secure sandboxed environments
 - ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
 
 Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
