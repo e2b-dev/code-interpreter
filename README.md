@@ -1,12 +1,6 @@
 # Code Interpreter SDK
 E2B's [Code Interpreter SDK](https://github.com/e2b-dev/code-interpreter) allows you to add code interpreting capabilities to your AI apps.
 
-With code interpreting, you can build apps like:
-- AI code execution
-- Data analysis with AI
-- AI tutors
-- Reasoning modules for LLM
-
 The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2b) - an open-source secure micro VM made for running untrusted AI-generated code and AI agents.
 - ✅ Works with any LLM and AI framework
 - ✅ Supports streaming content like charts and stdout, stderr
@@ -15,9 +9,51 @@ The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2
 - ✅ Runs AI-generated code in secure sandboxed environments
 - ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
 
-Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
+Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
 
-<img width="1200" alt="Post-02" src="https://github.com/e2b-dev/code-interpreter/assets/5136688/2fa8c371-f03c-4186-b0b6-4151e68b0539">
+## 🚀 Quickstart
+
+### 1. Install SDK
+
+JavaScript
+```
+npm i @e2b/code-interpreter
+```
+
+TypeScript
+```
+pip install e2b_code_interpreter
+```
+
+### 2. Execute code with code interpreter inside sandbox
+
+**JavaScript**
+```ts
+import { CodeInterpreter } from '@e2b/code-interpreter'
+
+const sandbox = await CodeInterpreter.create()
+await sandbox.notebook.execCell('x = 1')
+
+const execution = await sandbox.notebook.execCell('x+=1; x')
+console.log(execution.text)  // outputs 2
+
+await sandbox.close()
+```
+
+**Python**
+```py
+from e2b_code_interpreter import CodeInterpreter
+
+with CodeInterpreter() as sandbox:
+    sandbox.notebook.exec_cell("x = 1")
+
+    execution = sandbox.notebook.exec_cell("x+=1; x")
+    print(execution.text)  # outputs 2
+```
+
+### 3. Hello World guide
+Dive depeer and check out the [JavaScript](/hello-world/js) and [Python](/hello-world/py) the Hello World guides to learn how o connect code interpreter LLMs.
+
 
 ## 📖 Cookbook examples
 
@@ -38,26 +74,4 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev)
 ## 💻 Supported languages for AI-code execution
 - ✅ Python
 - (soon) JavaScript/TypeScript 
-
-## 🚀 Getting started
-
-### 1. Get API key
-[Sign up](https://e2b.dev/docs/sign-in?view=sign-up) and [get your E2B API key](https://e2b.dev/docs/getting-started/api-key).
-
-### 2. Install code interpreter SDK
-JavaScript
-```js
-npm i @e2b/code-interpreter
-```
-
-Python
-```py
-pip install e2b_code_interpreter
-```
-
-### 3. Check out Hello World example
-Check out the [TypeScript](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-js) and [Python](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-python) hello world examples.
-
-### 4. Explore documentation
-Visit our docs at [e2b.dev/docs](https://e2b.dev/docs).
 
