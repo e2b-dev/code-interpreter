@@ -15,12 +15,12 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
 
 ### 1. Install SDK
 
-JavaScript
+JavaScript/TypeScript
 ```
 npm i @e2b/code-interpreter
 ```
 
-TypeScript
+Python
 ```
 pip install e2b_code_interpreter
 ```
