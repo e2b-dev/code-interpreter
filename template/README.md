@@ -24,7 +24,7 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
    **Python**
    ```python
    from e2b_code_interpreter import CodeInterpreter
-   sandbox = CodeInterpreter("your-custom-sandbox-name")
+   sandbox = CodeInterpreter(template="your-custom-sandbox-name")
    execution = sandbox.notebook.exec_cell("print('hello')")
    sandbox.close()
 
