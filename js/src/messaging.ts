@@ -20,7 +20,7 @@ export class ExecutionError {
      * The raw traceback of the error.
      **/
     public tracebackRaw: string[]
-  ) {}
+  ) { }
 
   /**
    * Returns the traceback of the error as a string.
@@ -175,6 +175,25 @@ export class Result {
 
     return formats
   }
+
+  /**
+   * Returns the serializable representation of the result.
+   */
+  toJSON() {
+    return {
+      text: this.text,
+      html: this.html,
+      markdown: this.markdown,
+      svg: this.svg,
+      png: this.png,
+      jpeg: this.jpeg,
+      pdf: this.pdf,
+      latex: this.latex,
+      json: this.json,
+      javascript: this.javascript,
+      extra: this.extra
+    }
+  }
 }
 
 /**
@@ -208,7 +227,7 @@ export class Execution {
      * An Error object if an error occurred, null otherwise.
      */
     public error?: ExecutionError
-  ) {}
+  ) { }
 
   /**
    * Returns the text representation of the main result of the cell.
@@ -218,6 +237,17 @@ export class Execution {
       if (data.isMainResult) {
         return data.text
       }
+    }
+  }
+
+  /**
+   * Returns the serializable representation of the execution result.
+   */
+  toJSON() {
+    return {
+      results: this.results,
+      logs: this.logs,
+      error: this.error
     }
   }
 }
@@ -275,7 +305,7 @@ export class JupyterKernelWebSocket {
    * Does not start WebSocket connection!
    * You need to call connect() method first.
    */
-  constructor(private readonly url: string) {}
+  constructor(private readonly url: string) { }
 
   // public
   /**
