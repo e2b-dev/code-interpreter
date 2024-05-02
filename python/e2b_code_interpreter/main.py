@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 import threading
+import requests
+
 from concurrent.futures import Future
 from typing import Any, Callable, List, Optional, Dict
 
-import requests
 from e2b import EnvVars, ProcessMessage, Sandbox
 from e2b.constants import TIMEOUT
 
