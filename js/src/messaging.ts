@@ -191,7 +191,7 @@ export class Result {
       latex: this.latex,
       json: this.json,
       javascript: this.javascript,
-      extra: this.extra
+      ...(Object.keys(this.extra).length > 0 ? { extra: this.extra } : {})
     }
   }
 }
