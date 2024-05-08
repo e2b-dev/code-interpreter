@@ -1,4 +1,4 @@
-import IWebSocket from 'isomorphic-ws'
+import IWebSocket, { WebSocket } from 'isows'
 import { ProcessMessage } from 'e2b'
 import { id } from './utils'
 
@@ -281,9 +281,9 @@ interface Cells {
 
 export class JupyterKernelWebSocket {
   // native websocket
-  private _ws?: IWebSocket
+  private _ws?: any
 
-  private set ws(ws: IWebSocket) {
+  private set ws(ws: any) {
     this._ws = ws
   }
 
@@ -312,7 +312,7 @@ export class JupyterKernelWebSocket {
    * Starts WebSocket connection.
    */
   connect() {
-    this._ws = new IWebSocket(this.url)
+    this._ws = new WebSocket(this.url)
     return this.listen()
   }
 
@@ -470,7 +470,7 @@ export class JupyterKernelWebSocket {
       // listen for messages
       this.listenMessages()
 
-      this.ws.onclose = (e: IWebSocket.CloseEvent) => {
+      this.ws.onclose = (e: any) => {
         reject(
           new Error(
             `WebSocket closed with code: ${e.code} and reason: ${e.reason}`

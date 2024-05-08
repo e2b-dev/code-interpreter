@@ -1,6 +1,6 @@
 {
   "name": "@e2b/code-interpreter",
-  "version": "0.0.3",
+  "version": "0.0.4-deno.0",
   "description": "E2B Code Interpreter - Stateful code execution",
   "homepage": "https://e2b.dev",
   "license": "MIT",
@@ -60,8 +60,8 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "^0.16.0",
-    "isomorphic-ws": "^5.0.0",
+    "e2b": "0.16.1-deno.1",
+    "isows": "^1.0.4",
     "ws": "^8.15.1"
   },
   "engines": {
