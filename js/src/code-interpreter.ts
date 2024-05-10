@@ -19,8 +19,8 @@ export class CodeInterpreter extends Sandbox {
 
   readonly notebook = new JupyterExtension(this)
 
-  constructor(opts?: SandboxOpts) {
-    super({ template: opts?.template || CodeInterpreter.template, ...opts })
+  constructor(opts?: SandboxOpts, createCalled = false) {
+    super({ template: opts?.template || CodeInterpreter.template, ...opts }, createCalled)
   }
 
   override async _open(opts?: { timeout?: number }) {

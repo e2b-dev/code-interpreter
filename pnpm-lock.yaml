@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: ^0.16.0
-        version: 0.16.0
+        specifier: ^0.16.1
+        version: 0.16.1
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.16.0)
@@ -2128,8 +2128,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /e2b@0.16.0:
-    resolution: {integrity: sha512-ZPZ9tmbTduX8HVDKTVoA87vhZ9xIL3AZ3m1poh+9yErcF87GJuOJm6o4ZUrup8kP1rV2simWK7IMZMg/0U3pPQ==}
+  /e2b@0.16.1:
+    resolution: {integrity: sha512-2L1R/REEB+EezD4Q4MmcXXNATjvCYov2lv/69+PY6V95+wl1PZblIMTYAe7USxX6P6sqANxNs+kXqZr6RvXkSw==}
     engines: {node: '>=18'}
     dependencies:
       isomorphic-ws: 5.0.0(ws@8.16.0)
