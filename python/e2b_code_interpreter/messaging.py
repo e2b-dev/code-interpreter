@@ -43,30 +43,29 @@ class CellExecution:
         self.on_result = on_result
 
 
-class JupyterKernelWebSocket(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class JupyterKernelWebSocket:
 
-    url: str
-
-    _cells: Dict[str, CellExecution] = {}
-    _waiting_for_replies: Dict[str, DeferredFuture] = PrivateAttr(default_factory=dict)
-    _queue_in: Queue = PrivateAttr(default_factory=Queue)
-    _queue_out: Queue = PrivateAttr(default_factory=Queue)
-    _process_cleanup: List[Callable[[], Any]] = PrivateAttr(default_factory=list)
-    _closed: bool = PrivateAttr(default=False)
+    def __init__(self, url: str):
+        self.url = url
+        self._cells: Dict[str, CellExecution] = {}
+        self._waiting_for_replies: Dict[str, DeferredFuture] = {}
+        self._queue_in = Queue()
+        self._queue_out = Queue()
+        self._stopped = threading.Event()
 
     def process_messages(self):
-        while True:
-            data = self._queue_out.get()
+        while not self._stopped.is_set():
+            if self._queue_out.empty():
+                time.sleep(0.01)
+                continue
 
+            data = self._queue_out.get()
             logger.debug(f"WebSocket received message: {data}".strip())
             self._receive_message(json.loads(data))
             self._queue_out.task_done()
 
     def connect(self, timeout: float = TIMEOUT):
         started = threading.Event()
-        stopped = threading.Event()
-        self._process_cleanup.append(stopped.set)
 
         threading.Thread(
             target=self.process_messages, daemon=True, name="e2b-process-messages"
@@ -78,7 +77,7 @@ class JupyterKernelWebSocket(BaseModel):
                 queue_in=self._queue_in,
                 queue_out=self._queue_out,
                 started=started,
-                stopped=stopped,
+                stopped=self._stopped
             ).run,
             daemon=True,
             name="e2b-code-interpreter-websocket",
@@ -91,7 +90,7 @@ class JupyterKernelWebSocket(BaseModel):
             while (
                 not started.is_set()
                 and time.time() - start_time < timeout
-                and not self._closed
+                and not self._stopped.is_set()
             ):
                 time.sleep(0.1)
 
@@ -245,12 +244,7 @@ class JupyterKernelWebSocket(BaseModel):
 
     def close(self):
         logger.debug("Closing WebSocket")
-        self._closed = True
-
-        for cancel in self._process_cleanup:
-            cancel()
-
-        self._process_cleanup.clear()
+        self._stopped.set()
 
         for handler in self._waiting_for_replies.values():
             logger.debug(f"Cancelling waiting for execution result for {handler}")

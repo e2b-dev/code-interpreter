@@ -52,13 +52,13 @@ class CodeInterpreter(Sandbox):
 
 
 class JupyterExtension:
-    _default_kernel_id: Optional[str] = None
-    _connected_kernels: Dict[str, Future[JupyterKernelWebSocket]] = {}
 
     def __init__(self, sandbox: CodeInterpreter, timeout: Optional[float] = TIMEOUT):
         self._sandbox = sandbox
         self._kernel_id_set = Future()
         self._start_connecting_to_default_kernel(timeout=timeout)
+        self._connected_kernels: Dict[str, Future[JupyterKernelWebSocket]] = {}
+        self._default_kernel_id: Optional[str] = None
 
     def exec_cell(
         self,
