@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import threading
 import uuid
@@ -105,6 +106,47 @@ class JupyterExtension:
             f"Received result from kernel {kernel_id}, message_id: {message_id}, result: {result}"
         )
 
+        nb = self._sandbox.filesystem.read(f"/home/user/default.ipynb", timeout=timeout)
+        nb_parsed = json.loads(nb)
+        cell = {
+            "cell_type": "code",
+            "metadata": {},
+            "source": code,
+        }
+
+        outputs = []
+        if result.logs.stdout:
+            outputs.append(
+                {"output_type": "stream", "name": "stdout", "text": result.logs.stdout}
+            )
+        if result.logs.stderr:
+            outputs.append(
+                {"output_type": "stream", "name": "stderr", "text": result.logs.stderr}
+            )
+
+        if result.results:
+            outputs = [
+                {
+                    "output_type": (
+                        "execute_result" if r.is_main_result else "display_data"
+                    ),
+                    "data": r.raw,
+                    "metadata": {},
+                }
+                for r in result.results
+            ]
+
+        cell["execution_count"] = result.execution_count
+        cell["outputs"] = outputs
+
+        if nb_parsed["cells"] and not nb_parsed["cells"][-1]["source"]:
+            nb_parsed["cells"][-1] = cell
+        else:
+            nb_parsed["cells"].append(cell)
+
+        self._sandbox.filesystem.write(
+            f"/home/user/default.ipynb", json.dumps(nb_parsed), timeout=timeout
+        )
         return result
 
     @property
@@ -122,8 +164,9 @@ class JupyterExtension:
 
     def create_kernel(
         self,
-        cwd: str = "/home/user",
-        kernel_name: Optional[str] = None,
+        name: str,
+        path: str = "/home/user",
+        kernel_name: str = "python3",
         timeout: Optional[float] = TIMEOUT,
     ) -> str:
         """
@@ -134,16 +177,40 @@ class JupyterExtension:
         Once the kernel is created, this method establishes a WebSocket connection to the new kernel for
         real-time communication.
 
-        :param cwd: Sets the current working directory for the kernel. Defaults to "/home/user".
-        :param kernel_name:
-            Specifies which kernel should be used, useful if you have multiple kernel types.
-            If not provided, the default kernel will be used.
+        :param name: Name of the kernel
+        :param path: Sets the current working directory for the kernel. Defaults to "/home/user".
+        :param kernel_name: Specifies which kernel should be used, useful if you have multiple kernel types.
         :param timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
-        data = {"path": cwd, "kernel": {"name": "python3"}, "type": "notebook", "name": str(uuid.uuid4())}
-        if kernel_name:
-            data["kernel"]['name'] = kernel_name
+
+        x = {
+            "metadata": {
+                "signature": "hex-digest",
+                "kernel_info": {"name": kernel_name},
+                "language_info": {
+                    "name": kernel_name,
+                    "version": "3.10.14",
+                },  # TODO: get version
+            },
+            "nbformat": 4,
+            "nbformat_minor": 0,
+            "cells": [],
+        }
+
+        self._sandbox.filesystem.write(
+            f"/home/user/default.ipynb", json.dumps(x), timeout=timeout
+        )
+        self._sandbox.process.start("chmod 777 /home/user/default.ipynb")
+
+        data = {
+            "name": name,
+            "kernel": {"name": kernel_name},
+            "notebook": {"name": "default.ipynb"},
+            "path": path,
+            "type": "notebook",
+        }
+
         logger.debug(f"Creating kernel with data: {data}")
 
         response = requests.post(
@@ -154,14 +221,16 @@ class JupyterExtension:
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
 
-        session_data = response.json()
-        kernel_id = session_data["kernel"]["id"]
-        session_id = session_data["id"]
-        logger.debug(f"Created kernel {kernel_id}")
+        response_data = response.json()
+        kernel_id = response_data["kernel"]["id"]
+        session_id = response_data["id"]
+
+        logger.debug(f"Created kernel {kernel_id}, session {session_id}")
 
         threading.Thread(
             target=self._connect_to_kernel_ws, args=(kernel_id, session_id, timeout)
         ).start()
+
         return kernel_id
 
     def restart_kernel(
@@ -247,16 +316,23 @@ class JupyterExtension:
             ws.result().close()
 
     def _connect_to_kernel_ws(
-        self, kernel_id: str, session_id: Optional[str], timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: str,
+        session_id: Optional[str],
+        timeout: Optional[float] = TIMEOUT,
     ) -> JupyterKernelWebSocket:
         """
         Establishes a WebSocket connection to a specified Jupyter kernel.
 
         :param kernel_id: Kernel id
+        :param session_id: Session id
         :param timeout: The timeout for the kernel connection request.
 
         :return: Websocket connection
         """
+        if not session_id:
+            session_id = uuid.uuid4()
+
         logger.debug(f"Connecting to kernel's ({kernel_id}) websocket")
         future = Future()
         self._connected_kernels[kernel_id] = future
@@ -264,7 +340,7 @@ class JupyterExtension:
         session_id = session_id or str(uuid.uuid4())
         ws = JupyterKernelWebSocket(
             url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
-            session_id=session_id
+            session_id=session_id,
         )
 
         ws.connect(timeout=timeout)
@@ -283,17 +359,18 @@ class JupyterExtension:
         logger.debug("Starting to connect to the default kernel")
 
         def setup_default_kernel():
-            kernel_id = self._sandbox.filesystem.read(
-                "/root/.jupyter/kernel_id", timeout=timeout
+            session_info = self._sandbox.filesystem.read(
+                "/root/.jupyter/.session_info", timeout=timeout
             )
 
-            if kernel_id is None and not self._sandbox.is_open:
+            if session_info is None and not self._sandbox.is_open:
                 return
 
-            kernel_id = kernel_id.strip()
-
+            data = json.loads(session_info)
+            kernel_id = data["kernel"]["id"]
+            session_id = data["id"]
             logger.debug(f"Default kernel id: {kernel_id}")
-            self._connect_to_kernel_ws(kernel_id, None, timeout=timeout)
+            self._connect_to_kernel_ws(kernel_id, session_id, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
 
         threading.Thread(target=setup_default_kernel).start()

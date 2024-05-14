@@ -1,7 +1,8 @@
 # Jupyter server requirements
-jupyter-server==2.13.0
 ipykernel==6.29.3
 ipython==8.22.2
+jupyter-collaboration==3.0.0a2
+jupyterlab==4.2.0
 
 # Other packages
 aiohttp==3.9.3
@@ -18,10 +19,10 @@ opencv-python==4.9.0.80
 openpyxl==3.1.2
 pandas==1.5.3
 plotly==5.19.0
-pytest==8.1.0
+pytest==8.2.0
 python-docx==1.1.0
 pytz==2024.1
-requests==2.26.0
+requests==2.31.0
 scikit-image==0.22.0
 scikit-learn==1.4.1.post1
 scipy==1.12.0

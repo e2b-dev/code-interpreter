@@ -14,13 +14,29 @@ function start_jupyter_server() {
 	done
 	echo "Jupyter Server started"
 
-	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "/home/user", "kernel": {"name": "python3"}, "type": "notebook", "name": "default"}')
+	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "/home/user", "kernel": {"name": "python3"}, "notebook": {"name": "default.ipynb"}, "type": "notebook", "name": "default"}')
 	status=$(echo "${response}" | jq -r '.kernel.execution_state')
 	if [[ ${status} != "starting" ]]; then
 		echo "Error creating kernel: ${response} ${status}"
 		exit 1
 	fi
 	echo "Kernel created"
+
+  cat <<EOF >/home/user/default.ipynb
+{
+  "metadata": {
+      "signature": "hex-digest",
+      "kernel_info": {"name": "python3"},
+      "language_info": {
+          "name": "python3",
+          "version": "3.10.14"
+      }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "cells": []
+}
+EOF
 
 	sudo mkdir -p /root/.jupyter
   kernel_id=$(echo "${response}" | jq -r '.kernel.id')
@@ -31,4 +47,9 @@ function start_jupyter_server() {
 
 echo "Starting Jupyter Server..."
 start_jupyter_server &
-jupyter server --IdentityProvider.token=""
+jupyter lab --IdentityProvider.token="" \
+  --YDocExtension.ystore_class=pycrdt_websocket.ystore.TempFileYStore\
+  --YDocExtension.document_save_delay=0.5 \
+  --YDocExtension.document_cleanup_delay=None \
+  --notebook-dir=/home/user \
+  --LabApp.default_url='/doc'
