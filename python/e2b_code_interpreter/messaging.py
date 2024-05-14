@@ -5,14 +5,13 @@ import time
 import uuid
 from concurrent.futures import Future
 from queue import Queue
-from typing import Callable, Dict, List, Any, Optional
+from typing import Callable, Dict, Any, Optional
 
 from e2b import ProcessMessage
 from e2b.constants import TIMEOUT
 from e2b.sandbox import TimeoutException
 from e2b.sandbox.websocket_client import WebSocket
 from e2b.utils.future import DeferredFuture
-from pydantic import ConfigDict, PrivateAttr, BaseModel
 
 from e2b_code_interpreter.models import Execution, Result, Error
 
