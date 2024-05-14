@@ -5,6 +5,7 @@ function start_jupyter_server() {
 	while [[ ${response} -ne 200 ]]; do
 		echo "Waiting for Jupyter Server to start..."
 		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api")
+		sleep 0.2
 	done
 	echo "Jupyter Server started"
 
@@ -26,4 +27,7 @@ function start_jupyter_server() {
 
 echo "Starting Jupyter Server..."
 start_jupyter_server &
-jupyter server --IdentityProvider.token=""
+jupyter server
+
+
+

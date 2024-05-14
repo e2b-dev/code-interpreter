@@ -6,7 +6,7 @@ test('reconnect', async () => {
   let sandbox = await CodeInterpreter.create()
   await sandbox.close()
 
-  sandbox = await CodeInterpreter.reconnect(sandbox.id)
+  sandbox = await CodeInterpreter.reconnect({sandboxID: sandbox.id, apiKey: process.env.E2B_API_KEY})
 
   const result = await sandbox.notebook.execCell('x =1; x')
 
