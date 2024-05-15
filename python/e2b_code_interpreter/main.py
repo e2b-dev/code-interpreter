@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import threading
 import requests
@@ -276,13 +277,14 @@ class JupyterExtension:
         logger.debug("Starting to connect to the default kernel")
 
         def setup_default_kernel():
-            kernel_id = self._sandbox.filesystem.read(
-                "/root/.jupyter/kernel_id", timeout=timeout
+            session_info = self._sandbox.filesystem.read(
+                "/root/.jupyter/.session_info", timeout=timeout
             )
-            if kernel_id is None and not self._sandbox.is_open:
+            if session_info is None and not self._sandbox.is_open:
                 return
 
-            kernel_id = kernel_id.strip()
+            session_info = json.loads(session_info)
+            kernel_id = session_info['kernel']['id']
             logger.debug(f"Default kernel id: {kernel_id}")
             self._connect_to_kernel_ws(kernel_id, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
