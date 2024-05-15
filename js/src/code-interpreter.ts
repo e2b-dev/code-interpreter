@@ -101,9 +101,11 @@ export class JupyterExtension {
     resolve: (value: string) => void,
     opts?: { timeout?: number }
   ) {
-    const kernelID = (
-      await this.sandbox.filesystem.read('/root/.jupyter/kernel_id', opts)
-    ).trim()
+    const sessionInfo = (
+      await this.sandbox.filesystem.read('/root/.jupyter/.session_info', opts)
+    )
+    const parsedSessionInfo = JSON.parse(sessionInfo)
+    const kernelID = parsedSessionInfo.kernel.id
     await this.connectToKernelWS(kernelID)
     resolve(kernelID)
   }

@@ -284,7 +284,7 @@ class JupyterExtension:
                 return
 
             session_info = json.loads(session_info)
-            kernel_id = session_info['kernel']['id']
+            kernel_id = session_info["kernel"]["id"]
             logger.debug(f"Default kernel id: {kernel_id}")
             self._connect_to_kernel_ws(kernel_id, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
