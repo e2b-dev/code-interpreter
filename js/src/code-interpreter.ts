@@ -7,7 +7,7 @@ interface Kernels {
 }
 
 export interface CreateKernelProps {
-  cwd: string
+  path: string
   kernelName?: string
 }
 
@@ -147,7 +147,7 @@ export class JupyterExtension {
     cwd: string = '/home/user',
     kernelName?: string
   ): Promise<string> {
-    const data: CreateKernelProps = { cwd }
+    const data: CreateKernelProps = { path: cwd }
     if (kernelName) {
       data.kernelName = kernelName
     }

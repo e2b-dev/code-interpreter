@@ -139,7 +139,7 @@ class JupyterExtension:
         :param timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
-        data = {"cwd": cwd}
+        data = {"path": cwd}
         if kernel_name:
             data["kernel_name"] = kernel_name
         logger.debug(f"Creating kernel with data: {data}")
