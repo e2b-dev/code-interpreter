@@ -222,6 +222,8 @@ class Execution(BaseModel):
     "Logs printed to stdout and stderr during execution."
     error: Optional[Error] = None
     "Error object if an error occurred, None otherwise."
+    execution_count: Optional[int] = None
+    "Execution count of the cell."
 
     @property
     def text(self) -> Optional[str]:

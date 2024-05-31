@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import json
 import logging
 import threading
+import uuid
+
 import requests
 
 from concurrent.futures import Future
@@ -94,14 +95,14 @@ class JupyterExtension:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
             ws = self._connect_to_kernel_ws(kernel_id, timeout=timeout)
 
-        session_id = ws.send_execution_message(code, on_stdout, on_stderr, on_result)
+        message_id = ws.send_execution_message(code, on_stdout, on_stderr, on_result)
         logger.debug(
-            f"Sent execution message to kernel {kernel_id}, session_id: {session_id}"
+            f"Sent execution message to kernel {kernel_id}, message_id: {message_id}"
         )
 
-        result = ws.get_result(session_id, timeout=timeout)
+        result = ws.get_result(message_id, timeout=timeout)
         logger.debug(
-            f"Received result from kernel {kernel_id}, session_id: {session_id}, result: {result}"
+            f"Received result from kernel {kernel_id}, message_id: {message_id}, result: {result}"
         )
 
         return result
@@ -140,24 +141,26 @@ class JupyterExtension:
         :param timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
-        data = {"path": cwd}
+        data = {"path": cwd, "kernel": {"name": "python3"}, "type": "notebook", "name": str(uuid.uuid4())}
         if kernel_name:
-            data["kernel_name"] = kernel_name
+            data["kernel"]['name'] = kernel_name
         logger.debug(f"Creating kernel with data: {data}")
 
         response = requests.post(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/sessions",
             json=data,
             timeout=timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
 
-        kernel_id = response.json()["id"]
+        session_data = response.json()
+        kernel_id = session_data["kernel"]["id"]
+        session_id = session_data["id"]
         logger.debug(f"Created kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, timeout)
+            target=self._connect_to_kernel_ws, args=(kernel_id, session_id, timeout)
         ).start()
         return kernel_id
 
@@ -244,7 +247,7 @@ class JupyterExtension:
             ws.result().close()
 
     def _connect_to_kernel_ws(
-        self, kernel_id: str, timeout: Optional[float] = TIMEOUT
+        self, kernel_id: str, session_id: Optional[str], timeout: Optional[float] = TIMEOUT
     ) -> JupyterKernelWebSocket:
         """
         Establishes a WebSocket connection to a specified Jupyter kernel.
@@ -258,9 +261,13 @@ class JupyterExtension:
         future = Future()
         self._connected_kernels[kernel_id] = future
 
+        print(session_id)
+        session_id = session_id or str(uuid.uuid4())
         ws = JupyterKernelWebSocket(
             url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
+            session_id=session_id
         )
+
         ws.connect(timeout=timeout)
         logger.debug(f"Connected to kernel's ({kernel_id}) websocket.")
 
@@ -277,16 +284,13 @@ class JupyterExtension:
         logger.debug("Starting to connect to the default kernel")
 
         def setup_default_kernel():
-            session_info = self._sandbox.filesystem.read(
-                "/root/.jupyter/.session_info", timeout=timeout
+            kernel_id = self._sandbox.filesystem.read(
+                "/root/.jupyter/kernel_id", timeout=timeout
             )
-            if session_info is None and not self._sandbox.is_open:
-                return
+            kernel_id = kernel_id.strip()
 
-            session_info = json.loads(session_info)
-            kernel_id = session_info["kernel"]["id"]
             logger.debug(f"Default kernel id: {kernel_id}")
-            self._connect_to_kernel_ws(kernel_id, timeout=timeout)
+            self._connect_to_kernel_ws(kernel_id, None, timeout=timeout)
             self._kernel_id_set.set_result(kernel_id)
 
         threading.Thread(target=setup_default_kernel).start()

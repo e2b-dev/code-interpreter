@@ -23,6 +23,8 @@ function start_jupyter_server() {
 	echo "Kernel created"
 
 	sudo mkdir -p /root/.jupyter
+  kernel_id=$(echo "${response}" | jq -r '.kernel.id')
+	sudo echo "${kernel_id}" | sudo tee /root/.jupyter/kernel_id >/dev/null
 	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 	echo "Jupyter Server started"
 }
