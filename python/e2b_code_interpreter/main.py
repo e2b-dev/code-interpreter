@@ -93,7 +93,7 @@ class JupyterExtension:
             ws = ws_future.result(timeout=timeout)
         else:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
-            ws = self._connect_to_kernel_ws(kernel_id, timeout=timeout)
+            ws = self._connect_to_kernel_ws(kernel_id, None, timeout=timeout)
 
         message_id = ws.send_execution_message(code, on_stdout, on_stderr, on_result)
         logger.debug(
@@ -190,7 +190,7 @@ class JupyterExtension:
         logger.debug(f"Restarted kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, timeout)
+            target=self._connect_to_kernel_ws, args=(kernel_id, None, timeout)
         ).start()
 
     def shutdown_kernel(
