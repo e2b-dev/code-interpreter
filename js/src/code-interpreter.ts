@@ -1,14 +1,9 @@
 import { ProcessMessage, Sandbox, SandboxOpts } from 'e2b'
 import { Result, JupyterKernelWebSocket, Execution } from './messaging'
-import { createDeferredPromise } from './utils'
+import { createDeferredPromise, id } from './utils'
 
 interface Kernels {
   [kernelID: string]: JupyterKernelWebSocket
-}
-
-export interface CreateKernelProps {
-  path: string
-  kernelName?: string
 }
 
 /**
@@ -117,13 +112,16 @@ export class JupyterExtension {
    * the retrieval of the necessary WebSocket URL from the kernel's information.
    *
    * @param kernelID The unique identifier of the kernel to connect to.
+   * @param sessionID The unique identifier of the session to connect to.
    * @throws {Error} Throws an error if the connection to the kernel's WebSocket cannot be established.
    */
-  private async connectToKernelWS(kernelID: string) {
+  private async connectToKernelWS(kernelID: string, sessionID?: string) {
     const url = `${this.sandbox.getProtocol('ws')}://${this.sandbox.getHostname(
       8888
     )}/api/kernels/${kernelID}/channels`
-    const ws = new JupyterKernelWebSocket(url)
+
+    sessionID = sessionID || id(16)
+    const ws = new JupyterKernelWebSocket(url, sessionID)
     await ws.connect()
     this.connectedKernels[kernelID] = ws
 
@@ -147,15 +145,15 @@ export class JupyterExtension {
     cwd: string = '/home/user',
     kernelName?: string
   ): Promise<string> {
-    const data: CreateKernelProps = { path: cwd }
+    const data = { path: cwd, kernel: {name: "python3"}, type: "notebook", name: id(16) }
     if (kernelName) {
-      data.kernelName = kernelName
+      data.kernel.name = kernelName
     }
 
     const response = await fetch(
       `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
         8888
-      )}/api/kernels`,
+      )}/api/sessions`,
       {
         method: 'POST',
         body: JSON.stringify(data)
@@ -166,8 +164,10 @@ export class JupyterExtension {
       throw new Error(`Failed to create kernel: ${response.statusText}`)
     }
 
-    const kernelID = (await response.json()).id
-    await this.connectToKernelWS(kernelID)
+    const sessionInfo = await response.json()
+    const kernelID = sessionInfo.kernel.id
+    await this.connectToKernelWS(kernelID, sessionInfo.id)
+
     return kernelID
   }
 

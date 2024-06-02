@@ -226,7 +226,11 @@ export class Execution {
     /**
      * An Error object if an error occurred, null otherwise.
      */
-    public error?: ExecutionError
+    public error?: ExecutionError,
+    /**
+     * Execution count of the cell.
+     */
+    public executionCount?: number
   ) { }
 
   /**
@@ -305,7 +309,7 @@ export class JupyterKernelWebSocket {
    * Does not start WebSocket connection!
    * You need to call connect() method first.
    */
-  constructor(private readonly url: string) { }
+  constructor(private readonly url: string, private readonly sessionID: string) { }
 
   // public
   /**
@@ -401,6 +405,7 @@ export class JupyterKernelWebSocket {
         }
       } else if (message.msg_type == 'execute_input') {
         cell.inputAccepted = true
+        cell.execution.executionCount = message.content.execution_count
       } else {
         console.warn('[UNHANDLED MESSAGE TYPE]:', message.msg_type)
       }
@@ -486,12 +491,11 @@ export class JupyterKernelWebSocket {
    * @param code Code to be executed.
    */
   private sendExecuteRequest(msg_id: string, code: string) {
-    const session = id(16)
     return {
       header: {
         msg_id: msg_id,
         username: 'e2b',
-        session: session,
+        session: this.sessionID,
         msg_type: 'execute_request',
         version: '5.3'
       },
@@ -500,7 +504,7 @@ export class JupyterKernelWebSocket {
       content: {
         code: code,
         silent: false,
-        store_history: false,
+        store_history: true,
         user_expressions: {},
         allow_stdin: false
       }

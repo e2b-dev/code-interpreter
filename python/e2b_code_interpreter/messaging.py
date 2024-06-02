@@ -25,6 +25,7 @@ class CellExecution:
     """
 
     input_accepted: bool = False
+
     on_stdout: Optional[Callable[[ProcessMessage], Any]] = None
     on_stderr: Optional[Callable[[ProcessMessage], Any]] = None
     on_result: Optional[Callable[[Result], Any]] = None
@@ -44,8 +45,9 @@ class CellExecution:
 
 class JupyterKernelWebSocket:
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, session_id: str):
         self.url = url
+        self.session_id = session_id
         self._cells: Dict[str, CellExecution] = {}
         self._waiting_for_replies: Dict[str, DeferredFuture] = {}
         self._queue_in = Queue()
@@ -101,14 +103,13 @@ class JupyterKernelWebSocket:
 
         logger.debug("WebSocket started")
 
-    @staticmethod
-    def _get_execute_request(msg_id: str, code: str) -> str:
+    def _get_execute_request(self, msg_id: str, code: str) -> str:
         return json.dumps(
             {
                 "header": {
                     "msg_id": msg_id,
                     "username": "e2b",
-                    "session": str(uuid.uuid4()),
+                    "session": self.session_id,
                     "msg_type": "execute_request",
                     "version": "5.3",
                 },
@@ -117,7 +118,7 @@ class JupyterKernelWebSocket:
                 "content": {
                     "code": code,
                     "silent": False,
-                    "store_history": False,
+                    "store_history": True,
                     "user_expressions": {},
                     "allow_stdin": False,
                 },
@@ -237,6 +238,7 @@ class JupyterKernelWebSocket:
 
         elif data["msg_type"] == "execute_input":
             logger.debug(f"Input accepted for {parent_msg_ig}")
+            cell.partial_result.execution_count = data["content"]["execution_count"]
             cell.input_accepted = True
         else:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")

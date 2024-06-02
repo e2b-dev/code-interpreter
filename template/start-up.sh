@@ -1,26 +1,31 @@
 #!/bin/bash
 
 function start_jupyter_server() {
-	response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api")
+	counter=0
+	response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
 	while [[ ${response} -ne 200 ]]; do
-		echo "Waiting for Jupyter Server to start..."
-		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api")
+	  let counter++
+	  if  (( counter % 20 == 0 )); then
+      echo "Waiting for Jupyter Server to start..."
+      sleep 0.1
+    fi
+
+		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
 	done
 	echo "Jupyter Server started"
 
-	response=$(curl -s -X POST "localhost:8888/api/kernels" -H "Content-Type: application/json" -d '{"path": "/home/user"}')
-	status=$(echo "${response}" | jq -r '.execution_state')
+	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "/home/user", "kernel": {"name": "python3"}, "type": "notebook", "name": "default"}')
+	status=$(echo "${response}" | jq -r '.kernel.execution_state')
 	if [[ ${status} != "starting" ]]; then
 		echo "Error creating kernel: ${response} ${status}"
 		exit 1
 	fi
 	echo "Kernel created"
 
-	kernel=$(echo "${response}" | jq -r '.id')
-
 	sudo mkdir -p /root/.jupyter
-
-	sudo echo "${kernel}" | sudo tee /root/.jupyter/kernel_id >/dev/null
+  kernel_id=$(echo "${response}" | jq -r '.kernel.id')
+	sudo echo "${kernel_id}" | sudo tee /root/.jupyter/kernel_id >/dev/null
+	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 	echo "Jupyter Server started"
 }
 

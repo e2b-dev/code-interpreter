@@ -222,6 +222,8 @@ class Execution(BaseModel):
     "Logs printed to stdout and stderr during execution."
     error: Optional[Error] = None
     "Error object if an error occurred, None otherwise."
+    execution_count: Optional[int] = None
+    "Execution count of the cell."
 
     @property
     def text(self) -> Optional[str]:
@@ -249,7 +251,7 @@ class Execution(BaseModel):
         serialized = []
         for result in results:
             serialized_dict = {key: result[key] for key in result.formats()}
-            serialized_dict['text'] = result.text
+            serialized_dict["text"] = result.text
             serialized.append(serialized_dict)
         return serialized
 

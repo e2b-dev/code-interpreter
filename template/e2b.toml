@@ -10,7 +10,7 @@
 # const sandbox = await Sandbox.create({ template: 'code-interpreter-stateful' })
 
 memory_mb = 1_024
-start_cmd = "/home/user/.jupyter/start-up.sh"
+start_cmd = "/root/.jupyter/start-up.sh"
 dockerfile = "e2b.Dockerfile"
 template_name = "code-interpreter-stateful"
 template_id = "1tsfj5yvigmgc5gmgqz2"
