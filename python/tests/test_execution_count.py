@@ -1,7 +1,7 @@
 from e2b_code_interpreter.main import CodeInterpreter
 
 
-def test_bash():
+def test_execution_count():
     with CodeInterpreter() as sandbox:
         result = sandbox.notebook.exec_cell("echo 'E2B is awesome!'")
         print(result.execution_count)
