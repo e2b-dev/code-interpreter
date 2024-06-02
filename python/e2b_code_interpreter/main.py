@@ -261,7 +261,6 @@ class JupyterExtension:
         future = Future()
         self._connected_kernels[kernel_id] = future
 
-        print(session_id)
         session_id = session_id or str(uuid.uuid4())
         ws = JupyterKernelWebSocket(
             url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
@@ -287,6 +286,10 @@ class JupyterExtension:
             kernel_id = self._sandbox.filesystem.read(
                 "/root/.jupyter/kernel_id", timeout=timeout
             )
+
+            if kernel_id is None and not self._sandbox.is_open:
+                return
+
             kernel_id = kernel_id.strip()
 
             logger.debug(f"Default kernel id: {kernel_id}")
