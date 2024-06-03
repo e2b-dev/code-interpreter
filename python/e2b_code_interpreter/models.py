@@ -124,6 +124,9 @@ class Result:
         """
         return self.text
 
+    def __repr__(self) -> str:
+        return f"Result({self.text})"
+
     def _repr_html_(self) -> Optional[str]:
         """
         Returns the HTML representation of the data.
