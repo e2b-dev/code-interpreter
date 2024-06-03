@@ -141,9 +141,18 @@ class JupyterExtension:
         :param timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
-        data = {"path": cwd, "kernel": {"name": "python3"}, "type": "notebook", "name": str(uuid.uuid4())}
-        if kernel_name:
-            data["kernel"]['name'] = kernel_name
+        kernel_name = kernel_name or "python3"
+        response = requests.post(
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
+            json={"name": kernel_name, "path": cwd},
+            timeout=timeout,
+        )
+        if not response.ok:
+            raise KernelException(f"Failed to create kernel: {response.text}")
+
+        kernel_data = response.json()
+        kernel_id = kernel_data["id"]
+        data = {"path": str(uuid.uuid4()), "kernel": {"name": kernel_name, "id": kernel_id}, "type": "notebook", "name": str(uuid.uuid4())}
         logger.debug(f"Creating kernel with data: {data}")
 
         response = requests.post(
@@ -155,8 +164,17 @@ class JupyterExtension:
             raise KernelException(f"Failed to create kernel: {response.text}")
 
         session_data = response.json()
-        kernel_id = session_data["kernel"]["id"]
         session_id = session_data["id"]
+        kernel_id = session_data["kernel"]["id"]
+
+        response = requests.patch(
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/sessions/{session_id}",
+            json={"path": cwd},
+            timeout=timeout,
+        )
+        if not response.ok:
+            raise KernelException(f"Failed to create kernel: {response.text}")
+
         logger.debug(f"Created kernel {kernel_id}")
 
         threading.Thread(
