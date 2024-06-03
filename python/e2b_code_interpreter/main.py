@@ -142,17 +142,8 @@ class JupyterExtension:
         :return: Kernel id of the created kernel
         """
         kernel_name = kernel_name or "python3"
-        response = requests.post(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
-            json={"name": kernel_name, "path": cwd},
-            timeout=timeout,
-        )
-        if not response.ok:
-            raise KernelException(f"Failed to create kernel: {response.text}")
 
-        kernel_data = response.json()
-        kernel_id = kernel_data["id"]
-        data = {"path": str(uuid.uuid4()), "kernel": {"name": kernel_name, "id": kernel_id}, "type": "notebook", "name": str(uuid.uuid4())}
+        data = {"path": str(uuid.uuid4()), "kernel": {"name": kernel_name}, "type": "notebook", "name": str(uuid.uuid4())}
         logger.debug(f"Creating kernel with data: {data}")
 
         response = requests.post(

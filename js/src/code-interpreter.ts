@@ -145,10 +145,10 @@ export class JupyterExtension {
     cwd: string = '/home/user',
     kernelName?: string
   ): Promise<string> {
-    const data = { path: cwd, kernel: {name: "python3"}, type: "notebook", name: id(16) }
-    if (kernelName) {
-      data.kernel.name = kernelName
-    }
+    kernelName = kernelName || 'python3'
+
+
+    const data = { path: id(16), kernel: {name: kernelName}, type: "notebook", name: id(16) }
 
     const response = await fetch(
       `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
@@ -164,9 +164,27 @@ export class JupyterExtension {
       throw new Error(`Failed to create kernel: ${response.statusText}`)
     }
 
+
     const sessionInfo = await response.json()
     const kernelID = sessionInfo.kernel.id
-    await this.connectToKernelWS(kernelID, sessionInfo.id)
+    const sessionID = sessionInfo.id
+
+    const patchResponse = await fetch(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+        8888
+      )}/api/sessions/${sessionID}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({path: cwd})
+      }
+    )
+
+    if (!patchResponse.ok) {
+      throw new Error(`Failed to create kernel: ${response.statusText}`)
+    }
+
+
+    await this.connectToKernelWS(kernelID, sessionID)
 
     return kernelID
   }
