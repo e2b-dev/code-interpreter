@@ -63,6 +63,9 @@ class JupyterExtension:
         self._connected_kernels: Dict[str, Future[JupyterKernelWebSocket]] = {}
         self._default_kernel_id: Optional[str] = None
 
+    def get_default_url(self) -> str:
+        return f"https://{self._sandbox.get_hostname(8888)}/doc/tree/RTC:default.ipynb"
+
     def exec_cell(
         self,
         code: str,
