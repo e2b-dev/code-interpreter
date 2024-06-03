@@ -1,5 +1,4 @@
 export { CodeInterpreter, JupyterExtension } from './code-interpreter'
-export type { CreateKernelProps } from './code-interpreter'
 
 export type { Logs, ExecutionError, Result, Execution, MIMEType, RawData } from './messaging'
 
