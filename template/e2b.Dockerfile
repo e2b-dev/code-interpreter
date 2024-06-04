@@ -1,5 +1,9 @@
 FROM python:3.10
 
+ENV JAVA_HOME=/opt/java/openjdk
+COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq
 
@@ -19,3 +23,8 @@ COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
 RUN chmod +x $JUPYTER_CONFIG_PATH/start-up.sh
+
+
+RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
+    unzip ijava-1.3.0.zip && \
+    python install.py --sys-prefix

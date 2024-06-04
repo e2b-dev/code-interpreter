@@ -5,27 +5,14 @@ load_dotenv()
 
 
 code = """
-import matplotlib.pyplot as plt
-import numpy as np
-
-x = np.linspace(0, 20, 100)
-y = np.sin(x)
-
-plt.plot(x, y)
-plt.show()
-
-x = np.linspace(0, 10, 100)
-
-plt.plot(x, y)
-plt.show()
-
-import pandas
-pandas.DataFrame({"a": [1, 2, 3]})
+(int) eval("1 + 1") + 3
 """
 
-with CodeInterpreter() as sandbox:
+with CodeInterpreter(domain="e2b-api.com") as sandbox:
     print(sandbox.id)
-    execution = sandbox.notebook.exec_cell(code)
+    k_id = sandbox.notebook.create_kernel(kernel_name="java")
+    execution = sandbox.notebook.exec_cell(code, kernel_id=k_id)
 
-print(execution.results[0].formats())
+print(execution)
+print(execution.logs)
 print(len(execution.results))

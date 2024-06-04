@@ -29,6 +29,8 @@ function start_jupyter_server() {
 	echo "Jupyter Server started"
 }
 
+export PATH="/opt/java/openjdk/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 echo "Starting Jupyter Server..."
 start_jupyter_server &
 jupyter server --IdentityProvider.token=""
