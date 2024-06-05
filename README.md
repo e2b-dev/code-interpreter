@@ -52,14 +52,14 @@ with CodeInterpreter() as sandbox:
 ```
 
 ### 3. Hello World guide
-Dive depeer and check out the [JavaScript](/hello-world/js) and [Python](/hello-world/py) the Hello World guides to learn how o connect code interpreter LLMs.
+Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to connect code interpreter LLMs.
 
 
 ## 📖 Cookbook examples
 
 **Hello World**
-- [TypeScript](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-js)
-- [Python](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/hello-world-python)
+- [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js)
+- [Python](https://e2b.dev/docs/hello-world/py)
 
 **LLM Providers**
 - 🪸 [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter/claude_code_interpreter.ipynb)
