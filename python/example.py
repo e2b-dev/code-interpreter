@@ -3,16 +3,36 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+python_code = """
+k = 1
+k
+"""
 
-code = """
+java_code = """
 (int) eval("1 + 1") + 3
 """
 
-with CodeInterpreter(domain="e2b-api.com") as sandbox:
-    print(sandbox.id)
-    k_id = sandbox.notebook.create_kernel(kernel_name="java")
-    execution = sandbox.notebook.exec_cell(code, kernel_id=k_id)
+js_code = """
+console.log("Hello World");
+"""
 
-print(execution)
-print(execution.logs)
-print(len(execution.results))
+with CodeInterpreter() as sandbox:
+    print(sandbox.id)
+
+    execution = sandbox.notebook.exec_cell(python_code)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+    js_id = sandbox.notebook.create_kernel(kernel_name="javascript")
+    execution = sandbox.notebook.exec_cell(js_code, kernel_id=js_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+    java_id = sandbox.notebook.create_kernel(kernel_name="java")
+    execution = sandbox.notebook.exec_cell(java_code, kernel_id=java_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+

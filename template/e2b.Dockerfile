@@ -5,7 +5,7 @@ COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq
+  build-essential curl git util-linux jq nodejs npm
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -28,3 +28,6 @@ RUN chmod +x $JUPYTER_CONFIG_PATH/start-up.sh
 RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
     unzip ijava-1.3.0.zip && \
     python install.py --sys-prefix
+
+RUN npm install -g --unsafe-perm ijavascript
+RUN ijsinstall --install=global
