@@ -1,15 +1,16 @@
 # This is a config for E2B sandbox template.
-# You can use 'template_id' (izh2hyxizx0qanbiijvn) or 'template_name (code-interpreter-stateful) from this config to spawn a sandbox:
+# You can use 'template_id' (g8fvsnfpjr2truanf91h) or 'template_name (code-interpreter-multikernel) from this config to spawn a sandbox:
 
 # Python SDK
 # from e2b import Sandbox
-# sandbox = Sandbox(template='code-interpreter-stateful')
+# sandbox = Sandbox(template='code-interpreter-multikernel')
 
 # JS SDK
 # import { Sandbox } from 'e2b'
-# const sandbox = await Sandbox.create({ template: 'code-interpreter-stateful' })
+# const sandbox = await Sandbox.create({ template: 'code-interpreter-multikernel' })
 
+memory_mb = 1_024
 start_cmd = "/root/.jupyter/start-up.sh"
 dockerfile = "e2b.Dockerfile"
-template_name = "code-interpreter-stateful"
-template_id = "izh2hyxizx0qanbiijvn"
+template_name = "code-interpreter-multikernel"
+template_id = "g8fvsnfpjr2truanf91h"

@@ -10,7 +10,7 @@ interface Kernels {
  * E2B code interpreter sandbox extension.
  */
 export class CodeInterpreter extends Sandbox {
-  private static template = 'code-interpreter-stateful'
+  private static template = 'code-interpreter-multikernel'
 
   readonly notebook = new JupyterExtension(this)
 
