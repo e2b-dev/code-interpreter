@@ -161,7 +161,11 @@ class JupyterKernelWebSocket:
 
         :param data: The message data
         """
-        parent_msg_ig = data["parent_header"]["msg_id"]
+        parent_msg_ig = data["parent_header"].get("msg_id", None)
+        if parent_msg_ig is None:
+            logger.warning("Parent message ID not found. %s", data)
+            continue
+
         logger.debug(f"Received message {data['msg_type']} for {parent_msg_ig}")
 
         cell = self._cells.get(parent_msg_ig)

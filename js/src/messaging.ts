@@ -331,7 +331,13 @@ export class JupyterKernelWebSocket {
   public listenMessages() {
     this.ws.onmessage = (e: IWebSocket.MessageEvent) => {
       const message = JSON.parse(e.data.toString())
+
       const parentMsgId = message.parent_header.msg_id
+      if (parentMsgId == undefined) {
+        console.warn(`Parent message ID not found.\n Message: ${message}`)
+        return
+      }
+
       const cell = this.cells[parentMsgId]
       if (!cell) {
         return
@@ -430,30 +436,30 @@ export class JupyterKernelWebSocket {
     timeout?: number
   ) {
     return new Promise<Execution>((resolve, reject) => {
-      const msg_id = id(16)
-      const data = this.sendExecuteRequest(msg_id, code)
+      const msgID = id(16)
+      const data = this.sendExecuteRequest(msgID, code)
 
       // give limited time for response
       let timeoutSet: number | NodeJS.Timeout
       if (timeout) {
         timeoutSet = setTimeout(() => {
           // stop waiting for response
-          delete this.idAwaiter[msg_id]
+          delete this.idAwaiter[msgID]
           reject(
             new Error(
-              `Awaiting response to "${code}" with id: ${msg_id} timed out.`
+              `Awaiting response to "${code}" with id: ${msgID} timed out.`
             )
           )
         }, timeout)
       }
 
       // expect response
-      this.cells[msg_id] = new CellExecution(onStdout, onStderr, onResult)
-      this.idAwaiter[msg_id] = (responseData: Execution) => {
+      this.cells[msgID] = new CellExecution(onStdout, onStderr, onResult)
+      this.idAwaiter[msgID] = (responseData: Execution) => {
         // stop timeout
         clearInterval(timeoutSet as number)
         // stop waiting for response
-        delete this.idAwaiter[msg_id]
+        delete this.idAwaiter[msgID]
 
         resolve(responseData)
       }
