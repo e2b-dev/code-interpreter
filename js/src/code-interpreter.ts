@@ -136,16 +136,16 @@ export class JupyterExtension {
    * Once the kernel is created, this method establishes a WebSocket connection to the new kernel for
    * real-time communication.
    *
-   * @param cwd Sets the current working directory where the kernel should start. Defaults to "/home/user".
-   * @param kernelName The name of the kernel to create, useful if you have multiple kernel types. If not provided, the default kernel will be used.
    * @returns A promise that resolves with the ID of the newly created kernel.
    * @throws {Error} Throws an error if the kernel creation fails.
+   * @param opts The options to configure the new kernel.
+   * @param opts.cwd The working directory for the new kernel.
+   * @param opts.kernelName The name of the kernel to create.
    */
-  async createKernel(
-    cwd: string = '/home/user',
-    kernelName?: string
-  ): Promise<string> {
-    kernelName = kernelName || 'python3'
+  async createKernel(opts: { cwd?: string, kernelName?: string } = {
+                       cwd:'/home/user',
+}): Promise<string> {
+    const kernelName = opts.kernelName || 'python3'
 
 
     const data = { path: id(16), kernel: {name: kernelName}, type: "notebook", name: id(16) }
@@ -175,7 +175,7 @@ export class JupyterExtension {
       )}/api/sessions/${sessionID}`,
       {
         method: 'PATCH',
-        body: JSON.stringify({path: cwd})
+        body: JSON.stringify({path: opts.cwd})
       }
     )
 
