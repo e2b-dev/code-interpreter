@@ -24,10 +24,16 @@ COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
 RUN chmod +x $JUPYTER_CONFIG_PATH/start-up.sh
 
-
+# Java Kernel
 RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
     unzip ijava-1.3.0.zip && \
     python install.py --sys-prefix
 
+# Javascript Kernel
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
+
+# R Kernel
+RUN apt-get update && apt-get install -y r-base
+RUN R -e "install.packages('IRkernel')"
+RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"

@@ -16,6 +16,11 @@ js_code = """
 console.log("Hello World");
 """
 
+r_code = """
+x <- 13
+x
+"""
+
 with CodeInterpreter() as sandbox:
     print(sandbox.id)
 
@@ -32,6 +37,13 @@ with CodeInterpreter() as sandbox:
 
     java_id = sandbox.notebook.create_kernel(kernel_name="java")
     execution = sandbox.notebook.exec_cell(java_code, kernel_id=java_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+
+    r_id = sandbox.notebook.create_kernel(kernel_name="R")
+    execution = sandbox.notebook.exec_cell(r_code, kernel_id=r_id)
     print(execution)
     print(execution.logs)
     print(len(execution.results))
