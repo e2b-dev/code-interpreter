@@ -41,8 +41,7 @@ with CodeInterpreter() as sandbox:
     print(execution.logs)
     print(len(execution.results))
 
-
-    r_id = sandbox.notebook.create_kernel(kernel_name="R")
+    r_id = sandbox.notebook.create_kernel(kernel_name="r")
     execution = sandbox.notebook.exec_cell(r_code, kernel_id=r_id)
     print(execution)
     print(execution.logs)

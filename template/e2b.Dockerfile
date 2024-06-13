@@ -37,3 +37,7 @@ RUN ijsinstall --install=global
 RUN apt-get update && apt-get install -y r-base
 RUN R -e "install.packages('IRkernel')"
 RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
+
+# Bash Kernel
+RUN pip install bash_kernel
+RUN python -m bash_kernel.install
