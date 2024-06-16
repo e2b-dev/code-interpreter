@@ -15,6 +15,9 @@ Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
 - ✅ Python
 - [(Beta)](https://github.com/e2b-dev/code-interpreter/pull/20) JavaScript, R, Java
 
+## 📖 Documentation
+- [e2b.dev/docs/code-interpreter](https://e2b.dev/docs/code-interpreter/installation)
+
 ## 🚀 Quickstart
 
 ### 1. Install SDK
