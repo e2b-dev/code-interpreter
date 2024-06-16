@@ -11,6 +11,10 @@ The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2
 
 Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
 
+## 💻 Supported language runtimes
+- ✅ Python
+- [(Beta)](https://github.com/e2b-dev/code-interpreter/pull/20) JavaScript, R, Java
+
 ## 🚀 Quickstart
 
 ### 1. Install SDK
@@ -54,7 +58,6 @@ with CodeInterpreter() as sandbox:
 ### 3. Hello World guide
 Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to connect code interpreter LLMs.
 
-
 ## 📖 Cookbook examples
 
 **Hello World**
@@ -70,8 +73,4 @@ Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello
 - 🦜⛓️ [LangChain with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langchain-python)
 - 🦜🕸️ [LangGraph with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langgraph-python)
 - [Autogen with secure sandboxed code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/e2b_autogen)
-
-## 💻 Supported languages for AI-code execution
-- ✅ Python
-- (soon) JavaScript/TypeScript 
 
