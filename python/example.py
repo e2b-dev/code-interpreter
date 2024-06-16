@@ -3,29 +3,47 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+python_code = """
+k = 1
+k
+"""
 
-code = """
-import matplotlib.pyplot as plt
-import numpy as np
+java_code = """
+(int) eval("1 + 1") + 3
+"""
 
-x = np.linspace(0, 20, 100)
-y = np.sin(x)
+js_code = """
+console.log("Hello World");
+"""
 
-plt.plot(x, y)
-plt.show()
-
-x = np.linspace(0, 10, 100)
-
-plt.plot(x, y)
-plt.show()
-
-import pandas
-pandas.DataFrame({"a": [1, 2, 3]})
+r_code = """
+x <- 13
+x
 """
 
 with CodeInterpreter() as sandbox:
     print(sandbox.id)
-    execution = sandbox.notebook.exec_cell(code)
 
-print(execution.results[0].formats())
-print(len(execution.results))
+    execution = sandbox.notebook.exec_cell(python_code)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+    js_id = sandbox.notebook.create_kernel(kernel_name="javascript")
+    execution = sandbox.notebook.exec_cell(js_code, kernel_id=js_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+    java_id = sandbox.notebook.create_kernel(kernel_name="java")
+    execution = sandbox.notebook.exec_cell(java_code, kernel_id=java_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+
+    r_id = sandbox.notebook.create_kernel(kernel_name="r")
+    execution = sandbox.notebook.exec_cell(r_code, kernel_id=r_id)
+    print(execution)
+    print(execution.logs)
+    print(len(execution.results))
+

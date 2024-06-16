@@ -23,7 +23,7 @@ class CodeInterpreter(Sandbox):
     E2B code interpreter sandbox extension.
     """
 
-    template = "code-interpreter-stateful"
+    template = "code-interpreter-multikernel"
 
     def __init__(
         self,
