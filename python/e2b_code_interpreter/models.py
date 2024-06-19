@@ -1,6 +1,6 @@
 import copy
 from typing import List, Optional, Iterable, Dict
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel
 
 
 class Error(BaseModel):
@@ -211,6 +211,19 @@ class Logs(BaseModel):
     "List of strings printed to stderr by prints, subprocesses, etc."
 
 
+def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
+    """
+    Serializes the results to JSON.
+    This method is used by the Pydantic JSON encoder.
+    """
+    serialized = []
+    for result in results:
+        serialized_dict = {key: result[key] for key in result.formats()}
+        serialized_dict["text"] = result.text
+        serialized.append(serialized_dict)
+    return serialized
+
+
 class Execution(BaseModel):
     """
     Represents the result of a cell execution.
@@ -218,6 +231,9 @@ class Execution(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+        json_encoders = {
+            List[Result]: serialize_results,
+        }
 
     results: List[Result] = []
     "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
@@ -244,19 +260,6 @@ class Execution(BaseModel):
         Returns the JSON representation of the Execution object.
         """
         return self.model_dump_json(exclude_none=True)
-
-    @field_serializer("results", when_used="json")
-    def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
-        """
-        Serializes the results to JSON.
-        This method is used by the Pydantic JSON encoder.
-        """
-        serialized = []
-        for result in results:
-            serialized_dict = {key: result[key] for key in result.formats()}
-            serialized_dict["text"] = result.text
-            serialized.append(serialized_dict)
-        return serialized
 
 
 class KernelException(Exception):
