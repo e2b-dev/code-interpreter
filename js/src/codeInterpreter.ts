@@ -1,5 +1,6 @@
-import { ProcessMessage, Sandbox, SandboxOpts } from 'e2b'
-import { Result, JupyterKernelWebSocket, Execution } from './messaging'
+import { Sandbox } from 'e2b'
+
+import { Result, JupyterKernelWebSocket, Execution, CellMessage } from './messaging'
 import { createDeferredPromise, id } from './utils'
 
 interface Kernels {
@@ -10,24 +11,20 @@ interface Kernels {
  * E2B code interpreter sandbox extension.
  */
 export class CodeInterpreter extends Sandbox {
-  private static template = 'code-interpreter-stateful'
+  protected static readonly defaultTemplate: string = 'code-interpreter-stateful'
 
   readonly notebook = new JupyterExtension(this)
 
-  constructor(opts?: SandboxOpts, createCalled = false) {
-    super({ template: opts?.template || CodeInterpreter.template, ...opts }, createCalled)
+  protected override async onInit(opts: { requestTimeoutMs?: number }) {
+    await this.notebook.connect(opts?.requestTimeoutMs)
   }
 
-  override async _open(opts?: { timeout?: number }) {
-    await super._open({ timeout: opts?.timeout })
-    await this.notebook.connect(opts?.timeout)
-
-    return this
-  }
-
-  override async close() {
+  async close() {
     await this.notebook.close()
-    await super.close()
+  }
+
+  getProtocol(baseProtocol: string = 'http') {
+    return this.connectionConfig.debug ? `${baseProtocol}s` : baseProtocol
   }
 }
 
@@ -41,11 +38,11 @@ export class JupyterExtension {
     return this.kernelIDPromise.promise
   }
 
-  constructor(private sandbox: CodeInterpreter) {}
+  constructor(private sandbox: CodeInterpreter) { }
 
-  async connect(timeout?: number) {
+  async connect(requestTimeoutMs?: number) {
     return this.startConnectingToDefaultKernel(this.setDefaultKernelID, {
-      timeout
+      requestTimeoutMs,
     })
   }
 
@@ -72,8 +69,8 @@ export class JupyterExtension {
       timeout
     }: {
       kernelID?: string
-      onStdout?: (msg: ProcessMessage) => any
-      onStderr?: (msg: ProcessMessage) => any
+      onStdout?: (msg: CellMessage) => any
+      onStderr?: (msg: CellMessage) => any
       onResult?: (data: Result) => any
       timeout?: number
     } = {}
@@ -94,10 +91,10 @@ export class JupyterExtension {
 
   private async startConnectingToDefaultKernel(
     resolve: (value: string) => void,
-    opts?: { timeout?: number }
+    opts?: { requestTimeoutMs?: number }
   ) {
     const kernelID = (
-      await this.sandbox.filesystem.read('/root/.jupyter/kernel_id', opts)
+      await this.sandbox.files.read('/root/.jupyter/kernel_id', opts)
     ).trim()
     await this.connectToKernelWS(kernelID)
     resolve(kernelID)
@@ -116,7 +113,7 @@ export class JupyterExtension {
    * @throws {Error} Throws an error if the connection to the kernel's WebSocket cannot be established.
    */
   private async connectToKernelWS(kernelID: string, sessionID?: string) {
-    const url = `${this.sandbox.getProtocol('ws')}://${this.sandbox.getHostname(
+    const url = `${this.sandbox.getProtocol('ws')}://${this.sandbox.getHost(
       8888
     )}/api/kernels/${kernelID}/channels`
 
@@ -148,10 +145,10 @@ export class JupyterExtension {
     kernelName = kernelName || 'python3'
 
 
-    const data = { path: id(16), kernel: {name: kernelName}, type: "notebook", name: id(16) }
+    const data = { path: id(16), kernel: { name: kernelName }, type: "notebook", name: id(16) }
 
     const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
       )}/api/sessions`,
       {
@@ -170,12 +167,12 @@ export class JupyterExtension {
     const sessionID = sessionInfo.id
 
     const patchResponse = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
       )}/api/sessions/${sessionID}`,
       {
         method: 'PATCH',
-        body: JSON.stringify({path: cwd})
+        body: JSON.stringify({ path: cwd })
       }
     )
 
@@ -201,7 +198,7 @@ export class JupyterExtension {
     delete this.connectedKernels[kernelID]
 
     const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
       )}/api/kernels/${kernelID}/restart`,
       {
@@ -228,7 +225,7 @@ export class JupyterExtension {
     delete this.connectedKernels[kernelID]
 
     const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
       )}/api/kernels/${kernelID}`,
       {
@@ -252,7 +249,7 @@ export class JupyterExtension {
    */
   async listKernels(): Promise<string[]> {
     const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHostname(
+      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
       )}/api/kernels`,
       {

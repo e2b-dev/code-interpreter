@@ -60,9 +60,13 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "^0.16.1",
+    "e2b": "0.16.2-beta.1",
     "isomorphic-ws": "^5.0.0",
     "ws": "^8.15.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8",
+    "utf-8-validate": "^6.0.3"
   },
   "engines": {
     "node": ">=18"
