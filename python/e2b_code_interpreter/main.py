@@ -32,7 +32,7 @@ class CodeInterpreter(Sandbox):
         domain: Optional[str] = None,
         debug: Optional[bool] = None,
         sandbox_id: Optional[str] = None,
-        request_timeout: Optional[float] = None,
+        request_timeout: float = TIMEOUT,
     ):
         super().__init__(
             template=template,
@@ -63,10 +63,7 @@ class CodeInterpreter(Sandbox):
 
 
 class JupyterExtension:
-
-    def __init__(
-        self, sandbox: CodeInterpreter, request_timeout: Optional[float] = TIMEOUT
-    ):
+    def __init__(self, sandbox: CodeInterpreter, request_timeout: float = TIMEOUT):
         self._sandbox = sandbox
         self._kernel_id_set = Future()
         self._start_connecting_to_default_kernel(request_timeout=request_timeout)
@@ -312,7 +309,7 @@ class JupyterExtension:
         return ws
 
     def _start_connecting_to_default_kernel(
-        self, request_timeout: Optional[float] = TIMEOUT
+        self, request_timeout: float = TIMEOUT
     ) -> None:
         """
         Start connecting to the default kernel in a separate thread to avoid blocking the main thread.
