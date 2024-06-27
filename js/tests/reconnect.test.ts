@@ -6,7 +6,7 @@ test('reconnect', async () => {
   let sandbox = await CodeInterpreter.create()
   await sandbox.close()
 
-  sandbox = await CodeInterpreter.reconnect(sandbox.id)
+  sandbox = await CodeInterpreter.connect(sandbox.sandboxID)
 
   const result = await sandbox.notebook.execCell('x =1; x')
 
