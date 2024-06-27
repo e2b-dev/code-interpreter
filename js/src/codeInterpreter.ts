@@ -11,7 +11,7 @@ interface Kernels {
  * E2B code interpreter sandbox extension.
  */
 export class CodeInterpreter extends Sandbox {
-  protected static readonly defaultTemplate: string = 'code-interpreter-stateful'
+  protected static override readonly defaultTemplate: string = 'code-interpreter-stateful'
 
   readonly notebook = new JupyterExtension(this)
 
