@@ -80,6 +80,7 @@ class JupyterExtension:
         on_stdout: Optional[Callable[[CellMessage], Any]] = None,
         on_stderr: Optional[Callable[[CellMessage], Any]] = None,
         on_result: Optional[Callable[[Result], Any]] = None,
+        timeout: float = TIMEOUT,
         request_timeout: float = TIMEOUT,
     ) -> Execution:
         """
@@ -101,7 +102,7 @@ class JupyterExtension:
 
         if ws_future:
             logger.debug(f"Using existing websocket connection to kernel {kernel_id}")
-            ws = ws_future.result(timeout=request_timeout)
+            ws = ws_future.result(timeout=timeout)
         else:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
             ws = self._connect_to_kernel_ws(
@@ -115,7 +116,7 @@ class JupyterExtension:
             f"Sent execution message to kernel {kernel_id}, message_id: {message_id}"
         )
 
-        result = ws.get_result(message_id, timeout=request_timeout)
+        result = ws.get_result(message_id, timeout=timeout)
         logger.debug(
             f"Received result from kernel {kernel_id}, message_id: {message_id}, result: {result}"
         )
@@ -139,7 +140,7 @@ class JupyterExtension:
         self,
         cwd: str = "/home/user",
         kernel_name: Optional[str] = None,
-        timeout: Optional[float] = TIMEOUT,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> str:
         """
         Creates a new kernel, this can be useful if you want to have multiple independent code execution environments.
@@ -153,7 +154,7 @@ class JupyterExtension:
         :param kernel_name:
             Specifies which kernel should be used, useful if you have multiple kernel types.
             If not provided, the default kernel will be used.
-        :param timeout: Timeout for the kernel creation request.
+        :param request_timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
         kernel_name = kernel_name or "python3"
@@ -169,7 +170,7 @@ class JupyterExtension:
         response = requests.post(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/sessions",
             json=data,
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
@@ -181,7 +182,7 @@ class JupyterExtension:
         response = requests.patch(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/sessions/{session_id}",
             json={"path": cwd},
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
@@ -189,12 +190,15 @@ class JupyterExtension:
         logger.debug(f"Created kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, session_id, timeout)
+            target=self._connect_to_kernel_ws,
+            args=(kernel_id, session_id, request_timeout),
         ).start()
         return kernel_id
 
     def restart_kernel(
-        self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> None:
         """
         Restarts an existing Jupyter kernel. This can be useful to reset the kernel's state or to recover from errors.
@@ -211,7 +215,7 @@ class JupyterExtension:
 
         response = requests.post(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels/{kernel_id}/restart",
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to restart kernel {kernel_id}")
@@ -219,11 +223,13 @@ class JupyterExtension:
         logger.debug(f"Restarted kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, None, timeout)
+            target=self._connect_to_kernel_ws, args=(kernel_id, None, request_timeout)
         ).start()
 
     def shutdown_kernel(
-        self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> None:
         """
         Shuts down an existing Jupyter kernel. This method is used to gracefully terminate a kernel's process.
@@ -240,14 +246,14 @@ class JupyterExtension:
 
         response = requests.delete(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels/{kernel_id}",
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to shutdown kernel {kernel_id}")
 
         logger.debug(f"Shutdown kernel {kernel_id}")
 
-    def list_kernels(self, timeout: Optional[float] = TIMEOUT) -> List[str]:
+    def list_kernels(self, request_timeout: Optional[float] = TIMEOUT) -> List[str]:
         """
         Lists all available Jupyter kernels.
 
@@ -259,7 +265,7 @@ class JupyterExtension:
         """
         response = requests.get(
             f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels",
-            timeout=timeout,
+            timeout=request_timeout,
         )
 
         if not response.ok:

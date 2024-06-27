@@ -56,7 +56,7 @@ export class JupyterExtension {
    * @param onStdout A callback function to handle standard output messages from the code execution.
    * @param onStderr A callback function to handle standard error messages from the code execution.
    * @param onResult A callback function to handle display data messages from the code execution.
-   * @param timeout The maximum time to wait for the code execution to complete, in milliseconds.
+   * @param timeoutMs The maximum time to wait for the code execution to complete, in milliseconds.
    * @returns A promise that resolves with the result of the code execution.
    */
   async execCell(
@@ -66,13 +66,13 @@ export class JupyterExtension {
       onStdout,
       onStderr,
       onResult,
-      timeout
+      timeoutMs: timeout
     }: {
       kernelID?: string
       onStdout?: (msg: CellMessage) => any
       onStderr?: (msg: CellMessage) => any
       onResult?: (data: Result) => any
-      timeout?: number
+      timeoutMs?: number
     } = {}
   ): Promise<Execution> {
     kernelID = kernelID || (await this.defaultKernelID)

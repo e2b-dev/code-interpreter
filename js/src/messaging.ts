@@ -444,7 +444,7 @@ export class JupyterKernelWebSocket {
    * @param onStdout Callback for stdout messages.
    * @param onStderr Callback for stderr messages.
    * @param onResult Callback function to handle the result and display calls of the code execution.
-   * @param timeout Time in milliseconds to wait for response.
+   * @param timeoutMs Time in milliseconds to wait for response.
    * @returns Promise with execution result.
    */
   public sendExecutionMessage(
@@ -452,7 +452,7 @@ export class JupyterKernelWebSocket {
     onStdout?: (out: CellMessage) => any,
     onStderr?: (out: CellMessage) => any,
     onResult?: (data: Result) => any,
-    timeout?: number
+    timeoutMs?: number
   ) {
     return new Promise<Execution>((resolve, reject) => {
       const msgID = id(16)
@@ -460,7 +460,7 @@ export class JupyterKernelWebSocket {
 
       // give limited time for response
       let timeoutSet: number | NodeJS.Timeout
-      if (timeout) {
+      if (timeoutMs) {
         timeoutSet = setTimeout(() => {
           // stop waiting for response
           delete this.idAwaiter[msgID]
@@ -469,7 +469,7 @@ export class JupyterKernelWebSocket {
               `Awaiting response to "${code}" with id: ${msgID} timed out.`
             )
           )
-        }, timeout)
+        }, timeoutMs)
       }
 
       // expect response
