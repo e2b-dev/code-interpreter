@@ -68,8 +68,8 @@ Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello
 - [Python](https://e2b.dev/docs/hello-world/py)
 
 **LLM Providers**
-- 🪸 [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter/claude_code_interpreter.ipynb)
-- 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter)
+- 🪸 [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter-python/claude_code_interpreter.ipynb)
+- 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter-python)
 - [Mixtral with code interpreter and chat UI](https://github.com/e2b-dev/e2b-cookbook/tree/main/templates/mixtral-8x7b-code-interpreter-nextjs)
 
 **AI Frameworks**
