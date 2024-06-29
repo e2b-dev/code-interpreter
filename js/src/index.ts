@@ -1,6 +1,6 @@
 export { CodeInterpreter, JupyterExtension } from './codeInterpreter'
 
-export type { Logs, ExecutionError, Result, Execution, MIMEType, RawData } from './messaging'
+export type { Logs, ExecutionError, Result, Execution, MIMEType, RawData, CellMessage } from './messaging'
 
 import { CodeInterpreter } from './codeInterpreter'
 

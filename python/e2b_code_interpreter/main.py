@@ -61,6 +61,10 @@ class CodeInterpreter(Sandbox):
         """
         return base_protocol if self._connection_config.debug else f"{base_protocol}s"
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        super().__exit__(exc_type, exc_value, traceback)
+
 
 class JupyterExtension:
     def __init__(self, sandbox: CodeInterpreter, request_timeout: float = TIMEOUT):
