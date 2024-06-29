@@ -24,7 +24,7 @@ export class CodeInterpreter extends Sandbox {
   }
 
   getProtocol(baseProtocol: string = 'http') {
-    return this.connectionConfig.debug ? `${baseProtocol}s` : baseProtocol
+    return this.connectionConfig.debug ? baseProtocol : `${baseProtocol}s`
   }
 }
 

@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: 0.16.2-beta.1
-        version: 0.16.2-beta.1
+        specifier: 0.16.2-beta.9
+        version: 0.16.2-beta.9
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.16.0)
@@ -1931,6 +1931,10 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
+  /compare-versions@6.1.0:
+    resolution: {integrity: sha512-LNZQXhqUvqUTotpZ00qLSaify3b4VFD588aRr8MKFw4CMUr98ytzCW5wDH5qx/DEY5kCDXcbcRuCqL0szEf2tg==}
+    dev: false
+
   /compose-function@3.0.3:
     resolution: {integrity: sha512-xzhzTJ5eC+gmIzvZq+C3kCJHsp9os6tJkrigDRZclyGtOKINbZtE8n1Tzmeh32jW+BUDPbvZpibwvJHBLGMVwg==}
     dependencies:
@@ -2157,13 +2161,14 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /e2b@0.16.2-beta.1:
-    resolution: {integrity: sha512-/lA0bb/DBbMZzHI7UyZ4m/vjLNwwKcRnI5WSmgzKEeHvWJkpfabY8S+DIQY+OIqQYcMu3gTjFj5VHpEHd9n3Ag==}
+  /e2b@0.16.2-beta.9:
+    resolution: {integrity: sha512-dK6jDQKHHkyqJ8nj1er3kLstxWsbUTEIaWoVrxtR3fjSqBRkJuMPVX7GDZDlefZnAlQx+ODHkmyFO91Mmdjh5A==}
     engines: {node: '>=18'}
     dependencies:
       '@bufbuild/protobuf': 1.10.0
       '@connectrpc/connect': 1.4.0(@bufbuild/protobuf@1.10.0)
       '@connectrpc/connect-web': 1.4.0(@bufbuild/protobuf@1.10.0)(@connectrpc/connect@1.4.0)
+      compare-versions: 6.1.0
       openapi-fetch: 0.9.8
       platform: 1.3.6
     dev: false

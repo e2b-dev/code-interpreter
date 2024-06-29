@@ -24,7 +24,7 @@ pandas.DataFrame({"a": [1, 2, 3]})
 """
 
 with CodeInterpreter() as sandbox:
-    print(sandbox.id)
+    print(sandbox.sandbox_id)
     execution = sandbox.notebook.exec_cell(code)
 
 print(execution.results[0].formats())
