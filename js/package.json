@@ -61,7 +61,7 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "0.16.2-beta.12",
+    "e2b": "0.16.2-beta.13",
     "isomorphic-ws": "^5.0.0",
     "ws": "^8.17.1"
   },
