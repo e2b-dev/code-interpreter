@@ -3,19 +3,36 @@ import logging
 import threading
 import time
 import uuid
+
 from concurrent.futures import Future
 from queue import Queue
 from typing import Callable, Dict, Any, Optional
+from pydantic import BaseModel
+from e2b import TimeoutException
 
-from e2b import ProcessMessage
-from e2b.constants import TIMEOUT
-from e2b.sandbox import TimeoutException
-from e2b.sandbox.websocket_client import WebSocket
-from e2b.utils.future import DeferredFuture
-
+from e2b_code_interpreter.websocket_client import WebSocket
+from e2b_code_interpreter.future import DeferredFuture
 from e2b_code_interpreter.models import Execution, Result, Error
+from e2b_code_interpreter.constants import TIMEOUT
+
 
 logger = logging.getLogger(__name__)
+
+
+class CellMessage(BaseModel):
+    """
+    A message from a process.
+    """
+
+    line: str
+    error: bool = False
+    timestamp: int
+    """
+    Unix epoch in nanoseconds
+    """
+
+    def __str__(self):
+        return self.line
 
 
 class CellExecution:
@@ -26,14 +43,14 @@ class CellExecution:
 
     input_accepted: bool = False
 
-    on_stdout: Optional[Callable[[ProcessMessage], Any]] = None
-    on_stderr: Optional[Callable[[ProcessMessage], Any]] = None
+    on_stdout: Optional[Callable[[CellMessage], Any]] = None
+    on_stderr: Optional[Callable[[CellMessage], Any]] = None
     on_result: Optional[Callable[[Result], Any]] = None
 
     def __init__(
         self,
-        on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
-        on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
+        on_stdout: Optional[Callable[[CellMessage], Any]] = None,
+        on_stderr: Optional[Callable[[CellMessage], Any]] = None,
         on_result: Optional[Callable[[Result], Any]] = None,
     ):
         self.partial_result = Execution()
@@ -44,7 +61,6 @@ class CellExecution:
 
 
 class JupyterKernelWebSocket:
-
     def __init__(self, url: str, session_id: str):
         self.url = url
         self.session_id = session_id
@@ -78,7 +94,7 @@ class JupyterKernelWebSocket:
                 queue_in=self._queue_in,
                 queue_out=self._queue_out,
                 started=started,
-                stopped=self._stopped
+                stopped=self._stopped,
             ).run,
             daemon=True,
             name="e2b-code-interpreter-websocket",
@@ -128,8 +144,8 @@ class JupyterKernelWebSocket:
     def send_execution_message(
         self,
         code: str,
-        on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
-        on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
+        on_stdout: Optional[Callable[[CellMessage], Any]] = None,
+        on_stderr: Optional[Callable[[CellMessage], Any]] = None,
         on_result: Optional[Callable[[Result], Any]] = None,
     ) -> str:
         message_id = str(uuid.uuid4())
@@ -187,7 +203,7 @@ class JupyterKernelWebSocket:
                 execution.logs.stdout.append(data["content"]["text"])
                 if cell.on_stdout:
                     cell.on_stdout(
-                        ProcessMessage(
+                        CellMessage(
                             line=data["content"]["text"],
                             timestamp=time.time_ns(),
                         )
@@ -197,7 +213,7 @@ class JupyterKernelWebSocket:
                 execution.logs.stderr.append(data["content"]["text"])
                 if cell.on_stderr:
                     cell.on_stderr(
-                        ProcessMessage(
+                        CellMessage(
                             line=data["content"]["text"],
                             error=True,
                             timestamp=time.time_ns(),

@@ -1,10 +1,9 @@
-import { ProcessMessage } from 'e2b'
-import { CodeInterpreter, Result } from '../src'
+import { CodeInterpreter, Result, CellMessage } from '../src'
 
 import { expect, test } from 'vitest'
 
 test('streaming output', async () => {
-  const out: ProcessMessage[] = []
+  const out: CellMessage[] = []
   const sandbox = await CodeInterpreter.create()
   await sandbox.notebook.execCell('print(1)', {
     onStdout: (msg) => out.push(msg)
@@ -16,7 +15,7 @@ test('streaming output', async () => {
 })
 
 test('streaming error', async () => {
-  const out: ProcessMessage[] = []
+  const out: CellMessage[] = []
   const sandbox = await CodeInterpreter.create()
   await sandbox.notebook.execCell('import sys;print(1, file=sys.stderr)', {
     onStderr: (msg) => out.push(msg)

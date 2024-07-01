@@ -3,16 +3,14 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
-
 import requests
 
 from concurrent.futures import Future
 from typing import Any, Callable, List, Optional, Dict
+from e2b import Sandbox
 
-from e2b import EnvVars, ProcessMessage, Sandbox
-from e2b.constants import TIMEOUT
-
-from e2b_code_interpreter.messaging import JupyterKernelWebSocket
+from e2b_code_interpreter.constants import TIMEOUT
+from e2b_code_interpreter.messaging import CellMessage, JupyterKernelWebSocket
 from e2b_code_interpreter.models import KernelException, Execution, Result
 
 logger = logging.getLogger(__name__)
@@ -23,42 +21,56 @@ class CodeInterpreter(Sandbox):
     E2B code interpreter sandbox extension.
     """
 
-    template = "code-interpreter-stateful"
+    default_template = "code-interpreter-stateful"
 
     def __init__(
         self,
         template: Optional[str] = None,
+        timeout: Optional[int] = None,
+        metadata: Optional[Dict[str, str]] = None,
         api_key: Optional[str] = None,
-        cwd: Optional[str] = None,
-        env_vars: Optional[EnvVars] = None,
-        timeout: Optional[float] = TIMEOUT,
-        on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
-        on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
-        on_exit: Optional[Callable[[int], Any]] = None,
-        **kwargs,
+        domain: Optional[str] = None,
+        debug: Optional[bool] = None,
+        sandbox_id: Optional[str] = None,
+        request_timeout: float = TIMEOUT,
     ):
         super().__init__(
-            template=template or self.template,
-            api_key=api_key,
-            cwd=cwd,
-            env_vars=env_vars,
+            template=template,
             timeout=timeout,
-            on_stdout=on_stdout,
-            on_stderr=on_stderr,
-            on_exit=on_exit,
-            **kwargs,
+            metadata=metadata,
+            api_key=api_key,
+            domain=domain,
+            debug=debug,
+            sandbox_id=sandbox_id,
+            request_timeout=request_timeout,
         )
-        self.notebook = JupyterExtension(self, timeout=timeout)
-        # Close all the websocket connections when the interpreter is closed
-        self._process_cleanup.append(self.notebook.close)
+        self.notebook = JupyterExtension(self, request_timeout=request_timeout)
+
+    def close(self):
+        # Close all the websocket connections to the kernels
+        self.notebook.close()
+
+    def get_protocol(self, base_protocol: str = "http") -> str:
+        """
+        The function decides whether to use the secure or insecure protocol.
+
+        :param base_protocol: Specify the specific protocol you want to use. Do not include the `s` in `https` or `wss`.
+        :param secure: Specify whether you want to use the secure protocol or not.
+
+        :return: Protocol for the connection to the sandbox
+        """
+        return base_protocol if self._connection_config.debug else f"{base_protocol}s"
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        super().__exit__(exc_type, exc_value, traceback)
 
 
 class JupyterExtension:
-
-    def __init__(self, sandbox: CodeInterpreter, timeout: Optional[float] = TIMEOUT):
+    def __init__(self, sandbox: CodeInterpreter, request_timeout: float = TIMEOUT):
         self._sandbox = sandbox
         self._kernel_id_set = Future()
-        self._start_connecting_to_default_kernel(timeout=timeout)
+        self._start_connecting_to_default_kernel(request_timeout=request_timeout)
         self._connected_kernels: Dict[str, Future[JupyterKernelWebSocket]] = {}
         self._default_kernel_id: Optional[str] = None
 
@@ -66,10 +78,11 @@ class JupyterExtension:
         self,
         code: str,
         kernel_id: Optional[str] = None,
-        on_stdout: Optional[Callable[[ProcessMessage], Any]] = None,
-        on_stderr: Optional[Callable[[ProcessMessage], Any]] = None,
+        on_stdout: Optional[Callable[[CellMessage], Any]] = None,
+        on_stderr: Optional[Callable[[CellMessage], Any]] = None,
         on_result: Optional[Callable[[Result], Any]] = None,
-        timeout: Optional[float] = TIMEOUT,
+        timeout: float = TIMEOUT,
+        request_timeout: float = TIMEOUT,
     ) -> Execution:
         """
         Execute code in a notebook cell.
@@ -93,7 +106,11 @@ class JupyterExtension:
             ws = ws_future.result(timeout=timeout)
         else:
             logger.debug(f"Creating new websocket connection to kernel {kernel_id}")
-            ws = self._connect_to_kernel_ws(kernel_id, None, timeout=timeout)
+            ws = self._connect_to_kernel_ws(
+                kernel_id,
+                None,
+                request_timeout=request_timeout,
+            )
 
         message_id = ws.send_execution_message(code, on_stdout, on_stderr, on_result)
         logger.debug(
@@ -124,7 +141,7 @@ class JupyterExtension:
         self,
         cwd: str = "/home/user",
         kernel_name: Optional[str] = None,
-        timeout: Optional[float] = TIMEOUT,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> str:
         """
         Creates a new kernel, this can be useful if you want to have multiple independent code execution environments.
@@ -138,18 +155,23 @@ class JupyterExtension:
         :param kernel_name:
             Specifies which kernel should be used, useful if you have multiple kernel types.
             If not provided, the default kernel will be used.
-        :param timeout: Timeout for the kernel creation request.
+        :param request_timeout: Timeout for the kernel creation request.
         :return: Kernel id of the created kernel
         """
         kernel_name = kernel_name or "python3"
 
-        data = {"path": str(uuid.uuid4()), "kernel": {"name": kernel_name}, "type": "notebook", "name": str(uuid.uuid4())}
+        data = {
+            "path": str(uuid.uuid4()),
+            "kernel": {"name": kernel_name},
+            "type": "notebook",
+            "name": str(uuid.uuid4()),
+        }
         logger.debug(f"Creating kernel with data: {data}")
 
         response = requests.post(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/sessions",
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/sessions",
             json=data,
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
@@ -159,9 +181,9 @@ class JupyterExtension:
         kernel_id = session_data["kernel"]["id"]
 
         response = requests.patch(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/sessions/{session_id}",
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/sessions/{session_id}",
             json={"path": cwd},
-            timeout=timeout,
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to create kernel: {response.text}")
@@ -169,12 +191,15 @@ class JupyterExtension:
         logger.debug(f"Created kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, session_id, timeout)
+            target=self._connect_to_kernel_ws,
+            args=(kernel_id, session_id, request_timeout),
         ).start()
         return kernel_id
 
     def restart_kernel(
-        self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> None:
         """
         Restarts an existing Jupyter kernel. This can be useful to reset the kernel's state or to recover from errors.
@@ -190,8 +215,8 @@ class JupyterExtension:
         logger.debug(f"Closed websocket connection to kernel {kernel_id}")
 
         response = requests.post(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/restart",
-            timeout=timeout,
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels/{kernel_id}/restart",
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to restart kernel {kernel_id}")
@@ -199,11 +224,13 @@ class JupyterExtension:
         logger.debug(f"Restarted kernel {kernel_id}")
 
         threading.Thread(
-            target=self._connect_to_kernel_ws, args=(kernel_id, None, timeout)
+            target=self._connect_to_kernel_ws, args=(kernel_id, None, request_timeout)
         ).start()
 
     def shutdown_kernel(
-        self, kernel_id: Optional[str] = None, timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = TIMEOUT,
     ) -> None:
         """
         Shuts down an existing Jupyter kernel. This method is used to gracefully terminate a kernel's process.
@@ -219,15 +246,15 @@ class JupyterExtension:
         logger.debug(f"Closed websocket connection to kernel {kernel_id}")
 
         response = requests.delete(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}",
-            timeout=timeout,
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels/{kernel_id}",
+            timeout=request_timeout,
         )
         if not response.ok:
             raise KernelException(f"Failed to shutdown kernel {kernel_id}")
 
         logger.debug(f"Shutdown kernel {kernel_id}")
 
-    def list_kernels(self, timeout: Optional[float] = TIMEOUT) -> List[str]:
+    def list_kernels(self, request_timeout: Optional[float] = TIMEOUT) -> List[str]:
         """
         Lists all available Jupyter kernels.
 
@@ -238,8 +265,8 @@ class JupyterExtension:
         :return: List of kernel ids
         """
         response = requests.get(
-            f"{self._sandbox.get_protocol()}://{self._sandbox.get_hostname(8888)}/api/kernels",
-            timeout=timeout,
+            f"{self._sandbox.get_protocol()}://{self._sandbox.get_host(8888)}/api/kernels",
+            timeout=request_timeout,
         )
 
         if not response.ok:
@@ -256,7 +283,10 @@ class JupyterExtension:
             ws.result().close()
 
     def _connect_to_kernel_ws(
-        self, kernel_id: str, session_id: Optional[str], timeout: Optional[float] = TIMEOUT
+        self,
+        kernel_id: str,
+        session_id: Optional[str],
+        request_timeout: float = TIMEOUT,
     ) -> JupyterKernelWebSocket:
         """
         Establishes a WebSocket connection to a specified Jupyter kernel.
@@ -272,18 +302,18 @@ class JupyterExtension:
 
         session_id = session_id or str(uuid.uuid4())
         ws = JupyterKernelWebSocket(
-            url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_hostname(8888)}/api/kernels/{kernel_id}/channels",
-            session_id=session_id
+            url=f"{self._sandbox.get_protocol('ws')}://{self._sandbox.get_host(8888)}/api/kernels/{kernel_id}/channels",
+            session_id=session_id,
         )
 
-        ws.connect(timeout=timeout)
+        ws.connect(timeout=request_timeout)
         logger.debug(f"Connected to kernel's ({kernel_id}) websocket.")
 
         future.set_result(ws)
         return ws
 
     def _start_connecting_to_default_kernel(
-        self, timeout: Optional[float] = TIMEOUT
+        self, request_timeout: float = TIMEOUT
     ) -> None:
         """
         Start connecting to the default kernel in a separate thread to avoid blocking the main thread.
@@ -292,17 +322,19 @@ class JupyterExtension:
         logger.debug("Starting to connect to the default kernel")
 
         def setup_default_kernel():
-            kernel_id = self._sandbox.filesystem.read(
-                "/root/.jupyter/kernel_id", timeout=timeout
+            kernel_id = self._sandbox.files.read(
+                "/root/.jupyter/kernel_id", request_timeout=request_timeout
             )
 
-            if kernel_id is None and not self._sandbox.is_open:
+            if kernel_id is None and not self._sandbox.is_running(
+                request_timeout=request_timeout
+            ):
                 return
 
             kernel_id = kernel_id.strip()
 
             logger.debug(f"Default kernel id: {kernel_id}")
-            self._connect_to_kernel_ws(kernel_id, None, timeout=timeout)
+            self._connect_to_kernel_ws(kernel_id, None, request_timeout=request_timeout)
             self._kernel_id_set.set_result(kernel_id)
 
         threading.Thread(target=setup_default_kernel).start()

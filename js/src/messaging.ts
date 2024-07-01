@@ -1,6 +1,25 @@
 import IWebSocket from 'isomorphic-ws'
-import { ProcessMessage } from 'e2b'
 import { id } from './utils'
+
+/**
+ * A message from a process.
+ */
+export class CellMessage {
+  constructor(
+    public readonly line: string,
+    /**
+     * Unix epoch in nanoseconds
+     */
+    public readonly timestamp: number,
+    public readonly error: boolean,
+  ) {
+  }
+
+  public toString() {
+    return this.line
+  }
+}
+
 
 /**
  * Represents an error that occurred during the execution of a cell.
@@ -262,14 +281,14 @@ export class Execution {
  */
 class CellExecution {
   execution: Execution
-  onStdout?: (out: ProcessMessage) => any
-  onStderr?: (out: ProcessMessage) => any
+  onStdout?: (out: CellMessage) => any
+  onStderr?: (out: CellMessage) => any
   onResult?: (data: Result) => any
   inputAccepted: boolean = false
 
   constructor(
-    onStdout?: (out: ProcessMessage) => any,
-    onStderr?: (out: ProcessMessage) => any,
+    onStdout?: (out: CellMessage) => any,
+    onStderr?: (out: CellMessage) => any,
     onResult?: (data: Result) => any
   ) {
     this.execution = new Execution([], { stdout: [], stderr: [] })
@@ -355,7 +374,7 @@ export class JupyterKernelWebSocket {
           execution.logs.stdout.push(message.content.text)
           if (cell?.onStdout) {
             cell.onStdout(
-              new ProcessMessage(
+              new CellMessage(
                 message.content.text,
                 new Date().getTime() * 1_000_000,
                 false
@@ -366,7 +385,7 @@ export class JupyterKernelWebSocket {
           execution.logs.stderr.push(message.content.text)
           if (cell?.onStderr) {
             cell.onStderr(
-              new ProcessMessage(
+              new CellMessage(
                 message.content.text,
                 new Date().getTime() * 1_000_000,
                 true
@@ -425,15 +444,15 @@ export class JupyterKernelWebSocket {
    * @param onStdout Callback for stdout messages.
    * @param onStderr Callback for stderr messages.
    * @param onResult Callback function to handle the result and display calls of the code execution.
-   * @param timeout Time in milliseconds to wait for response.
+   * @param timeoutMs Time in milliseconds to wait for response.
    * @returns Promise with execution result.
    */
   public sendExecutionMessage(
     code: string,
-    onStdout?: (out: ProcessMessage) => any,
-    onStderr?: (out: ProcessMessage) => any,
+    onStdout?: (out: CellMessage) => any,
+    onStderr?: (out: CellMessage) => any,
     onResult?: (data: Result) => any,
-    timeout?: number
+    timeoutMs?: number
   ) {
     return new Promise<Execution>((resolve, reject) => {
       const msgID = id(16)
@@ -441,7 +460,7 @@ export class JupyterKernelWebSocket {
 
       // give limited time for response
       let timeoutSet: number | NodeJS.Timeout
-      if (timeout) {
+      if (timeoutMs) {
         timeoutSet = setTimeout(() => {
           // stop waiting for response
           delete this.idAwaiter[msgID]
@@ -450,7 +469,7 @@ export class JupyterKernelWebSocket {
               `Awaiting response to "${code}" with id: ${msgID} timed out.`
             )
           )
-        }, timeout)
+        }, timeoutMs)
       }
 
       // expect response
