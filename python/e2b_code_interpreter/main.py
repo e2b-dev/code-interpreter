@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import logging
 
-from typing import Any, Callable, Optional, Dict
+from typing import Optional, Dict
 from e2b import Sandbox
 
-from e2b_code_interpreter.client import ApiClient, DefaultApi, ExecutionRequest
+from e2b_code_interpreter.client import DefaultApi, ExecutionRequest
 from e2b_code_interpreter.constants import TIMEOUT
-from e2b_code_interpreter.models import Execution, Result
+from e2b_code_interpreter.models import Execution
 
 logger = logging.getLogger(__name__)
 
@@ -52,11 +52,7 @@ class CodeInterpreter(Sandbox):
 
         :param code: Code to execute
         :param kernel_id: The ID of the kernel to execute the code on. If not provided, the default kernel is used.
-        :param on_stdout: A callback function to handle standard output messages from the code execution.
-        :param on_stderr: A callback function to handle standard error messages from the code execution.
-        :param on_result: A callback function to handle the result and display calls of the code execution.
         :param timeout: Timeout for the call
-        :param request_timeout: Timeout for the request
 
         :return: Result of the execution
         """
