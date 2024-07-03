@@ -13,6 +13,7 @@ from models.error import Error
 from models.execution import Execution
 from models.result import Result
 from future import DeferredFuture
+from websocket_client import  WebSocket
 
 TIMEOUT = 60
 
