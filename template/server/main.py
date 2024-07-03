@@ -14,7 +14,7 @@ session_id = str(uuid.uuid4())
 with open("/root/.jupyter/kernel_id") as file:
     kernel_id = file.read().strip()
 
-ws = JupyterKernelWebSocket(f"localhost:8888/api/kernels/{kernel_id}/channels", session_id)
+ws = JupyterKernelWebSocket(f"http://localhost:8888/api/kernels/{kernel_id}/channels", session_id)
 ws.connect()
 
 @app.get("/health")
