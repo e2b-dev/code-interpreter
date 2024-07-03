@@ -5,7 +5,7 @@ import logging
 from typing import Optional, Dict
 from e2b import Sandbox
 
-from e2b_code_interpreter.client import DefaultApi, ExecutionRequest
+from e2b_code_interpreter.client import DefaultApi, ExecutionRequest, ApiClient, Configuration
 from e2b_code_interpreter.constants import TIMEOUT
 from e2b_code_interpreter.models import Execution
 
@@ -17,7 +17,7 @@ class CodeInterpreter(Sandbox):
     E2B code interpreter sandbox extension.
     """
 
-    default_template = "code-interpreter-stateful"
+    default_template = "ci-no-ws"
 
     def __init__(
         self,
@@ -41,7 +41,7 @@ class CodeInterpreter(Sandbox):
             request_timeout=request_timeout,
         )
 
-    def exec_cell(
+    def exec_code(
         self,
         code: str,
         language: Optional[str] = None,
@@ -56,13 +56,17 @@ class CodeInterpreter(Sandbox):
 
         :return: Result of the execution
         """
-        logger.debug(f"Executing code {code} for language {language}")
-
-        with DefaultApi() as api_client:
-            result = api_client.exec_post(ExecutionRequest(code=code, language=language), _request_timeout=timeout)
-
         logger.debug(
-            f"Received result: {result}"
+            f"Executing code {code} for language {language} (Sandbox: {self.sandbox_id})"
         )
+
+        configuration = Configuration(host=self.get_host(8000))
+        with ApiClient(configuration=configuration) as client:
+            api_client = DefaultApi(api_client=client)
+            result = api_client.exec_post(
+                ExecutionRequest(code=code, language=language), _request_timeout=timeout
+            )
+
+        logger.debug(f"Received result: {result} (Sandbox: {self.sandbox_id})")
 
         return result
