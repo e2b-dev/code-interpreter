@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: 0.16.2-beta.13
-        version: 0.16.2-beta.13
+        specifier: 0.16.2-beta.15
+        version: 0.16.2-beta.15
       isomorphic-ws:
         specifier: ^5.0.0
         version: 5.0.0(ws@8.17.1)
@@ -2015,8 +2015,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /e2b@0.16.2-beta.13:
-    resolution: {integrity: sha512-Q7l2ruIYNx9eCn5paeANch/CcrmS/FWCm3wkR6tuRcNAKHy5lYXh0xQbTwJsoVp9shlm1JX0ddP9nTekUqgfTA==}
+  /e2b@0.16.2-beta.15:
+    resolution: {integrity: sha512-b4ZNnNvQI8HGJ6N3Yr90FaSiRN5hae9yY6LIDMAIRpjj2hRcaQ4iaAK1DqXOWwhiZphcPrlTWmoU/17cXxNztw==}
     engines: {node: '>=18'}
     dependencies:
       '@bufbuild/protobuf': 1.10.0
