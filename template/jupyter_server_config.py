@@ -45,4 +45,3 @@ c.ServerApp.disable_check_xsrf = True
 # Whether to allow the user to run the server as root.
 #  Default: False
 c.ServerApp.allow_root = True
-

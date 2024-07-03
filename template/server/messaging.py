@@ -8,12 +8,13 @@ from concurrent.futures import Future
 from queue import Queue
 from typing import Callable, Dict, Any, Optional
 from pydantic import BaseModel
-from e2b import TimeoutException
 
-from e2b_code_interpreter.websocket_client import WebSocket
-from e2b_code_interpreter.future import DeferredFuture
-from e2b_code_interpreter.models import Execution, Result, Error
-from e2b_code_interpreter.constants import TIMEOUT
+from models.error import Error
+from models.execution import Execution
+from models.result import Result
+from future import DeferredFuture
+
+TIMEOUT = 60
 
 
 logger = logging.getLogger(__name__)
@@ -112,7 +113,7 @@ class JupyterKernelWebSocket:
                 time.sleep(0.1)
 
             if not started.is_set():
-                raise TimeoutException("WebSocket failed to start")
+                raise Exception("WebSocket failed to start")
         except BaseException as e:
             self.close()
             raise Exception(f"WebSocket failed to start: {e}") from e
@@ -141,28 +142,15 @@ class JupyterKernelWebSocket:
             }
         )
 
-    def send_execution_message(
-        self,
-        code: str,
-        on_stdout: Optional[Callable[[CellMessage], Any]] = None,
-        on_stderr: Optional[Callable[[CellMessage], Any]] = None,
-        on_result: Optional[Callable[[Result], Any]] = None,
-    ) -> str:
+    def execute(self, code: str, timeout: int = TIMEOUT) -> Execution:
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution message: {message_id}")
 
-        self._cells[message_id] = CellExecution(
-            on_stdout=on_stdout,
-            on_stderr=on_stderr,
-            on_result=on_result,
-        )
+        self._cells[message_id] = CellExecution()
         request = self._get_execute_request(message_id, code)
         self._queue_in.put(request)
-        return message_id
 
-    def get_result(
-        self, message_id: str, timeout: Optional[float] = TIMEOUT
-    ) -> Execution:
+        logger.debug(f"Waiting for result for message: {message_id}")
         result = self._cells[message_id].execution.result(timeout=timeout)
         logger.debug(f"Got result for message: {message_id}")
         del self._cells[message_id]

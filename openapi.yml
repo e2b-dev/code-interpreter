@@ -1,0 +1,166 @@
+openapi: 3.0.0
+info:
+  version: 0.1.0
+  title: E2B Code Interpreter
+
+components:
+  parameters:
+    templateID:
+      name: templateID
+      in: path
+      required: true
+      schema:
+        type: string
+    buildID:
+      name: buildID
+      in: path
+      required: true
+      schema:
+        type: string
+    sandboxID:
+      name: sandboxID
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    "400":
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    "404":
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+    "500":
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Result:
+      properties:
+        text:
+          type: string
+          description: Textual representation of the result
+        html:
+          type: string
+          description: HTML representation of the result
+        markdown:
+          type: string
+          description: Markdown representation of the result
+        svg:
+          type: string
+          description: SVG representation of the result
+        png:
+          type: string
+          description: PNG representation of the result
+        jpeg:
+          type: string
+          description: JPEG representation of the result
+        pdf:
+          type: string
+          description: PDF representation of the result
+        latex:
+          type: string
+          description: LaTeX representation of the result
+        json:
+          type: object
+          description: JSON representation of the result
+        javascript:
+          type: string
+          description: JavaScript representation of the result
+        extra:
+          type: object
+          description: Extra representations of the result
+
+    Logs:
+      properties:
+        stdout:
+          type: string
+        stderr:
+          type: string
+
+    Error:
+      properties:
+        name:
+          type: string
+          description: Name of the exception
+        value:
+          type: string
+          description: Value of the exception
+        traceback_raw:
+          type: array
+          items:
+              type: string
+          description: List of strings representing the traceback
+        code:
+          type: integer
+          format: int32
+          description: Error code
+        message:
+          type: string
+          description: Error
+
+    Execution:
+      properties:
+        results:
+          type: array
+          items:
+              $ref: "#/components/schemas/Result"
+        logs:
+            $ref: "#/components/schemas/Logs"
+        error:
+          $ref: "#/components/schemas/Error"
+        execution_count:
+          type: integer
+          format: int32
+          description: "Execution count of the cell."
+
+    ExecutionRequest:
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Code to be executed
+        language:
+          type: string
+          description: Language of the code to be executed
+
+paths:
+  /health:
+    get:
+      description: Health check
+      responses:
+        "200":
+          description: Request was successful
+
+  /exec:
+    post:
+      description: Create a sandbox from the template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExecutionRequest"
+      responses:
+        "201":
+          description: The sandbox was created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Execution"
+        "400":
+          $ref: "#/components/responses/400"
+        "500":
+          $ref: "#/components/responses/500"
