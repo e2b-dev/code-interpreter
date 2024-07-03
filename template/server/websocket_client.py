@@ -12,8 +12,6 @@ from websockets.legacy.client import WebSocketClientProtocol, Connect
 from websockets.exceptions import ConnectionClosed
 from websockets.typing import Data
 
-from e2b import SandboxException
-
 logger = logging.getLogger(__name__)
 
 
@@ -135,7 +133,7 @@ class E2BConnect(Connect):
             except Exception:
                 retries += 1
                 if retries >= max_retries:
-                    raise SandboxException("Failed to connect to the server")
+                    raise Exception("Failed to connect to the server")
                 # Add a random initial delay between 0 and 5 seconds.
                 # See 7.2.3. Recovering from Abnormal Closure in RFC 6544.
                 if backoff_delay == 0.1:
