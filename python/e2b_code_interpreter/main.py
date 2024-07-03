@@ -44,25 +44,25 @@ class CodeInterpreter(Sandbox):
     def exec_cell(
         self,
         code: str,
-        kernel_id: Optional[str] = None,
+        language: Optional[str] = None,
         timeout: float = TIMEOUT,
     ) -> Execution:
         """
         Execute code in a notebook cell.
 
         :param code: Code to execute
-        :param kernel_id: The ID of the kernel to execute the code on. If not provided, the default kernel is used.
+        :param language: Language of the code to be executed
         :param timeout: Timeout for the call
 
         :return: Result of the execution
         """
-        logger.debug(f"Executing code in kernel {kernel_id}")
+        logger.debug(f"Executing code {code} for language {language}")
 
         with DefaultApi() as api_client:
-            result = api_client.exec_post(ExecutionRequest(code=code), _request_timeout=timeout)
+            result = api_client.exec_post(ExecutionRequest(code=code, language=language), _request_timeout=timeout)
 
         logger.debug(
-            f"Received result from kernel {kernel_id}, result: {result}"
+            f"Received result: {result}"
         )
 
         return result
