@@ -9,11 +9,11 @@ from queue import Queue
 from typing import Callable, Dict, Any, Optional
 from pydantic import BaseModel
 
-from models.error import Error
-from models.execution import Execution
-from models.result import Result
+from api.models.error import Error
+from api.models.execution import Execution
+from api.models.result import Result
 from future import DeferredFuture
-from websocket_client import  WebSocket
+from websocket_client import WebSocket
 
 TIMEOUT = 60
 

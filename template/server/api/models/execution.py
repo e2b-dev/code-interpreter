@@ -21,9 +21,9 @@ import json
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt
 from pydantic import Field
-from models.error import Error
-from models.logs import Logs
-from models.result import Result
+from api.models.error import Error
+from api.models.logs import Logs
+from api.models.result import Result
 
 try:
     from typing import Self

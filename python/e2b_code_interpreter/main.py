@@ -5,7 +5,12 @@ import logging
 from typing import Optional, Dict
 from e2b import Sandbox
 
-from e2b_code_interpreter.client import DefaultApi, ExecutionRequest, ApiClient, Configuration
+from e2b_code_interpreter.client import (
+    DefaultApi,
+    ExecutionRequest,
+    ApiClient,
+    Configuration,
+)
 from e2b_code_interpreter.constants import TIMEOUT
 from e2b_code_interpreter.models import Execution
 
@@ -60,10 +65,10 @@ class CodeInterpreter(Sandbox):
             f"Executing code {code} for language {language} (Sandbox: {self.sandbox_id})"
         )
 
-        configuration = Configuration(host=self.get_host(8000))
+        configuration = Configuration(host=f"https://{self.get_host(8000)}")
         with ApiClient(configuration=configuration) as client:
             api_client = DefaultApi(api_client=client)
-            result = api_client.exec_post(
+            result = api_client.execute_post(
                 ExecutionRequest(code=code, language=language), _request_timeout=timeout
             )
 

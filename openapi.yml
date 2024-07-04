@@ -144,7 +144,7 @@ paths:
         "200":
           description: Request was successful
 
-  /exec:
+  /execute:
     post:
       description: Create a sandbox from the template
       requestBody:

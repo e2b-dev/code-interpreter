@@ -44,7 +44,7 @@ class DefaultApi:
         self.api_client = api_client
 
     @validate_call
-    def exec_post(
+    def execute_post(
         self,
         execution_request: ExecutionRequest,
         _request_timeout: Union[
@@ -59,7 +59,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> Execution:
-        """exec_post
+        """execute_post
 
         Create a sandbox from the template
 
@@ -87,7 +87,7 @@ class DefaultApi:
         :return: Returns the result object.
         """  # noqa: E501
 
-        _param = self._exec_post_serialize(
+        _param = self._execute_post_serialize(
             execution_request=execution_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -110,7 +110,7 @@ class DefaultApi:
         ).data
 
     @validate_call
-    def exec_post_with_http_info(
+    def execute_post_with_http_info(
         self,
         execution_request: ExecutionRequest,
         _request_timeout: Union[
@@ -125,7 +125,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[Execution]:
-        """exec_post
+        """execute_post
 
         Create a sandbox from the template
 
@@ -153,7 +153,7 @@ class DefaultApi:
         :return: Returns the result object.
         """  # noqa: E501
 
-        _param = self._exec_post_serialize(
+        _param = self._execute_post_serialize(
             execution_request=execution_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -176,7 +176,7 @@ class DefaultApi:
         )
 
     @validate_call
-    def exec_post_without_preload_content(
+    def execute_post_without_preload_content(
         self,
         execution_request: ExecutionRequest,
         _request_timeout: Union[
@@ -191,7 +191,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """exec_post
+        """execute_post
 
         Create a sandbox from the template
 
@@ -219,7 +219,7 @@ class DefaultApi:
         :return: Returns the result object.
         """  # noqa: E501
 
-        _param = self._exec_post_serialize(
+        _param = self._execute_post_serialize(
             execution_request=execution_request,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -237,7 +237,7 @@ class DefaultApi:
         )
         return response_data.response
 
-    def _exec_post_serialize(
+    def _execute_post_serialize(
         self,
         execution_request,
         _request_auth,
@@ -285,7 +285,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method="POST",
-            resource_path="/exec",
+            resource_path="/execute",
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
