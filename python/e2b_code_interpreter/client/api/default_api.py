@@ -96,7 +96,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            "201": "Execution",
+            "200": "Execution",
             "400": "Error",
             "500": "Error",
         }
@@ -162,7 +162,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            "201": "Execution",
+            "200": "Execution",
             "400": "Error",
             "500": "Error",
         }
@@ -228,7 +228,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            "201": "Execution",
+            "200": "Execution",
             "400": "Error",
             "500": "Error",
         }
