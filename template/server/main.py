@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import FastAPI
+from starlette.responses import JSONResponse
 
 from messaging import JupyterKernelWebSocket
 from api.models.execution import Execution
@@ -26,5 +27,6 @@ def health():
 
 
 @app.post("/execute", response_model=Execution)
-def execute(request: ExecutionRequest):
-    return ws.execute(code=request.code)
+def execute(request: ExecutionRequest) -> JSONResponse:
+    result = ws.execute(code=request.code)
+    return JSONResponse(content=result)

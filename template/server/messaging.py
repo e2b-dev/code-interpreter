@@ -55,7 +55,7 @@ class CellExecution:
         on_stderr: Optional[Callable[[CellMessage], Any]] = None,
         on_result: Optional[Callable[[Result], Any]] = None,
     ):
-        self.partial_result = Execution()
+        self.partial_result = Execution(results=[])
         self.execution = Future()
         self.on_stdout = on_stdout
         self.on_stderr = on_stderr
