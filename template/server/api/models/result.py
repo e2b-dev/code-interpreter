@@ -19,7 +19,7 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional, Union
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel, StrictBool, StrictStr
 from pydantic import Field
 
 try:
@@ -66,6 +66,9 @@ class Result(BaseModel):
     extra: Optional[Union[str, Any]] = Field(
         default=None, description="Extra representations of the result"
     )
+    is_main_result: Optional[StrictBool] = Field(
+        default=None, description="Whether this is the main result of the cell"
+    )
     additional_properties: Dict[str, Any] = {}
     __properties: ClassVar[List[str]] = [
         "text",
@@ -79,6 +82,7 @@ class Result(BaseModel):
         "json",
         "javascript",
         "extra",
+        "is_main_result",
     ]
 
     model_config = {"populate_by_name": True, "validate_assignment": True}
@@ -144,6 +148,7 @@ class Result(BaseModel):
                 "json": obj.get("json"),
                 "javascript": obj.get("javascript"),
                 "extra": obj.get("extra"),
+                "is_main_result": obj.get("is_main_result"),
             }
         )
         # store additional fields in additional_properties
