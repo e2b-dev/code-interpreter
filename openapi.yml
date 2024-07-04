@@ -81,6 +81,10 @@ components:
         extra:
           type: object
           description: Extra representations of the result
+        is_main_result:
+          type: boolean
+          description: Whether this is the main result of the cell
+
 
     Logs:
       properties:

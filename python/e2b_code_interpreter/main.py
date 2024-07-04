@@ -12,7 +12,7 @@ from e2b_code_interpreter.client import (
     Configuration,
 )
 from e2b_code_interpreter.constants import TIMEOUT
-from e2b_code_interpreter.models import Execution
+from e2b_code_interpreter.models import Execution, Result, Logs, Error
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +68,19 @@ class CodeInterpreter(Sandbox):
         configuration = Configuration(host=f"https://{self.get_host(8000)}")
         with ApiClient(configuration=configuration) as client:
             api_client = DefaultApi(api_client=client)
-            result = api_client.execute_post(
+            execution = api_client.execute_post(
                 ExecutionRequest(code=code, language=language), _request_timeout=timeout
             )
 
-        logger.debug(f"Received result: {result} (Sandbox: {self.sandbox_id})")
+        logger.debug(f"Received result: {execution} (Sandbox: {self.sandbox_id})")
 
-        return result
+        return Execution(
+            results=[
+                Result(**result.model_dump(exclude={"additional_properties"}))
+                for result in execution.results
+            ] if execution.results else None,
+            logs=Logs(stdout=execution.logs.stdout, stderr=execution.logs.stderr) if execution.logs else Logs(),
+            error=Error(
+                **execution.error.model_dump(exclude={"additional_properties"})
+            ) if execution.error else None,
+        )

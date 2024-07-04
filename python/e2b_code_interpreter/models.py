@@ -60,29 +60,22 @@ class Result:
     is_main_result: bool
     "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
 
-    raw: Dict[MIMEType, str]
-    "Dictionary that maps MIME types to their corresponding string representations of the data."
-
-    def __init__(self, is_main_result: bool, data: [MIMEType, str]):
-        self.is_main_result = is_main_result
-        self.raw = copy.deepcopy(data)
-
-        self.text = data.pop("text/plain", None)
-        self.html = data.pop("text/html", None)
-        self.markdown = data.pop("text/markdown", None)
-        self.svg = data.pop("image/svg+xml", None)
-        self.png = data.pop("image/png", None)
-        self.jpeg = data.pop("image/jpeg", None)
-        self.pdf = data.pop("application/pdf", None)
-        self.latex = data.pop("text/latex", None)
-        self.json = data.pop("application/json", None)
-        self.javascript = data.pop("application/javascript", None)
-        self.extra = data
+    def __init__(self, **kwargs):
+        self.text = kwargs.pop("text", None)
+        self.html = kwargs.pop("html", None)
+        self.markdown = kwargs.pop("markdown", None)
+        self.svg = kwargs.pop("svg", None)
+        self.png = kwargs.pop("png", None)
+        self.jpeg = kwargs.pop("jpeg", None)
+        self.pdf = kwargs.pop("pdf", None)
+        self.latex = kwargs.pop("latex", None)
+        self.json = kwargs.pop("json", None)
+        self.javascript = kwargs.pop("javascript", None)
+        self.is_main_result = kwargs.pop("is_main_result", False)
+        self.extra = kwargs
 
     # Allows to iterate over formats()
     def __getitem__(self, item):
-        if item in self.raw:
-            return self.raw[item]
         return getattr(self, item)
 
     def formats(self) -> Iterable[str]:
@@ -230,6 +223,7 @@ class Execution(BaseModel):
     """
 
     class Config:
+        from_attributes = True
         arbitrary_types_allowed = True
         json_encoders = {
             List[Result]: serialize_results,
