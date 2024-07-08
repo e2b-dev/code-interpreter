@@ -75,12 +75,22 @@ class CodeInterpreter(Sandbox):
         logger.debug(f"Received result: {execution} (Sandbox: {self.sandbox_id})")
 
         return Execution(
-            results=[
-                Result(**result.model_dump(exclude={"additional_properties"}))
-                for result in execution.results
-            ] if execution.results else None,
-            logs=Logs(stdout=execution.logs.stdout, stderr=execution.logs.stderr) if execution.logs else Logs(),
-            error=Error(
-                **execution.error.model_dump(exclude={"additional_properties"})
-            ) if execution.error else None,
+            results=(
+                [
+                    Result(**result.model_dump(exclude={"additional_properties"}))
+                    for result in execution.results
+                ]
+                if execution.results
+                else None
+            ),
+            logs=(
+                Logs(stdout=execution.logs.stdout, stderr=execution.logs.stderr)
+                if execution.logs
+                else Logs()
+            ),
+            error=(
+                Error(**execution.error.model_dump(exclude={"additional_properties"}))
+                if execution.error
+                else None
+            ),
         )
