@@ -11,7 +11,7 @@ from api.models.execution import Execution
 from api.models.execution_request import ExecutionRequest
 
 logger = logging.Logger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 session_id = str(uuid.uuid4())
