@@ -962,3 +962,8 @@ c.InteractiveShell.colors = "NoColor"
 ## Username for the Session. Default is your system username.
 #  Default: 'user'
 # c.Session.username = 'user'
+
+# Truncate large collections (lists, dicts, tuples, sets) to this size.
+# Set to 0 to disable truncation.
+#  Default: 1000
+c.PlainTextFormatter.max_seq_length = 0
