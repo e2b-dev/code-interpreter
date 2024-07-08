@@ -5,14 +5,17 @@ import logging
 from typing import Optional, Dict
 from e2b import Sandbox
 
-from e2b_code_interpreter.client import (
-    DefaultApi,
-    ExecutionRequest,
-    ApiClient,
-    Configuration,
-)
+
 from e2b_code_interpreter.constants import TIMEOUT
 from e2b_code_interpreter.models import Execution, Result, Logs, Error
+
+
+from e2b_code_interpreter.client.client import Client
+from e2b_code_interpreter.client.models import ExecutionRequest
+
+from e2b_code_interpreter.client.api.default.post_execute import (
+    sync_detailed as post_execute,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,33 +68,29 @@ class CodeInterpreter(Sandbox):
             f"Executing code {code} for language {language} (Sandbox: {self.sandbox_id})"
         )
 
-        configuration = Configuration(host=f"https://{self.get_host(8000)}")
-        # configuration = Configuration(host=f"http://localhost:8000")
-        with ApiClient(configuration=configuration) as client:
-            api_client = DefaultApi(api_client=client)
-            execution = api_client.execute_post(
-                ExecutionRequest(code=code, language=language), _request_timeout=timeout
-            )
+        client = Client(base_url=f"https://{self.get_host(8000)}")
+        with client as client:
+            execution = post_execute(client=client, body=ExecutionRequest(code=code))
+
+        execution = execution.parsed
+        if not execution:
+            raise Exception("Failed to execute code")
 
         logger.debug(f"Received result: {execution} (Sandbox: {self.sandbox_id})")
 
         return Execution(
             results=(
-                [
-                    Result(**result.model_dump(exclude={"additional_properties"}))
-                    for result in execution.results
-                ]
+                [Result(**result.to_dict()) for result in execution.results]
                 if execution.results
                 else None
             ),
             logs=(
-                Logs(stdout=execution.logs.stdout, stderr=execution.logs.stderr)
+                Logs(
+                    stdout=execution.logs.stdout or None,
+                    stderr=execution.logs.stderr or None,
+                )
                 if execution.logs
                 else Logs()
             ),
-            error=(
-                Error(**execution.error.model_dump(exclude={"additional_properties"}))
-                if execution.error
-                else None
-            ),
+            error=(Error(**execution.error.to_dict()) if execution.error else None),
         )

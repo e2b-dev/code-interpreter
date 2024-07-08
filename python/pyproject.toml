@@ -12,11 +12,13 @@ packages = [{ include = "e2b_code_interpreter" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 
-pydantic = "*"
 websocket-client = "^1.7.0"
 websockets = "^12.0"
 e2b = "0.17.2a23"
 requests = "^2.32.3"
+httpx = ">=0.20.0,<0.28.0"
+attrs = ">=21.3.0"
+python-dateutil = "^2.8.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.3.0"

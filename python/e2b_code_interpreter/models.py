@@ -71,23 +71,37 @@ class Result:
     is_main_result: bool
     "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
 
-    def __init__(self, **kwargs):
-        self.text = kwargs.pop("text", None)
-        self.html = kwargs.pop("html", None)
-        self.markdown = kwargs.pop("markdown", None)
-        self.svg = kwargs.pop("svg", None)
-        self.png = kwargs.pop("png", None)
-        self.jpeg = kwargs.pop("jpeg", None)
-        self.pdf = kwargs.pop("pdf", None)
-        self.latex = kwargs.pop("latex", None)
-        self.json = kwargs.pop("json", None)
-        self.javascript = kwargs.pop("javascript", None)
-        self.is_main_result = kwargs.pop("is_main_result", False)
-        self.extra = kwargs.pop("extra", None) or {}
-
-    # Allows to iterate over formats()
     def __getitem__(self, item):
         return getattr(self, item)
+
+    # Allows to iterate over formats()
+    def __init__(
+        self,
+        text: Optional[str] = None,
+        html: Optional[str] = None,
+        markdown: Optional[str] = None,
+        svg: Optional[str] = None,
+        png: Optional[str] = None,
+        jpeg: Optional[str] = None,
+        pdf: Optional[str] = None,
+        latex: Optional[str] = None,
+        json: Optional[dict] = None,
+        javascript: Optional[str] = None,
+        is_main_result: bool = False,
+        extra: Optional[dict] = None,
+    ):
+        self.text = text
+        self.html = html
+        self.markdown = markdown
+        self.svg = svg
+        self.png = png
+        self.jpeg = jpeg
+        self.pdf = pdf
+        self.latex = latex
+        self.json = json
+        self.javascript = javascript
+        self.is_main_result = is_main_result
+        self.extra = extra or {}
 
     def formats(self) -> Iterable[str]:
         """
@@ -209,16 +223,19 @@ class Logs:
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
 
-    stdout: List[str] = []
+    stdout: Optional[str] = None
     "List of strings printed to stdout by prints, subprocesses, etc."
-    stderr: List[str] = []
+    stderr: Optional[str] = None
     "List of strings printed to stderr by prints, subprocesses, etc."
 
     def __init__(
         self, stdout: Optional[List[str]] = None, stderr: Optional[List[str]] = None
     ):
-        self.stdout = stdout or []
-        self.stderr = stderr or []
+        self.stdout = stdout
+        self.stderr = stderr
+
+    def __repr__(self):
+        return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
 
     def to_json(self) -> str:
         """
@@ -260,6 +277,9 @@ class Execution:
         self.logs = kwargs.pop("logs", Logs())
         self.error = kwargs.pop("error", None)
         self.execution_count = kwargs.pop("execution_count", None)
+
+    def __repr__(self):
+        return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
 
     @property
     def text(self) -> Optional[str]:

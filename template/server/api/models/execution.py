@@ -45,7 +45,11 @@ class Execution(BaseModel):
     additional_properties: Dict[str, Any] = {}
     __properties: ClassVar[List[str]] = ["results", "logs", "error", "execution_count"]
 
-    model_config = {"populate_by_name": True, "validate_assignment": True}
+    model_config = {
+        "populate_by_name": True,
+        "validate_assignment": True,
+        "arbitrary_types_allowed": True,
+    }
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""

@@ -144,7 +144,9 @@ class JupyterKernelWebSocket:
 
         await self._ws.send(request)
 
-        result = await asyncio.wait_for(self._cells[message_id].execution, timeout=timeout)
+        result = await asyncio.wait_for(
+            self._cells[message_id].execution, timeout=timeout
+        )
         logger.debug(f"Got result for message: {message_id}")
 
         del self._cells[message_id]
@@ -201,7 +203,7 @@ class JupyterKernelWebSocket:
             elif data["content"]["name"] == "stderr":
                 execution.logs.stderr.append(data["content"]["text"])
                 if cell.on_stderr:
-                    cell.on_stderr(                            data["content"]["text"])
+                    cell.on_stderr(data["content"]["text"])
 
         elif data["msg_type"] in "display_data":
             result = Result(is_main_result=False, data=data["content"]["data"])

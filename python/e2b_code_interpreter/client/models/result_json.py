@@ -1,56 +1,30 @@
-from typing import Any, Dict, List, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..types import UNSET, Unset
-
-T = TypeVar("T", bound="ExecutionRequest")
+T = TypeVar("T", bound="ResultJson")
 
 
 @_attrs_define
-class ExecutionRequest:
-    """
-    Attributes:
-        code (str): Code to be executed
-        language (Union[Unset, str]): Language of the code to be executed
-    """
+class ResultJson:
+    """JSON representation of the result"""
 
-    code: str
-    language: Union[Unset, str] = UNSET
     additional_properties: Dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
-        code = self.code
-
-        language = self.language
-
         field_dict: Dict[str, Any] = {}
         field_dict.update(self.additional_properties)
-        field_dict.update(
-            {
-                "code": code,
-            }
-        )
-        if language is not UNSET:
-            field_dict["language"] = language
 
         return field_dict
 
     @classmethod
     def from_dict(cls: Type[T], src_dict: Dict[str, Any]) -> T:
         d = src_dict.copy()
-        code = d.pop("code")
+        result_json = cls()
 
-        language = d.pop("language", UNSET)
-
-        execution_request = cls(
-            code=code,
-            language=language,
-        )
-
-        execution_request.additional_properties = d
-        return execution_request
+        result_json.additional_properties = d
+        return result_json
 
     @property
     def additional_keys(self) -> List[str]:

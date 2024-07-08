@@ -21,10 +21,12 @@ with open("/root/.jupyter/kernel_id") as file:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load the ML model
-    default_ws = JupyterKernelWebSocket(f"ws://localhost:8888/api/kernels/{kernel_id}/channels", session_id)
+    default_ws = JupyterKernelWebSocket(
+        f"ws://localhost:8888/api/kernels/{kernel_id}/channels", session_id
+    )
 
-    websockets['default'] = default_ws
-    websockets['python'] = default_ws
+    websockets["default"] = default_ws
+    websockets["python"] = default_ws
 
     task = asyncio.create_task(default_ws.connect())
     await default_ws.started
@@ -43,7 +45,7 @@ def health():
     return "Request was successful"
 
 
-@app.post("/execute")
+@app.post("/execute", response_model=Execution, response_model_exclude_none=True)
 async def execute(request: ExecutionRequest) -> Execution:
-    ws = websockets['default']
+    ws = websockets["default"]
     return await ws.execute(code=request.code)
