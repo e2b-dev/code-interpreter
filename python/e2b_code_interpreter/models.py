@@ -248,7 +248,6 @@ class Logs:
 def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     """
     Serializes the results to JSON.
-    This method is used by the Pydantic JSON encoder.
     """
     serialized = []
     for result in results:
