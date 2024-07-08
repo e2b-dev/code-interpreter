@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import uuid
 from contextlib import asynccontextmanager
 from typing import Dict
@@ -8,6 +9,9 @@ from fastapi import FastAPI
 from messaging import JupyterKernelWebSocket
 from api.models.execution import Execution
 from api.models.execution_request import ExecutionRequest
+
+logger = logging.Logger(__name__)
+logger.setLevel(logging.INFO)
 
 
 session_id = str(uuid.uuid4())
@@ -28,9 +32,11 @@ async def lifespan(app: FastAPI):
     websockets["default"] = default_ws
     websockets["python"] = default_ws
 
+    logger.info("Connecting to default runtime")
     task = asyncio.create_task(default_ws.connect())
     await default_ws.started
 
+    logger.info("Connected to default runtime")
     yield
 
     await default_ws.close()
@@ -38,6 +44,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+logger.info("Starting Code Interpreter server")
 
 
 @app.get("/health")
@@ -47,5 +55,10 @@ def health():
 
 @app.post("/execute", response_model=Execution, response_model_exclude_none=True)
 async def execute(request: ExecutionRequest) -> Execution:
+    logger.info(f"Executing code: {request.code}")
+
     ws = websockets["default"]
-    return await ws.execute(code=request.code)
+    execution = await ws.execute(code=request.code)
+
+    logger.info(f"Execution result: {execution}")
+    return execution
