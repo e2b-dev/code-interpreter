@@ -28,7 +28,7 @@ function start_jupyter_server() {
 	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 	echo "Jupyter Server started"
 
-	fastapi run /root/.server/main.py
+	fastapi run /root/.server/main.py --port 8000
 }
 
 echo "Starting Jupyter Server..."

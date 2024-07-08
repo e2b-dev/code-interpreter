@@ -1,9 +1,8 @@
-import copy
+import json
 from typing import List, Optional, Iterable, Dict
-from pydantic import BaseModel
 
 
-class Error(BaseModel):
+class Error:
     """
     Represents an error that occurred during the execution of a cell.
     The error contains the name of the error, the value of the error, and the traceback.
@@ -16,6 +15,11 @@ class Error(BaseModel):
     traceback_raw: List[str]
     "List of strings representing the traceback."
 
+    def __init__(self, name: str, value: str, traceback: List[str]):
+        self.name = name
+        self.value = value
+        self.traceback_raw = traceback
+
     @property
     def traceback(self) -> str:
         """
@@ -24,6 +28,13 @@ class Error(BaseModel):
         :return: The traceback as a single string.
         """
         return "\n".join(self.traceback_raw)
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Error object.
+        """
+        data = {"name": self.name, "value": self.value, "traceback": self.traceback}
+        return json.dumps(data)
 
 
 class MIMEType(str):
@@ -72,7 +83,7 @@ class Result:
         self.json = kwargs.pop("json", None)
         self.javascript = kwargs.pop("javascript", None)
         self.is_main_result = kwargs.pop("is_main_result", False)
-        self.extra = kwargs
+        self.extra = kwargs.pop("extra", None) or {}
 
     # Allows to iterate over formats()
     def __getitem__(self, item):
@@ -193,7 +204,7 @@ class Result:
         return self.javascript
 
 
-class Logs(BaseModel):
+class Logs:
     """
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
@@ -202,6 +213,19 @@ class Logs(BaseModel):
     "List of strings printed to stdout by prints, subprocesses, etc."
     stderr: List[str] = []
     "List of strings printed to stderr by prints, subprocesses, etc."
+
+    def __init__(
+        self, stdout: Optional[List[str]] = None, stderr: Optional[List[str]] = None
+    ):
+        self.stdout = stdout or []
+        self.stderr = stderr or []
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Logs object.
+        """
+        data = {"stdout": self.stdout, "stderr": self.stderr}
+        return json.dumps(data)
 
 
 def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
@@ -217,17 +241,10 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     return serialized
 
 
-class Execution(BaseModel):
+class Execution:
     """
     Represents the result of a cell execution.
     """
-
-    class Config:
-        from_attributes = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            List[Result]: serialize_results,
-        }
 
     results: List[Result] = []
     "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
@@ -237,6 +254,12 @@ class Execution(BaseModel):
     "Error object if an error occurred, None otherwise."
     execution_count: Optional[int] = None
     "Execution count of the cell."
+
+    def __init__(self, **kwargs):
+        self.results = kwargs.pop("results", [])
+        self.logs = kwargs.pop("logs", Logs())
+        self.error = kwargs.pop("error", None)
+        self.execution_count = kwargs.pop("execution_count", None)
 
     @property
     def text(self) -> Optional[str]:
@@ -253,7 +276,12 @@ class Execution(BaseModel):
         """
         Returns the JSON representation of the Execution object.
         """
-        return self.model_dump_json(exclude_none=True)
+        data = {
+            "results": serialize_results(self.results),
+            "logs": self.logs.to_json(),
+            "error": self.error.to_json() if self.error else None,
+        }
+        return json.dumps(data)
 
 
 class KernelException(Exception):

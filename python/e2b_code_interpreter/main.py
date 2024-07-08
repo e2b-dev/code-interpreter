@@ -66,6 +66,7 @@ class CodeInterpreter(Sandbox):
         )
 
         configuration = Configuration(host=f"https://{self.get_host(8000)}")
+        # configuration = Configuration(host=f"http://localhost:8000")
         with ApiClient(configuration=configuration) as client:
             api_client = DefaultApi(api_client=client)
             execution = api_client.execute_post(
