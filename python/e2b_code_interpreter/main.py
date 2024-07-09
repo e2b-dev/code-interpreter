@@ -65,9 +65,9 @@ class CodeInterpreter(Sandbox):
         )
 
         execution = Execution()
-        # with requests.get(f"https://{self.get_host(8000)}/execution", stream=True) as r:
-        with requests.get(f"http://localhost:8000/execution", stream=True) as r:
-            print(r)
+        with requests.post(f"http://localhost:8000/execute", stream=True) as r:
+        # with requests.post(f"https://{self.get_host(8000)}/execute", stream=True) as r:
+            print(r.text)
             for line in r.iter_lines():
                 data = json.loads(line.decode("utf-8"))
                 data_type = data.pop("type")
