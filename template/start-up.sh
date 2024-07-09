@@ -25,7 +25,8 @@ function start_jupyter_server() {
 	sudo echo "${kernel_id}" | sudo tee /root/.jupyter/kernel_id >/dev/null
 	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 
-	fastapi run /root/.server/main.py --port 8000 > /dev/null 2>&1
+	cd /root/.server/
+	uvicorn main:app --port 8000  --workers 2 --no-access-log --no-use-colors
 }
 
 echo "Starting Code Interpreter server..."

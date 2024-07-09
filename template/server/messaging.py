@@ -137,7 +137,7 @@ class JupyterKernelWebSocket:
 
     async def execute(self, code: str, timeout: int = TIMEOUT) -> Execution:
         message_id = str(uuid.uuid4())
-        logger.debug(f"Sending execution message: {message_id}")
+        logger.debug(f"Sending execution for code ({message_id}): {code}")
 
         self._cells[message_id] = CellExecution()
         request = self._get_execute_request(message_id, code)
@@ -147,7 +147,7 @@ class JupyterKernelWebSocket:
         result = await asyncio.wait_for(
             self._cells[message_id].execution, timeout=timeout
         )
-        logger.debug(f"Got result for message: {message_id}")
+        logger.debug(f"Got result for code ({message_id})")
 
         del self._cells[message_id]
         return result
@@ -248,10 +248,10 @@ class JupyterKernelWebSocket:
         else:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 
-    def close(self):
+    async def close(self):
         logger.debug("Closing WebSocket")
         self._stopped.set_result(None)
-        self._ws.close()
+        await self._ws.close()
 
         for handler in self._waiting_for_replies.values():
             logger.debug(f"Cancelling waiting for execution result for {handler}")
