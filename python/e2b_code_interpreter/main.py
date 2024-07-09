@@ -1,21 +1,17 @@
 from __future__ import annotations
 
+import json
 import logging
 
 from typing import Optional, Dict
+
+import requests
 from e2b import Sandbox
 
 
 from e2b_code_interpreter.constants import TIMEOUT
 from e2b_code_interpreter.models import Execution, Result, Logs, Error
 
-
-from e2b_code_interpreter.client.client import Client
-from e2b_code_interpreter.client.models import ExecutionRequest
-
-from e2b_code_interpreter.client.api.default.post_execute import (
-    sync_detailed as post_execute,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -68,29 +64,45 @@ class CodeInterpreter(Sandbox):
             f"Executing code {code} for language {language} (Sandbox: {self.sandbox_id})"
         )
 
-        client = Client(base_url=f"https://{self.get_host(8000)}")
-        with client as client:
-            execution = post_execute(client=client, body=ExecutionRequest(code=code))
+        execution = Execution()
+        # with requests.get(f"https://{self.get_host(8000)}/execution", stream=True) as r:
+        with requests.get(f"http://localhost:8000/execution", stream=True) as r:
+            print(r)
+            for line in r.iter_lines():
+                data = json.loads(line.decode("utf-8"))
+                data_type = data.pop("type")
 
-        execution = execution.parsed
-        if not execution:
-            raise Exception("Failed to execute code")
+                if data_type == "result":
+                    result = Result(**data)
+                    execution.results.append(result)
+                elif data_type == "stdout":
+                    execution.logs.stdout += data["value"]
+                elif data_type == "stderr":
+                    execution.logs.stderr += data["value"]
+                elif data_type == "error":
+                    execution.error = Error(**data)
 
-        logger.debug(f"Received result: {execution} (Sandbox: {self.sandbox_id})")
+        print("Done")
+        return execution
 
-        return Execution(
-            results=(
-                [Result(**result.to_dict()) for result in execution.results]
-                if execution.results
-                else None
-            ),
-            logs=(
-                Logs(
-                    stdout=execution.logs.stdout or None,
-                    stderr=execution.logs.stderr or None,
-                )
-                if execution.logs
-                else Logs()
-            ),
-            error=(Error(**execution.error.to_dict()) if execution.error else None),
-        )
+        # if not execution:
+        #     raise Exception("Failed to execute code")
+        #
+        # logger.debug(f"Received result: {execution} (Sandbox: {self.sandbox_id})")
+        #
+        # return Execution(
+        #     results=(
+        #         [Result(**result.to_dict()) for result in execution.results]
+        #         if execution.results
+        #         else None
+        #     ),
+        #     logs=(
+        #         Logs(
+        #             stdout=execution.logs.stdout or None,
+        #             stderr=execution.logs.stderr or None,
+        #         )
+        #         if execution.logs
+        #         else Logs()
+        #     ),
+        #     error=(Error(**execution.error.to_dict()) if execution.error else None),
+        # )

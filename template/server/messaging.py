@@ -1,17 +1,14 @@
 import json
 import logging
-import threading
 import uuid
 import asyncio
 import random
-from asyncio import Future
+from asyncio import Future, Queue
 
-from typing import Callable, Dict, Any, Optional, AsyncIterator, List
+from typing import Callable, Dict, Any, AsyncIterator, List, AsyncIterable
 
 
-from api.models.error import Error
-from api.models.execution import Execution
-from api.models.result import Result
+from api.models.output import Output, OutputType
 from websockets.legacy.client import WebSocketClientProtocol, Connect
 from websockets.exceptions import ConnectionClosed
 
@@ -21,45 +18,10 @@ TIMEOUT = 60
 logger = logging.getLogger(__name__)
 
 
-class CellMessage:
-    """
-    A message from a process.
-    """
-
-    line: str
-    error: bool = False
-    timestamp: int
-    """
-    Unix epoch in nanoseconds
-    """
-
-    def __str__(self):
-        return self.line
-
-
-class CellExecution:
-    """
-    Represents the execution of a cell in the Jupyter kernel.
-    It's an internal class used by JupyterKernelWebSocket.
-    """
-
-    input_accepted: bool = False
-
-    on_stdout: Optional[Callable[[str], Any]] = None
-    on_stderr: Optional[Callable[[str], Any]] = None
-    on_result: Optional[Callable[[Result], Any]] = None
-
-    def __init__(
-        self,
-        on_stdout: Optional[Callable[[str], Any]] = None,
-        on_stderr: Optional[Callable[[str], Any]] = None,
-        on_result: Optional[Callable[[Result], Any]] = None,
-    ):
-        self.partial_result = Execution(results=[])
-        self.execution = Future()
-        self.on_stdout = on_stdout
-        self.on_stderr = on_stderr
-        self.on_result = on_result
+class Execution:
+    def __init__(self):
+        self.queue = Queue()
+        self.input_accepted = False
 
 
 class JupyterKernelWebSocket:
@@ -68,7 +30,7 @@ class JupyterKernelWebSocket:
     def __init__(self, url: str, session_id: str):
         self.url = url
         self.session_id = session_id
-        self._cells: Dict[str, CellExecution] = {}
+        self._executions: Dict[str, Execution] = {}
         self._process_cleanup: List[Callable[[], Any]] = []
         self._waiting_for_replies: Dict[str, Future] = {}
         self._stopped = Future()
@@ -135,22 +97,25 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(self, code: str, timeout: int = TIMEOUT) -> Execution:
+    async def execute(self, code: str) -> AsyncIterable[Output]:
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
-        self._cells[message_id] = CellExecution()
+        self._executions[message_id] = Execution()
         request = self._get_execute_request(message_id, code)
 
         await self._ws.send(request)
 
-        result = await asyncio.wait_for(
-            self._cells[message_id].execution, timeout=timeout
-        )
-        logger.debug(f"Got result for code ({message_id})")
+        queue = self._executions[message_id].queue
+        while True:
+            output = await queue.get()
+            if output.type == "end_of_execution":
+                break
 
-        del self._cells[message_id]
-        return result
+            logger.debug(f"Got result for code ({message_id}): {output}")
+            yield output
+
+        del self._executions[message_id]
 
     async def _receive_message(self):
         try:
@@ -159,11 +124,11 @@ class JupyterKernelWebSocket:
                 return
             async for message in self._ws:
                 logger.debug(f"WebSocket received message: {message}".strip())
-                self._process_message(json.loads(message))
+                await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {e}")
 
-    def _process_message(self, data: dict):
+    async def _process_message(self, data: dict):
         """
         Process messages from the WebSocket
 
@@ -180,71 +145,48 @@ class JupyterKernelWebSocket:
 
         logger.debug(f"Received message {data['msg_type']} for {parent_msg_ig}")
 
-        cell = self._cells.get(parent_msg_ig)
-        if not cell:
+        execution = self._executions.get(parent_msg_ig)
+        if not execution:
             return
 
-        execution = cell.partial_result
-
+        queue = execution.queue
         if data["msg_type"] == "error":
             logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-            execution.error = Error(
-                name=data["content"]["ename"],
-                value=data["content"]["evalue"],
-                traceback_raw=data["content"]["traceback"],
-            )
+            await queue.put(Output(data=data["content"], type=OutputType.ERROR))
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                execution.logs.stdout.append(data["content"]["text"])
-                if cell.on_stdout:
-                    cell.on_stdout(data["content"]["text"])
+                await queue.put(Output(data=data['content'], type=OutputType.STDOUT))
 
             elif data["content"]["name"] == "stderr":
-                execution.logs.stderr.append(data["content"]["text"])
-                if cell.on_stderr:
-                    cell.on_stderr(data["content"]["text"])
+                await queue.put(Output(data=data['content'], type=OutputType.STDERR))
 
         elif data["msg_type"] in "display_data":
-            result = Result(is_main_result=False, data=data["content"]["data"])
-            execution.results.append(result)
-            if cell.on_result:
-                cell.on_result(result)
+            await queue.put(Output(is_main_result=False, data=data["content"]["data"], type=OutputType.RESULT))
         elif data["msg_type"] == "execute_result":
-            result = Result(is_main_result=True, data=data["content"]["data"])
-            execution.results.append(result)
-            if cell.on_result:
-                cell.on_result(result)
+            await queue.put(Output(is_main_result=True, data=data["content"]["data"], type=OutputType.RESULT))
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
-                if cell.input_accepted:
+                if execution.input_accepted:
                     logger.debug(f"Cell {parent_msg_ig} finished execution")
-                    cell.execution.set_result(execution)
+                    await queue.put(Output(type=OutputType.END_OF_EXECUTION))
 
             elif data["content"]["execution_state"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                execution.error = Error(
-                    name=data["content"]["ename"],
-                    value=data["content"]["evalue"],
-                    traceback_raw=data["content"]["traceback"],
-                )
-                cell.execution.set_result(execution)
+                await queue.put(Output(data=data["content"], type=OutputType.ERROR))
+                await queue.put(Output(type=OutputType.END_OF_EXECUTION))
 
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                execution.error = Error(
-                    name=data["content"]["ename"],
-                    value=data["content"]["evalue"],
-                    traceback_raw=data["content"]["traceback"],
-                )
+                await queue.put(Output(data=data["content"], type=OutputType.ERROR))
             elif data["content"]["status"] == "ok":
                 pass
 
         elif data["msg_type"] == "execute_input":
             logger.debug(f"Input accepted for {parent_msg_ig}")
-            cell.partial_result.execution_count = data["content"]["execution_count"]
-            cell.input_accepted = True
+            # execution.partial_result.execution_count = data["content"]["execution_count"]
+            execution.input_accepted = True
         else:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 

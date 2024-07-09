@@ -7,8 +7,9 @@ from typing import Dict
 from fastapi import FastAPI
 
 from messaging import JupyterKernelWebSocket
-from api.models.execution import Execution
+from api.models.output import Output
 from api.models.execution_request import ExecutionRequest
+from stream import StreamingJsonListResponse
 
 logger = logging.Logger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -53,12 +54,10 @@ def health():
     return "Request was successful"
 
 
-@app.post("/execute", response_model=Execution, response_model_exclude_none=True)
-async def execute(request: ExecutionRequest) -> Execution:
+@app.post("/execute", response_model=Output, response_model_exclude_none=True)
+async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
     ws = websockets["default"]
-    execution = await ws.execute(code=request.code)
 
-    logger.info(f"Execution result: {execution}")
-    return execution
+    return StreamingJsonListResponse(ws.execute(code=request.code))

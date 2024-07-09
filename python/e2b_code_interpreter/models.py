@@ -231,8 +231,8 @@ class Logs:
     def __init__(
         self, stdout: Optional[List[str]] = None, stderr: Optional[List[str]] = None
     ):
-        self.stdout = stdout
-        self.stderr = stderr
+        self.stdout = stdout or []
+        self.stderr = stderr or []
 
     def __repr__(self):
         return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
