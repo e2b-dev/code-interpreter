@@ -11,7 +11,6 @@ export default defineConfig({
         maxThreads: 4,
       },
     },
-    maxWorkers: 5,
     globals: false,
     testTimeout: 20000,
     environment: 'node',
