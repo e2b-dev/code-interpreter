@@ -30,8 +30,9 @@ class Execution:
 class JupyterKernelWebSocket:
     _ws: WebSocketClientProtocol = None
 
-    def __init__(self, url: str, session_id: str):
-        self.url = url
+    def __init__(self, kernel_id: str, session_id: str):
+        self.kernel_id = kernel_id
+        self.url = f"ws://localhost:8888/api/kernels/{kernel_id}/channels"
         self.session_id = session_id
         self._executions: Dict[str, Execution] = {}
         self._process_cleanup: List[Callable[[], Any]] = []
@@ -39,7 +40,7 @@ class JupyterKernelWebSocket:
         self._stopped = Future()
         self.started = Future()
 
-    async def connect(self, timeout: float = TIMEOUT):
+    async def connect(self):
         logger.debug(f"WebSocket connecting to {self.url}")
 
         ws_logger = logger.getChild("websockets.client")

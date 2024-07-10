@@ -7,7 +7,7 @@ from typing import Dict
 import requests
 from fastapi import FastAPI
 
-from api.models.create_kernel import CreateKernel
+from api.models.create_kernel import CreateKernel, RestartKernel
 from messaging import JupyterKernelWebSocket
 from api.models.execution_request import ExecutionRequest
 from stream import StreamingLisJsonResponse
@@ -16,21 +16,20 @@ from stream import StreamingLisJsonResponse
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
 
-
-session_id = str(uuid.uuid4())
-
 websockets: Dict[str, JupyterKernelWebSocket] = {}
-
-with open("/root/.jupyter/kernel_id") as file:
-    kernel_id = file.read().strip()
+global default_kernel_id
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load the ML model
-    default_ws = JupyterKernelWebSocket(
-        f"ws://localhost:8888/api/kernels/{kernel_id}/channels", session_id
-    )
+    # Load the default kernel
+    session_id = str(uuid.uuid4())
+
+    global default_kernel_id
+    with open("/root/.jupyter/kernel_id") as file:
+        default_kernel_id = file.read().strip()
+
+    default_ws = JupyterKernelWebSocket(default_kernel_id, session_id)
 
     websockets["default"] = default_ws
     websockets["python"] = default_ws
@@ -83,22 +82,20 @@ async def create_kernel(request: CreateKernel):
         raise Exception(f"Failed to create kernel: {response.text}")
 
     session_data = response.json()
-    sess_id = session_data["id"]
-    _id = session_data["kernel"]["id"]
+    session_id = session_data["id"]
+    kernel_id = session_data["kernel"]["id"]
 
-    response = requests.patch(f"http://localhost:8888/api/sessions/{sess_id}", json={"path": cwd},    )
+    response = requests.patch(f"http://localhost:8888/api/sessions/{session_id}", json={"path": cwd})
     if not response.ok:
         raise Exception(f"Failed to create kernel: {response.text}")
 
     logger.debug(f"Created kernel {kernel_id}")
 
-    ws = JupyterKernelWebSocket(
-        f"ws://localhost:8888/api/kernels/{kernel_id}/channels", session_id
-    )
+    ws = JupyterKernelWebSocket(kernel_id, session_id)
     task = asyncio.create_task(ws.connect())
     await ws.started
 
-    websockets[_id] = ws
+    websockets[kernel_id] = ws
 
     return kernel_id
 
@@ -108,6 +105,33 @@ async def list_kernels():
     logger.info(f"Listing kernels")
 
     kernel_ids = list(websockets.keys())
-    kernel_ids.remove(kernel_id)
+    kernel_ids.remove(default_kernel_id)
 
     return kernel_ids
+
+
+@app.post("/contexts/restart")
+async def restart_kernel(request: RestartKernel):
+    logger.info(f"Restarting kernel")
+
+    kernel_id = request.kernel_id or "default"
+
+    ws = websockets.get(kernel_id, None)
+    if not ws:
+        raise Exception(f"Kernel {kernel_id} not found")
+
+    kernel_id = ws.kernel_id
+    session_id = ws.session_id
+
+    await ws.close()
+
+    response = requests.post(f"http://localhost:8888/api/kernels/{kernel_id}/restart")
+    if not response.ok:
+        raise Exception(f"Failed to restart kernel {kernel_id}")
+
+    ws = JupyterKernelWebSocket(kernel_id, session_id)
+
+    task = asyncio.create_task(ws.connect())
+    await ws.started
+
+    websockets[kernel_id] = ws

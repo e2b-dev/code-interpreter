@@ -17,12 +17,8 @@ pandas.DataFrame({"a": [1, 2, 3]})
 """
 
 sandbox = CodeInterpreter.connect("", debug=True)
-print(sandbox.sandbox_id)
-execution = sandbox.notebook.exec_cell(
-    code,
-    on_stdout=lambda msg: print("stdout", msg),
-    on_stderr=lambda msg: print("stderr", msg),
-)
+sandbox.notebook.exec_cell("x = 1")
+sandbox.notebook.restart_kernel()
 
-print(execution.results[0].formats())
-print(len(execution.results))
+r = sandbox.notebook.exec_cell("x")
+assert r.error.value == "name 'x' is not defined"

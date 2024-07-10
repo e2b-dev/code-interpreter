@@ -1,6 +1,6 @@
 import logging
 
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from httpx import HTTPTransport, Client
 from e2b import Sandbox, Stderr, Stdout, ConnectionConfig
 
@@ -63,6 +63,31 @@ class JupyterExtension:
 
         with Client(transport=self._transport) as client:
             response = client.post(f"{self._url}/contexts", json={"language": language})
+            response.raise_for_status()
+
+            return response.json()
+
+    def restart_kernel(self, kernel_id: Optional[str] = None):
+        logger.debug(f"Creating new kernel for language: {kernel_id}")
+
+        with Client(transport=self._transport) as client:
+            response = client.post(f"{self._url}/contexts/restart", json={"kernel_id": kernel_id})
+            response.raise_for_status()
+
+            return response.json()
+
+    def list_kernels(self) -> List[str]:
+        """
+        Lists all available Jupyter kernels.
+
+        This method fetches a list of all currently available Jupyter kernels from the server. It can be used
+        to retrieve the IDs of all kernels that are currently running or available for connection.
+
+        :param timeout: The timeout for the kernel list request.
+        :return: List of kernel ids
+        """
+        with Client(transport=self._transport) as client:
+            response = client.get(f"{self._url}/contexts")
             response.raise_for_status()
 
             return response.json()
