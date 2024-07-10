@@ -9,3 +9,7 @@ generate:
 	rm  ./python/e2b_code_interpreter/client/.gitignore ./python/e2b_code_interpreter/client/pyproject.toml ./python/e2b_code_interpreter/client/README.md ./python/e2b_code_interpreter/client/py.typed
 	rm -rf ./python/e2b_code_interpreter/client/e2b_code_interpreter_client
 	black .
+
+
+start-template-server:
+	docker run --rm -p 8000:8000 -it $$(docker build -q ./template -f ./template/e2b.Dockerfile)
