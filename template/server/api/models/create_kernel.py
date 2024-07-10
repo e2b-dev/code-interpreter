@@ -9,3 +9,7 @@ class CreateKernel(BaseModel):
         default=None, description="Language of the code to be executed"
     )
     kernel_name: Optional[StrictStr] = Field(default=None, description="Name of the kernel")
+
+
+class RestartKernel(BaseModel):
+    kernel_id: Optional[StrictStr] = Field(default=None, description="Kernel ID")
