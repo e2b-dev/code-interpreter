@@ -26,7 +26,7 @@ class JupyterExtension:
         self._transport = transport
         self._connection_config = connection_config
 
-    async def exec_code(
+    async def exec_cell(
         self,
         code: str,
         kernel_id: Optional[str] = None,
