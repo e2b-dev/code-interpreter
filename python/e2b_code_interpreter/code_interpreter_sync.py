@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 class JupyterExtension:
     _exec_timeout = 300
 
+    @property
+    def client(self) -> Client:
+        return Client(transport=self._transport)
+
     def __init__(
         self,
         url: str,
@@ -40,41 +44,48 @@ class JupyterExtension:
         request_timeout = request_timeout or self._connection_config.request_timeout
         execution = Execution()
 
-        with Client(transport=self._transport) as client:
-            with client.stream(
-                "POST",
-                f"{self._url}/execute",
-                json={
-                    "code": code,
-                    # "language": language,
-                    "kernel_id": kernel_id,
-                },
-                timeout=(request_timeout, timeout, request_timeout, request_timeout),
-            ) as response:
-                response.raise_for_status()
+        with self.client.stream(
+            "POST",
+            f"{self._url}/execute",
+            json={
+                "code": code,
+                # "language": language,
+                "kernel_id": kernel_id,
+            },
+            timeout=(request_timeout, timeout, request_timeout, request_timeout),
+        ) as response:
+            response.raise_for_status()
 
-                for line in response.iter_lines():
-                    parse_output(execution, line, on_stdout=on_stdout, on_stderr=on_stderr, on_result=on_result)
+            for line in response.iter_lines():
+                parse_output(
+                    execution,
+                    line,
+                    on_stdout=on_stdout,
+                    on_stderr=on_stderr,
+                    on_result=on_result,
+                )
 
-            return execution
+        return execution
 
     def create_kernel(self, language: Optional[str] = None):
         logger.debug(f"Creating new kernel for language: {language}")
 
-        with Client(transport=self._transport) as client:
-            response = client.post(f"{self._url}/contexts", json={"language": language})
-            response.raise_for_status()
+        response = self.client.post(
+            f"{self._url}/contexts", json={"language": language}
+        )
+        response.raise_for_status()
 
-            return response.json()
+        return response.json()
 
     def restart_kernel(self, kernel_id: Optional[str] = None):
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
-        with Client(transport=self._transport) as client:
-            response = client.post(f"{self._url}/contexts/restart", json={"kernel_id": kernel_id})
-            response.raise_for_status()
+        response = self.client.post(
+            f"{self._url}/contexts/restart", json={"kernel_id": kernel_id}
+        )
+        response.raise_for_status()
 
-            return response.json()
+        return response.json()
 
     def list_kernels(self) -> List[str]:
         """
@@ -86,11 +97,10 @@ class JupyterExtension:
         :param timeout: The timeout for the kernel list request.
         :return: List of kernel ids
         """
-        with Client(transport=self._transport) as client:
-            response = client.get(f"{self._url}/contexts")
-            response.raise_for_status()
+        response = self.client.get(f"{self._url}/contexts")
+        response.raise_for_status()
 
-            return response.json()
+        return response.json()
 
 
 class CodeInterpreter(Sandbox):
@@ -125,5 +135,7 @@ class CodeInterpreter(Sandbox):
 
         jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}"
         self._notebook = JupyterExtension(
-            jupyter_url, self._transport, self.connection_config
+            jupyter_url,
+            self._transport,
+            self.connection_config,
         )
