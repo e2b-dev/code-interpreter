@@ -1,14 +1,13 @@
-import json
 import logging
-import inspect
 
 from typing import Optional
+
 from httpx import AsyncHTTPTransport, AsyncClient
-from e2b import AsyncSandbox, ConnectionConfig, Stderr, Stdout, OutputHandler
+
+from e2b import AsyncSandbox, ConnectionConfig, Stdout, Stderr
 
 from e2b_code_interpreter.constants import DEFAULT_TEMPLATE, JUPYTER_PORT
-from e2b_code_interpreter.models import Execution, Result, Error
-
+from e2b_code_interpreter.models import Execution, Result, parse_output, OutputHandler
 
 logger = logging.getLogger(__name__)
 
@@ -59,30 +58,7 @@ class JupyterExtension:
                 response.raise_for_status()
 
                 async for line in response.aiter_lines():
-                    data = json.loads(line)
-                    data_type = data.pop("type")
-
-                    if data_type == "result":
-                        result = Result(**data)
-                        execution.results.append(result)
-                        if on_result:
-                            cb = on_result(result)
-                            if inspect.isawaitable(cb):
-                                await cb
-                    elif data_type == "stdout":
-                        execution.logs.stdout += data["value"]
-                        if on_stdout:
-                            cb = on_stdout(data["value"])
-                            if inspect.isawaitable(cb):
-                                await cb
-                    elif data_type == "stderr":
-                        execution.logs.stderr += data["value"]
-                        if on_stderr:
-                            cb = on_stderr(data["value"])
-                            if inspect.isawaitable(cb):
-                                await cb
-                    elif data_type == "error":
-                        execution.error = Error(**data)
+                    parse_output(execution, line, on_stdout, on_stderr, on_result)
 
             return execution
 

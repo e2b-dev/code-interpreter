@@ -1,19 +1,13 @@
-import json
 import logging
 
-from typing import Optional, Dict, Callable, TypeVar
+from typing import Optional, Dict
 from httpx import HTTPTransport, Client
 from e2b import Sandbox, Stderr, Stdout, ConnectionConfig
 
 from e2b_code_interpreter.constants import DEFAULT_TEMPLATE, JUPYTER_PORT
-from e2b_code_interpreter.models import Execution, Result, Error
-
+from e2b_code_interpreter.models import Execution, Result, parse_output, OutputHandler
 
 logger = logging.getLogger(__name__)
-
-T = TypeVar("T")
-
-OutputHandler = Callable[[T], None]
 
 
 class JupyterExtension:
@@ -60,24 +54,7 @@ class JupyterExtension:
                 response.raise_for_status()
 
                 for line in response.iter_lines():
-                    data = json.loads(line)
-                    data_type = data.pop("type")
-
-                    if data_type == "result":
-                        result = Result(**data)
-                        execution.results.append(result)
-                        if on_result:
-                            on_result(result)
-                    elif data_type == "stdout":
-                        execution.logs.stdout += data["value"]
-                        if on_stdout:
-                            on_stdout(data["value"])
-                    elif data_type == "stderr":
-                        execution.logs.stderr += data["value"]
-                        if on_stderr:
-                            on_stderr(data["value"])
-                    elif data_type == "error":
-                        execution.error = Error(**data)
+                    parse_output(execution, line, on_stdout=on_stdout, on_stderr=on_stderr, on_result=on_result)
 
             return execution
 

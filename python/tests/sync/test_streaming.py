@@ -4,14 +4,14 @@ from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
 def test_streaming_output(sandbox: CodeInterpreter):
     out = []
 
-    def test(line) -> int:
+    def test(line) -> None:
         out.append(line)
-        return 1
+        return
 
     sandbox.notebook.exec_cell("print(1)", on_stdout=test)
 
     assert len(out) == 1
-    assert out[0].line == "1\n"
+    assert out[0] == "1\n"
 
 
 def test_streaming_error(sandbox: CodeInterpreter):
@@ -22,7 +22,7 @@ def test_streaming_error(sandbox: CodeInterpreter):
     )
 
     assert len(out) == 1
-    assert out[0].line == "1\n"
+    assert out[0] == "1\n"
 
 
 def test_streaming_result(sandbox: CodeInterpreter):

@@ -1,5 +1,12 @@
 import json
-from typing import List, Optional, Iterable, Dict
+from typing import List, Optional, Iterable, Dict, TypeVar, Callable
+
+from e2b.sandbox.process.process_handle import Stdout, Stderr
+
+
+T = TypeVar("T")
+
+OutputHandler = Callable[[T], None]
 
 
 class Error:
@@ -309,3 +316,32 @@ class KernelException(Exception):
     """
 
     pass
+
+
+def parse_output(
+        execution: Execution,
+        output: str,
+        on_stdout: Optional[OutputHandler[Stdout]] = None,
+        on_stderr: Optional[OutputHandler[Stderr]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+) -> None:
+    data = json.loads(output)
+    data_type = data.pop("type")
+
+    if data_type == "result":
+        result = Result(**data)
+        execution.results.append(result)
+        if on_result:
+            on_result(result)
+    elif data_type == "stdout":
+        execution.logs.stdout += data['text']
+        if on_stdout:
+            on_stdout(data["text"])
+    elif data_type == "stderr":
+        execution.logs.stderr += data["text"]
+        if on_stderr:
+            on_stderr(data["text"])
+    elif data_type == "error":
+        execution.error = Error(**data)
+    elif data_type == "execution_count":
+        execution.execution_count = data["execution_count"]

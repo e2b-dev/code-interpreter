@@ -1,6 +1,5 @@
 import json
 import logging
-import time
 import uuid
 import asyncio
 import random
@@ -8,10 +7,13 @@ from asyncio import Future, Queue
 
 from typing import Callable, Dict, Any, AsyncIterator, List, AsyncIterable
 
-
-from api.models.output import Output, OutputType
+from api.models.error import Error
+from api.models.logs import Stdout, Stderr
+from api.models.result import Result
+from api.models.output import EndOfExecution, NumberOfExecutions, OutputType
 from websockets.legacy.client import WebSocketClientProtocol, Connect
 from websockets.exceptions import ConnectionClosed
+
 
 TIMEOUT = 60
 
@@ -98,8 +100,7 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(self, code: str) -> AsyncIterable[Output]:
-        x =             (time.time())
+    async def execute(self, code: str) -> AsyncIterable:
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
@@ -116,9 +117,7 @@ class JupyterKernelWebSocket:
 
             logger.debug(f"Got result for code ({message_id}): {output}")
             yield output.model_dump(exclude_none=True)
-            print(x - time.time())
 
-        print("FINISH", x - time.time())
         del self._executions[message_id]
 
     async def _receive_message(self):
@@ -156,40 +155,52 @@ class JupyterKernelWebSocket:
         queue = execution.queue
         if data["msg_type"] == "error":
             logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-            await queue.put(Output(data=data["content"], type=OutputType.ERROR))
+            await queue.put(Error(
+                name=data["content"]["ename"],
+                value=data["content"]["evalue"],
+                traceback=data["content"]["traceback"],
+            ))
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                await queue.put(Output(data=data['content'], type=OutputType.STDOUT))
+                await queue.put(Stdout(text=data['content']['text'], timestamp=data['header']['date']))
 
             elif data["content"]["name"] == "stderr":
-                await queue.put(Output(data=data['content'], type=OutputType.STDERR))
+                await queue.put(Stderr(text=data['content']['text'], timestamp=data['header']['date']))
 
         elif data["msg_type"] in "display_data":
-            await queue.put(Output(is_main_result=False, data=data["content"]["data"], type=OutputType.RESULT))
+            await queue.put(Result(is_main_result=False, data=data["content"]["data"]))
         elif data["msg_type"] == "execute_result":
-            await queue.put(Output(is_main_result=True, data=data["content"]["data"], type=OutputType.RESULT))
+            await queue.put(Result(is_main_result=True, data=data["content"]["data"]))
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "idle":
                 if execution.input_accepted:
                     logger.debug(f"Cell {parent_msg_ig} finished execution")
-                    await queue.put(Output(type=OutputType.END_OF_EXECUTION))
+                    await queue.put(EndOfExecution())
 
             elif data["content"]["execution_state"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                await queue.put(Output(data=data["content"], type=OutputType.ERROR))
-                await queue.put(Output(type=OutputType.END_OF_EXECUTION))
+                await queue.put(Error(
+                    name=data["content"]["ename"],
+                    value=data["content"]["evalue"],
+                    traceback=data["content"]["traceback"],
+                ))
+                await queue.put(EndOfExecution())
 
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
                 logger.debug(f"Cell {parent_msg_ig} finished execution with error")
-                await queue.put(Output(data=data["content"], type=OutputType.ERROR))
+                await queue.put(Error(
+                    name=data["content"]["ename"],
+                    value=data["content"]["evalue"],
+                    traceback=data["content"]["traceback"],
+                ))
             elif data["content"]["status"] == "ok":
                 pass
 
         elif data["msg_type"] == "execute_input":
             logger.debug(f"Input accepted for {parent_msg_ig}")
-            # execution.partial_result.execution_count = data["content"]["execution_count"]
+            await queue.put(NumberOfExecutions(execution_count=data["content"]["execution_count"]))
             execution.input_accepted = True
         else:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")

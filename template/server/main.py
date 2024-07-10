@@ -2,12 +2,11 @@ import asyncio
 import logging
 import uuid
 from contextlib import asynccontextmanager
-from typing import Dict, List
+from typing import Dict
 
 from fastapi import FastAPI
 
 from messaging import JupyterKernelWebSocket
-from api.models.output import Output
 from api.models.execution_request import ExecutionRequest
 from stream import StreamingLisJsonResponse
 
