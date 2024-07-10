@@ -343,5 +343,5 @@ def parse_output(
             on_stderr(data["text"])
     elif data_type == "error":
         execution.error = Error(**data)
-    elif data_type == "execution_count":
+    elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]

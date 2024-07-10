@@ -158,7 +158,7 @@ class JupyterKernelWebSocket:
             await queue.put(Error(
                 name=data["content"]["ename"],
                 value=data["content"]["evalue"],
-                traceback=data["content"]["traceback"],
+                traceback="".join(data["content"]["traceback"]),
             ))
 
         elif data["msg_type"] == "stream":
@@ -183,7 +183,7 @@ class JupyterKernelWebSocket:
                 await queue.put(Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
-                    traceback=data["content"]["traceback"],
+                    traceback="".join(data["content"]["traceback"]),
                 ))
                 await queue.put(EndOfExecution())
 
@@ -193,7 +193,7 @@ class JupyterKernelWebSocket:
                 await queue.put(Error(
                     name=data["content"]["ename"],
                     value=data["content"]["evalue"],
-                    traceback=data["content"]["traceback"],
+                    traceback=''.join(data["content"]["traceback"]),
                 ))
             elif data["content"]["status"] == "ok":
                 pass
