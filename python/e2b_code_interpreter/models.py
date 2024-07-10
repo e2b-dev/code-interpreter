@@ -1,9 +1,8 @@
-import copy
+import json
 from typing import List, Optional, Iterable, Dict
-from pydantic import BaseModel
 
 
-class Error(BaseModel):
+class Error:
     """
     Represents an error that occurred during the execution of a cell.
     The error contains the name of the error, the value of the error, and the traceback.
@@ -16,6 +15,11 @@ class Error(BaseModel):
     traceback_raw: List[str]
     "List of strings representing the traceback."
 
+    def __init__(self, name: str, value: str, traceback: List[str]):
+        self.name = name
+        self.value = value
+        self.traceback_raw = traceback
+
     @property
     def traceback(self) -> str:
         """
@@ -24,6 +28,13 @@ class Error(BaseModel):
         :return: The traceback as a single string.
         """
         return "\n".join(self.traceback_raw)
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Error object.
+        """
+        data = {"name": self.name, "value": self.value, "traceback": self.traceback}
+        return json.dumps(data)
 
 
 class MIMEType(str):
@@ -60,30 +71,37 @@ class Result:
     is_main_result: bool
     "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
 
-    raw: Dict[MIMEType, str]
-    "Dictionary that maps MIME types to their corresponding string representations of the data."
-
-    def __init__(self, is_main_result: bool, data: [MIMEType, str]):
-        self.is_main_result = is_main_result
-        self.raw = copy.deepcopy(data)
-
-        self.text = data.pop("text/plain", None)
-        self.html = data.pop("text/html", None)
-        self.markdown = data.pop("text/markdown", None)
-        self.svg = data.pop("image/svg+xml", None)
-        self.png = data.pop("image/png", None)
-        self.jpeg = data.pop("image/jpeg", None)
-        self.pdf = data.pop("application/pdf", None)
-        self.latex = data.pop("text/latex", None)
-        self.json = data.pop("application/json", None)
-        self.javascript = data.pop("application/javascript", None)
-        self.extra = data
+    def __getitem__(self, item):
+        return getattr(self, item)
 
     # Allows to iterate over formats()
-    def __getitem__(self, item):
-        if item in self.raw:
-            return self.raw[item]
-        return getattr(self, item)
+    def __init__(
+        self,
+        text: Optional[str] = None,
+        html: Optional[str] = None,
+        markdown: Optional[str] = None,
+        svg: Optional[str] = None,
+        png: Optional[str] = None,
+        jpeg: Optional[str] = None,
+        pdf: Optional[str] = None,
+        latex: Optional[str] = None,
+        json: Optional[dict] = None,
+        javascript: Optional[str] = None,
+        is_main_result: bool = False,
+        extra: Optional[dict] = None,
+    ):
+        self.text = text
+        self.html = html
+        self.markdown = markdown
+        self.svg = svg
+        self.png = png
+        self.jpeg = jpeg
+        self.pdf = pdf
+        self.latex = latex
+        self.json = json
+        self.javascript = javascript
+        self.is_main_result = is_main_result
+        self.extra = extra or {}
 
     def formats(self) -> Iterable[str]:
         """
@@ -200,21 +218,36 @@ class Result:
         return self.javascript
 
 
-class Logs(BaseModel):
+class Logs:
     """
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
 
-    stdout: List[str] = []
+    stdout: Optional[str] = None
     "List of strings printed to stdout by prints, subprocesses, etc."
-    stderr: List[str] = []
+    stderr: Optional[str] = None
     "List of strings printed to stderr by prints, subprocesses, etc."
+
+    def __init__(
+        self, stdout: Optional[List[str]] = None, stderr: Optional[List[str]] = None
+    ):
+        self.stdout = stdout or []
+        self.stderr = stderr or []
+
+    def __repr__(self):
+        return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Logs object.
+        """
+        data = {"stdout": self.stdout, "stderr": self.stderr}
+        return json.dumps(data)
 
 
 def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     """
     Serializes the results to JSON.
-    This method is used by the Pydantic JSON encoder.
     """
     serialized = []
     for result in results:
@@ -224,16 +257,10 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     return serialized
 
 
-class Execution(BaseModel):
+class Execution:
     """
     Represents the result of a cell execution.
     """
-
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            List[Result]: serialize_results,
-        }
 
     results: List[Result] = []
     "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
@@ -243,6 +270,15 @@ class Execution(BaseModel):
     "Error object if an error occurred, None otherwise."
     execution_count: Optional[int] = None
     "Execution count of the cell."
+
+    def __init__(self, **kwargs):
+        self.results = kwargs.pop("results", [])
+        self.logs = kwargs.pop("logs", Logs())
+        self.error = kwargs.pop("error", None)
+        self.execution_count = kwargs.pop("execution_count", None)
+
+    def __repr__(self):
+        return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
 
     @property
     def text(self) -> Optional[str]:
@@ -259,7 +295,12 @@ class Execution(BaseModel):
         """
         Returns the JSON representation of the Execution object.
         """
-        return self.model_dump_json(exclude_none=True)
+        data = {
+            "results": serialize_results(self.results),
+            "logs": self.logs.to_json(),
+            "error": self.error.to_json() if self.error else None,
+        }
+        return json.dumps(data)
 
 
 class KernelException(Exception):
