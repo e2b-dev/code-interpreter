@@ -24,6 +24,11 @@ global default_kernel_id
 
 client = httpx.AsyncClient()
 
+# TODO: Increase keepalive timeout
+# TODO: Increase timeout for requests to allow streaming
+# TODO: Handle pings from server so we can keep the connection from idling
+# TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -56,7 +61,7 @@ logger.info("Starting Code Interpreter server")
 
 
 @app.get("/health")
-def health():
+async def health():
     return "Request was successful"
 
 
