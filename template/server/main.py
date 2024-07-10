@@ -2,17 +2,18 @@ import asyncio
 import logging
 import uuid
 from contextlib import asynccontextmanager
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import FastAPI
 
 from messaging import JupyterKernelWebSocket
 from api.models.output import Output
 from api.models.execution_request import ExecutionRequest
-from stream import StreamingJsonListResponse
+from stream import StreamingLisJsonResponse
 
+
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 session_id = str(uuid.uuid4())
@@ -54,10 +55,10 @@ def health():
     return "Request was successful"
 
 
-@app.post("/execute", response_model=Output, response_model_exclude_none=True)
+@app.post("/execute")
 async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
     ws = websockets["default"]
 
-    return StreamingJsonListResponse(ws.execute(code=request.code))
+    return StreamingLisJsonResponse(ws.execute(request.code))

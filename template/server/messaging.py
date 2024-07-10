@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 import uuid
 import asyncio
 import random
@@ -98,6 +99,7 @@ class JupyterKernelWebSocket:
         )
 
     async def execute(self, code: str) -> AsyncIterable[Output]:
+        x =             (time.time())
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
@@ -109,12 +111,14 @@ class JupyterKernelWebSocket:
         queue = self._executions[message_id].queue
         while True:
             output = await queue.get()
-            if output.type == "end_of_execution":
+            if output.type == OutputType.END_OF_EXECUTION:
                 break
 
             logger.debug(f"Got result for code ({message_id}): {output}")
-            yield output
+            yield output.model_dump(exclude_none=True)
+            print(x - time.time())
 
+        print("FINISH", x - time.time())
         del self._executions[message_id]
 
     async def _receive_message(self):

@@ -44,9 +44,11 @@ class JupyterExtension:
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
+        execution = Execution()
 
         with Client(transport=self._transport) as client:
-            response = client.post(
+            with client.stream(
+                "POST",
                 self._url,
                 json={
                     "code": code,
@@ -54,31 +56,28 @@ class JupyterExtension:
                     # "kernel_id": kernel_id,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
-            )
+            ) as response:
+                response.raise_for_status()
 
-            response.raise_for_status()
+                for line in response.iter_lines():
+                    data = json.loads(line)
+                    data_type = data.pop("type")
 
-            execution = Execution()
-
-            for line in response.iter_lines():
-                data = json.loads(line)
-                data_type = data.pop("type")
-
-                if data_type == "result":
-                    result = Result(**data)
-                    execution.results.append(result)
-                    if on_result:
-                        on_result(result)
-                elif data_type == "stdout":
-                    execution.logs.stdout += data["value"]
-                    if on_stdout:
-                        on_stdout(data["value"])
-                elif data_type == "stderr":
-                    execution.logs.stderr += data["value"]
-                    if on_stderr:
-                        on_stderr(data["value"])
-                elif data_type == "error":
-                    execution.error = Error(**data)
+                    if data_type == "result":
+                        result = Result(**data)
+                        execution.results.append(result)
+                        if on_result:
+                            on_result(result)
+                    elif data_type == "stdout":
+                        execution.logs.stdout += data["value"]
+                        if on_stdout:
+                            on_stdout(data["value"])
+                    elif data_type == "stderr":
+                        execution.logs.stderr += data["value"]
+                        if on_stderr:
+                            on_stderr(data["value"])
+                    elif data_type == "error":
+                        execution.error = Error(**data)
 
             return execution
 

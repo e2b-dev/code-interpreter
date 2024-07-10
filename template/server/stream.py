@@ -17,7 +17,7 @@ async def async_enumerate(async_sequence: AsyncIterable, start=0):
         idx += 1
 
 
-class StreamingJsonListResponse(StreamingResponse):
+class StreamingLisJsonResponse(StreamingResponse):
     """Converts a pydantic model generator into a streaming HTTP Response
     that streams a JSON list, one element at a time.
 
@@ -48,20 +48,16 @@ class StreamingJsonListResponse(StreamingResponse):
         """Converts an asynchronous pydantic model generator
         into a streaming JSON list
         """
-        yield "["
         async for idx, item in async_enumerate(async_generator):
-            if idx > 0:
-                yield ","
-            yield json.dumps(jsonable_encoder(item.dict()))
-        yield "]"
+            yield json.dumps(jsonable_encoder(item))
+            yield "\n"
+        yield '{"type": "end_of_execution"}'
 
     async def _encoded_generator(self, generator):
         """Converts a synchronous pydantic model generator
         into a streaming JSON list
         """
-        yield "["
         for idx, item in enumerate(generator):
-            if idx > 0:
-                yield ","
-            yield json.dumps(jsonable_encoder(item.dict()))
-        yield "]"
+            yield json.dumps(jsonable_encoder(item))
+            yield "\n"
+        yield '{"type": "end_of_execution"}'

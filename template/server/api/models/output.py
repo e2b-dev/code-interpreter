@@ -45,11 +45,10 @@ class Output(BaseModel):
     value: Optional[str] = None
     traceback: Optional[str] = None
 
-    def __init__(self, type: OutputType,  data: Dict[str, str] = None, is_main_result:Optional[bool] = None):
-        super().__init__()
-        self.type = type
+    def __init__(self, type: OutputType,  data: Dict[str, str] = None, is_main_result: Optional[bool] = None):
+        super().__init__(type=type, is_main_result=is_main_result)
 
-        self.is_main_result = is_main_result
+        data = data or {}
 
         self.text = data.pop("text/plain", None)
         self.html = data.pop("text/html", None)
@@ -70,13 +69,13 @@ class Output(BaseModel):
 
         self.extra = data
 
-    def __str__(self) -> Optional[str]:
+    def __str__(self) -> str:
         """
         Returns the text representation of the data.
 
         :return: The text representation of the data.
         """
-        return self.text
+        return self.__repr__()
 
     def __repr__(self) -> str:
         if self.type == OutputType.RESULT:
@@ -87,3 +86,5 @@ class Output(BaseModel):
             return f"Stdout({self.stdout})"
         elif self.type == OutputType.STDERR:
             return f"Stderr({self.stderr})"
+        elif self.type == OutputType.END_OF_EXECUTION:
+            return f"END_OF_EXECUTION"

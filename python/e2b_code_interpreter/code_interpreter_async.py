@@ -42,8 +42,11 @@ class JupyterExtension:
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
 
+        execution = Execution()
+
         async with AsyncClient(transport=self._transport) as client:
-            response = await client.post(
+            async with client.stream(
+                "POST",
                 self._url,
                 json={
                     "code": code,
@@ -51,37 +54,35 @@ class JupyterExtension:
                     # "kernel_id": kernel_id,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
-            )
+            ) as response:
 
-            response.raise_for_status()
+                response.raise_for_status()
 
-            execution = Execution()
+                async for line in response.aiter_lines():
+                    data = json.loads(line)
+                    data_type = data.pop("type")
 
-            async for line in response.aiter_lines():
-                data = json.loads(line)
-                data_type = data.pop("type")
-
-                if data_type == "result":
-                    result = Result(**data)
-                    execution.results.append(result)
-                    if on_result:
-                        cb = on_result(result)
-                        if inspect.isawaitable(cb):
-                            await cb
-                elif data_type == "stdout":
-                    execution.logs.stdout += data["value"]
-                    if on_stdout:
-                        cb = on_stdout(data["value"])
-                        if inspect.isawaitable(cb):
-                            await cb
-                elif data_type == "stderr":
-                    execution.logs.stderr += data["value"]
-                    if on_stderr:
-                        cb = on_stderr(data["value"])
-                        if inspect.isawaitable(cb):
-                            await cb
-                elif data_type == "error":
-                    execution.error = Error(**data)
+                    if data_type == "result":
+                        result = Result(**data)
+                        execution.results.append(result)
+                        if on_result:
+                            cb = on_result(result)
+                            if inspect.isawaitable(cb):
+                                await cb
+                    elif data_type == "stdout":
+                        execution.logs.stdout += data["value"]
+                        if on_stdout:
+                            cb = on_stdout(data["value"])
+                            if inspect.isawaitable(cb):
+                                await cb
+                    elif data_type == "stderr":
+                        execution.logs.stderr += data["value"]
+                        if on_stderr:
+                            cb = on_stderr(data["value"])
+                            if inspect.isawaitable(cb):
+                                await cb
+                    elif data_type == "error":
+                        execution.error = Error(**data)
 
             return execution
 
