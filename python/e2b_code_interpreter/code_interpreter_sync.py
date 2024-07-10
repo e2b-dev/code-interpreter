@@ -43,11 +43,11 @@ class JupyterExtension:
         with Client(transport=self._transport) as client:
             with client.stream(
                 "POST",
-                self._url,
+                f"{self._url}/execute",
                 json={
                     "code": code,
                     # "language": language,
-                    # "kernel_id": kernel_id,
+                    "kernel_id": kernel_id,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
@@ -57,6 +57,15 @@ class JupyterExtension:
                     parse_output(execution, line, on_stdout=on_stdout, on_stderr=on_stderr, on_result=on_result)
 
             return execution
+
+    def create_kernel(self, language: Optional[str] = None):
+        logger.debug(f"Creating new kernel for language: {language}")
+
+        with Client(transport=self._transport) as client:
+            response = client.post(f"{self._url}/contexts", json={"language": language})
+            response.raise_for_status()
+
+            return response.json()
 
 
 class CodeInterpreter(Sandbox):
@@ -89,7 +98,7 @@ class CodeInterpreter(Sandbox):
             request_timeout=request_timeout,
         )
 
-        jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}/execute"
+        jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}"
         self._notebook = JupyterExtension(
             jupyter_url, self._transport, self.connection_config
         )

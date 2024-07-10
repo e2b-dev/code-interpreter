@@ -3,9 +3,9 @@ from pydantic import BaseModel, StrictStr
 from pydantic import Field
 
 
-class ExecutionRequest(BaseModel):
-    code: StrictStr = Field(description="Code to be executed")
+class CreateKernel(BaseModel):
+    cwd: Optional[StrictStr] = Field(default=None, description="Current working directory")
     language: Optional[StrictStr] = Field(
         default=None, description="Language of the code to be executed"
     )
-    kernel_id: Optional[StrictStr] = Field(default=None, description="Kernel ID")
+    kernel_name: Optional[StrictStr] = Field(default=None, description="Name of the kernel")
