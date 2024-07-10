@@ -6,9 +6,9 @@ import httpx
 from typing import Dict, Union, Literal
 from pydantic import StrictStr
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
-from api.models.create_kernel import CreateKernel, RestartKernel
+from api.models.create_kernel import CreateKernel, RestartKernel, ShutdownKernel
 from messaging import JupyterKernelWebSocket
 from api.models.execution_request import ExecutionRequest
 from messaging import JupyterKernelWebSocket
@@ -30,6 +30,8 @@ client = httpx.AsyncClient()
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
 # TODO: Update signatures and types on clients
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
+# TODO: Return objects not just plain types from api (list kernels) so we can expand it later with more data (kernel language, cwd, etc.)
+# TODO: Should we use kernel ids as context ids and have /contexts/{context_id}/restart, etc?
 
 
 @asynccontextmanager
@@ -83,7 +85,7 @@ async def execute(request: ExecutionRequest):
 async def create_kernel(request: CreateKernel):
     logger.info(f"Creating new kernel for language: {request.language}")
 
-    kernel_name = request.kernel_name or "python3"
+    kernel_name = request.language or "python3"
     cwd = request.cwd or "/home/user"
 
     data = {
@@ -97,7 +99,10 @@ async def create_kernel(request: CreateKernel):
     response = await client.post("http://localhost:8888/api/sessions", json=data)
 
     if not response.is_success:
-        raise Exception(f"Failed to create kernel: {response.text}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create kernel: {response.text}",
+        )
 
     session_data = response.json()
     session_id = session_data["id"]
@@ -107,7 +112,10 @@ async def create_kernel(request: CreateKernel):
         f"http://localhost:8888/api/sessions/{session_id}", json={"path": cwd}
     )
     if not response.is_success:
-        raise Exception(f"Failed to create kernel: {response.text}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create kernel: {response.text}",
+        )
 
     logger.debug(f"Created kernel {kernel_id}")
 
@@ -117,7 +125,7 @@ async def create_kernel(request: CreateKernel):
 
     websockets[kernel_id] = ws
 
-    return kernel_id
+    return {"kernel_id": kernel_id}
 
 
 @app.get("/contexts")
@@ -138,7 +146,10 @@ async def restart_kernel(request: RestartKernel):
 
     ws = websockets.get(kernel_id, None)
     if not ws:
-        raise Exception(f"Kernel {kernel_id} not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Kernel {kernel_id} not found",
+        )
 
     kernel_id = ws.kernel_id
     session_id = ws.session_id
@@ -149,7 +160,10 @@ async def restart_kernel(request: RestartKernel):
         f"http://localhost:8888/api/kernels/{kernel_id}/restart"
     )
     if not response.is_success:
-        raise Exception(f"Failed to restart kernel {kernel_id}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to restart kernel {kernel_id}",
+        )
 
     ws = JupyterKernelWebSocket(kernel_id, session_id)
 
@@ -157,3 +171,33 @@ async def restart_kernel(request: RestartKernel):
     await ws.started
 
     websockets[kernel_id] = ws
+
+
+@app.delete("/contexts")
+async def shutdown_kernel(request: ShutdownKernel):
+    logger.info(f"Shutting down kernel")
+
+    kernel_id = request.kernel_id or "default"
+
+    ws = websockets.get(kernel_id, None)
+    if not ws:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Kernel {kernel_id} not found",
+        )
+
+    kernel_id = ws.kernel_id
+
+    try:
+        await ws.close()
+    except:
+        pass
+
+    response = await client.delete(f"http://localhost:8888/api/kernels/{kernel_id}")
+    if not response.is_success:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to shutdown kernel {kernel_id}",
+        )
+
+    del websockets[kernel_id]
