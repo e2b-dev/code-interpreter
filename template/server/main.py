@@ -102,3 +102,12 @@ async def create_kernel(request: CreateKernel):
 
     return kernel_id
 
+
+@app.get("/contexts")
+async def list_kernels():
+    logger.info(f"Listing kernels")
+
+    kernel_ids = list(websockets.keys())
+    kernel_ids.remove(kernel_id)
+
+    return kernel_ids
