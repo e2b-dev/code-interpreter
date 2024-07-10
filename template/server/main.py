@@ -1,28 +1,32 @@
 import asyncio
 import logging
 import uuid
-from contextlib import asynccontextmanager
-from typing import Dict
+import httpx
 
-import requests
+from typing import Dict, Union
+from pydantic import StrictStr
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from api.models.create_kernel import CreateKernel
-from messaging import JupyterKernelWebSocket
 from api.models.execution_request import ExecutionRequest
+from messaging import JupyterKernelWebSocket
 from stream import StreamingLisJsonResponse
 
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.Logger(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 session_id = str(uuid.uuid4())
 
-websockets: Dict[str, JupyterKernelWebSocket] = {}
+websockets: Dict[Union[str, StrictStr], JupyterKernelWebSocket] = {}
 
 with open("/root/.jupyter/kernel_id") as file:
     kernel_id = file.read().strip()
+
+client = httpx.AsyncClient()
 
 
 @asynccontextmanager
@@ -75,19 +79,28 @@ async def create_kernel(request: CreateKernel):
     kernel_name = request.kernel_name or "python3"
     cwd = request.cwd or "/home/user"
 
-    data = {"path": str(uuid.uuid4()), "kernel": {"name": kernel_name}, "type": "notebook", "name": str(uuid.uuid4())}
+    data = {
+        "path": str(uuid.uuid4()),
+        "kernel": {"name": kernel_name},
+        "type": "notebook",
+        "name": str(uuid.uuid4()),
+    }
     logger.debug(f"Creating kernel with data: {data}")
 
-    response = requests.post("http://localhost:8888/api/sessions",json=data)
-    if not response.ok:
+    response = await client.post("http://localhost:8888/api/sessions", json=data)
+
+    if not response.is_success:
         raise Exception(f"Failed to create kernel: {response.text}")
 
     session_data = response.json()
     sess_id = session_data["id"]
     _id = session_data["kernel"]["id"]
 
-    response = requests.patch(f"http://localhost:8888/api/sessions/{sess_id}", json={"path": cwd},    )
-    if not response.ok:
+    response = await client.patch(
+        f"http://localhost:8888/api/sessions/{sess_id}",
+        json={"path": cwd},
+    )
+    if not response.is_success:
         raise Exception(f"Failed to create kernel: {response.text}")
 
     logger.debug(f"Created kernel {kernel_id}")
@@ -101,4 +114,3 @@ async def create_kernel(request: CreateKernel):
     websockets[_id] = ws
 
     return kernel_id
-
