@@ -28,6 +28,8 @@ client = httpx.AsyncClient()
 # TODO: Increase timeout for requests to allow streaming
 # TODO: Handle pings from server so we can keep the connection from idling
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
+# TODO: Update signatures and types on clients
+# TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
 
 
 @asynccontextmanager

@@ -14,7 +14,7 @@ class JupyterExtension:
     _exec_timeout = 300
 
     @property
-    def client(self) -> Client:
+    def _client(self) -> Client:
         return Client(transport=self._transport)
 
     def __init__(
@@ -44,7 +44,7 @@ class JupyterExtension:
         request_timeout = request_timeout or self._connection_config.request_timeout
         execution = Execution()
 
-        with self.client.stream(
+        with self._client.stream(
             "POST",
             f"{self._url}/execute",
             json={
@@ -67,27 +67,42 @@ class JupyterExtension:
 
         return execution
 
-    def create_kernel(self, language: Optional[str] = None):
+    def create_kernel(
+        self,
+        language: Optional[str] = None,
+        request_timeout: Optional[float] = None,
+    ):
         logger.debug(f"Creating new kernel for language: {language}")
 
-        response = self.client.post(
-            f"{self._url}/contexts", json={"language": language}
+        response = self._client.post(
+            f"{self._url}/contexts",
+            json={"language": language},
+            timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
 
         return response.json()
 
-    def restart_kernel(self, kernel_id: Optional[str] = None):
+    def restart_kernel(
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = None,
+    ):
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
-        response = self.client.post(
-            f"{self._url}/contexts/restart", json={"kernel_id": kernel_id}
+        response = self._client.post(
+            f"{self._url}/contexts/restart",
+            json={"kernel_id": kernel_id},
+            timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
 
         return response.json()
 
-    def list_kernels(self) -> List[str]:
+    def list_kernels(
+        self,
+        request_timeout: Optional[float] = None,
+    ) -> List[str]:
         """
         Lists all available Jupyter kernels.
 
@@ -97,7 +112,10 @@ class JupyterExtension:
         :param timeout: The timeout for the kernel list request.
         :return: List of kernel ids
         """
-        response = self.client.get(f"{self._url}/contexts")
+        response = self._client.get(
+            f"{self._url}/contexts",
+            timeout=request_timeout or self._connection_config.request_timeout,
+        )
         response.raise_for_status()
 
         return response.json()

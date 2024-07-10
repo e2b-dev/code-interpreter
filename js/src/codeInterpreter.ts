@@ -28,7 +28,7 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
 }
 
 export class JupyterExtension {
-  private static readonly defaultTimeoutMs = 300_000
+  private static readonly execTimeoutMs = 300_000
 
   constructor(private readonly url: string, private readonly connectionConfig: ConnectionConfig) { }
 
@@ -55,21 +55,24 @@ export class JupyterExtension {
 
     const res = await fetch(`${this.url}/execute`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         code,
         // language: opts.language,
-        // kernel_id: opts.kernelID,
+        kernel_id: opts.kernelID,
       }),
       keepalive: true,
     })
 
     if (!res.ok || !res.body) {
-      throw new Error(`Failed to execute code: ${res.statusText}`)
+      throw new Error(`Failed to execute code: ${res.statusText} ${await res?.text()}`)
     }
 
     clearTimeout(reqTimer)
 
-    const bodyTimeout = opts.timeoutMs ?? JupyterExtension.defaultTimeoutMs
+    const bodyTimeout = opts.timeoutMs ?? JupyterExtension.execTimeoutMs
 
     const bodyTimer = bodyTimeout
       ? setTimeout(() => {
@@ -83,7 +86,6 @@ export class JupyterExtension {
     let error: ExecutionError | undefined = undefined
 
     try {
-
       for await (const chunk of readLines(res.body)) {
         const msg = JSON.parse(chunk)
 
@@ -126,6 +128,70 @@ export class JupyterExtension {
       },
       error,
     )
+  }
+
+  async createKernel(
+    cwd: string = '/home/user',
+    kernelName?: string,
+    requestTimeoutMs?: number,
+  ): Promise<string> {
+    const res = await fetch(`${this.url}/contexts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        language: kernelName,
+      }),
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
+
+    if (!res.ok || !res.body) {
+      throw new Error(`Failed to create kernel: ${res.statusText} ${await res?.text()}`)
+    }
+
+    return res.json()
+  }
+
+  async restartKernel(
+    kernelID?: string,
+    requestTimeoutMs?: number,
+  ) {
+    const res = await fetch(`${this.url}/contexts/restart`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        kernel_id: kernelID,
+      }),
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
+
+    if (!res.ok) {
+      throw new Error(`Failed to restart kernel: ${res.statusText} ${await res?.text()}`)
+    }
+
+    return res.json()
+  }
+
+  // async shutdownKernel(kernelID?: string) { }
+
+  async listKernels(
+    requestTimeoutMs?: number,
+  ): Promise<string[]> {
+    const res = await fetch(`${this.url}/contexts`, {
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
+
+    if (!res.ok) {
+      throw new Error(`Failed to list kernels: ${res.statusText} ${await res?.text()}`)
+    }
+
+    return res.json()
   }
 }
 
