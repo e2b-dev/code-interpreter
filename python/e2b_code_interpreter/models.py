@@ -123,6 +123,8 @@ class Result:
         :return: All available formats of the result in MIME types.
         """
         formats = []
+        if self.text:
+            formats.append("text")
         if self.html:
             formats.append("html")
         if self.markdown:
