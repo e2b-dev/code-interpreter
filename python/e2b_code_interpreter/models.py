@@ -43,16 +43,7 @@ class ExecutionError:
 
     name: str
     value: str
-    traceback_raw: List[str]
-
-    @property
-    def traceback(self) -> str:
-        """
-        Returns the traceback as a single string.
-
-        :return: The traceback as a single string.
-        """
-        return "\n".join(self.traceback_raw)
+    traceback: str
 
     def to_json(self) -> str:
         """
@@ -324,6 +315,7 @@ def parse_output(
         if on_stderr:
             on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
+        print("all data", data)
         execution.error = ExecutionError(**data)
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]

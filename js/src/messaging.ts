@@ -32,15 +32,8 @@ export class ExecutionError {
     /**
      * The raw traceback of the error.
      **/
-    public tracebackRaw: string[],
+    public traceback: string,
   ) { }
-
-  /**
-   * Returns the traceback of the error as a string.
-   */
-  get traceback(): string {
-    return this.tracebackRaw.join('\n')
-  }
 }
 
 /**
