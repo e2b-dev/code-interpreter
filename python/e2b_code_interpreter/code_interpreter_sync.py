@@ -56,7 +56,6 @@ class JupyterExtension:
             f"{self._url}/execute",
             json={
                 "code": code,
-                # "language": language,
                 "kernel_id": kernel_id,
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
@@ -100,8 +99,9 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
-        logger.debug(f"Creating new kernel for language: {kernel_id}")
+        logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
+        kernel_id = kernel_id or "default"
         response = self._client.request(
             method="DELETE",
             url=f"{self._url}/contexts/{kernel_id}",

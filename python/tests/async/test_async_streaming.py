@@ -11,7 +11,7 @@ async def test_streaming_output(async_sandbox: AsyncCodeInterpreter):
     await async_sandbox.notebook.exec_cell("print(1)", on_stdout=test)
 
     assert len(out) == 1
-    assert out[0] == "1\n"
+    assert out[0].line == "1\n"
 
 
 async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
@@ -22,7 +22,7 @@ async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
     )
 
     assert len(out) == 1
-    assert out[0] == "1\n"
+    assert out[0].line == "1\n"
 
 
 async def test_streaming_result(async_sandbox: AsyncCodeInterpreter):
