@@ -29,6 +29,15 @@ sandboxTest('list kernels', async ({ sandbox }) => {
 
   const kernelID = await sandbox.notebook.createKernel()
   kernels = await sandbox.notebook.listKernels()
-  expect(kernels).toContain(kernelID)
+  expect(kernels.map(kernel => kernel.kernelID)).toContain(kernelID)
   expect(kernels.length).toEqual(2)
+})
+sandboxTest('shutdown kernel', async ({ sandbox }) => {
+  let kernels = await sandbox.notebook.listKernels()
+  expect(kernels.length).toEqual(1)
+
+  const kernelID = await sandbox.notebook.shutdownKernel()
+  kernels = await sandbox.notebook.listKernels()
+  expect(kernels).not.toContain(kernelID)
+  expect(kernels.length).toEqual(0)
 })

@@ -163,7 +163,7 @@ export class JupyterExtension {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        language: kernelName,
+        kernel_name: kernelName,
         cwd: cwd || '/home/user'
       }),
       keepalive: true,
@@ -174,7 +174,8 @@ export class JupyterExtension {
       throw new Error(`Failed to create kernel: ${res.statusText} ${await res?.text()}`)
     }
 
-    return res.json()
+    const data = await res.json()
+    return data.id
   }
 
   async restartKernel({
@@ -184,14 +185,12 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    const res = await fetch(`${this.url}/contexts/restart`, {
+    kernelID = kernelID || 'default'
+    const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        kernel_id: kernelID,
-      }),
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
@@ -208,14 +207,13 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    const res = await fetch(`${this.url}/contexts`, {
+    kernelID = kernelID || 'default'
+
+    const res = await fetch(`${this.url}/contexts/${kernelID}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        kernel_id: kernelID,
-      }),
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
@@ -239,7 +237,7 @@ export class JupyterExtension {
       throw new Error(`Failed to list kernels: ${res.statusText} ${await res?.text()}`)
     }
 
-    return (await res.json()).map((kernel: any) => ({ kernelID: kernel.kernel_id, name: kernel.name }))
+    return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
   }
 }
 
