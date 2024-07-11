@@ -1,7 +1,6 @@
 import logging
 
 from typing import Optional, List
-
 from httpx import AsyncHTTPTransport, AsyncClient
 
 from e2b import AsyncSandbox, ConnectionConfig, Stdout, Stderr
@@ -33,14 +32,13 @@ class JupyterExtension:
         self,
         code: str,
         kernel_id: Optional[str] = None,
-        language: Optional[str] = None,
         on_stdout: Optional[OutputHandler[Stdout]] = None,
         on_stderr: Optional[OutputHandler[Stderr]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ):
-        logger.debug(f"Executing code {code} for language {language}")
+        logger.debug(f"Executing code {code}")
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
@@ -50,7 +48,6 @@ class JupyterExtension:
             self._url,
             json={
                 "code": code,
-                # "language": language,
                 "kernel_id": kernel_id,
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),

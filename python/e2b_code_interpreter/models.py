@@ -1,12 +1,25 @@
 import json
-from typing import List, Optional, Iterable, Dict, TypeVar, Callable
+
+from typing import (
+    List,
+    Optional,
+    Iterable,
+    Dict,
+    TypeVar,
+    Callable,
+    Awaitable,
+    Any,
+    Union,
+)
 
 from e2b.sandbox.process.process_handle import Stdout, Stderr
 
 
 T = TypeVar("T")
-
-OutputHandler = Callable[[T], None]
+OutputHandler = Union[
+    Callable[[T], Any],
+    Callable[[T], Awaitable[Any]],
+]
 
 
 class Error:
@@ -14,13 +27,6 @@ class Error:
     Represents an error that occurred during the execution of a cell.
     The error contains the name of the error, the value of the error, and the traceback.
     """
-
-    name: str
-    "Name of the exception."
-    value: str
-    "Value of the exception."
-    traceback_raw: List[str]
-    "List of strings representing the traceback."
 
     def __init__(self, name: str, value: str, traceback: List[str]):
         self.name = name
@@ -62,22 +68,6 @@ class Result:
     The class also provides methods to display the data in a Jupyter notebook.
     """
 
-    text: Optional[str] = None
-    html: Optional[str] = None
-    markdown: Optional[str] = None
-    svg: Optional[str] = None
-    png: Optional[str] = None
-    jpeg: Optional[str] = None
-    pdf: Optional[str] = None
-    latex: Optional[str] = None
-    json: Optional[dict] = None
-    javascript: Optional[str] = None
-    extra: Optional[dict] = None
-    "Extra data that can be included. Not part of the standard types."
-
-    is_main_result: bool
-    "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
-
     def __getitem__(self, item):
         return getattr(self, item)
 
@@ -108,7 +98,9 @@ class Result:
         self.json = json
         self.javascript = javascript
         self.is_main_result = is_main_result
+        """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
         self.extra = extra or {}
+        """Extra data that can be included. Not part of the standard types."""
 
     def formats(self) -> Iterable[str]:
         """
@@ -230,16 +222,15 @@ class Logs:
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
 
-    stdout: Optional[str] = None
-    "List of strings printed to stdout by prints, subprocesses, etc."
-    stderr: Optional[str] = None
-    "List of strings printed to stderr by prints, subprocesses, etc."
-
     def __init__(
-        self, stdout: Optional[List[str]] = None, stderr: Optional[List[str]] = None
+        self,
+        stdout: Optional[List[str]] = None,
+        stderr: Optional[List[str]] = None,
     ):
         self.stdout = stdout or []
+        """List of strings printed to stdout by prints, subprocesses, etc."""
         self.stderr = stderr or []
+        """List of strings printed to stderr by prints, subprocesses, etc."""
 
     def __repr__(self):
         return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
@@ -269,20 +260,15 @@ class Execution:
     Represents the result of a cell execution.
     """
 
-    results: List[Result] = []
-    "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
-    logs: Logs = Logs()
-    "Logs printed to stdout and stderr during execution."
-    error: Optional[Error] = None
-    "Error object if an error occurred, None otherwise."
-    execution_count: Optional[int] = None
-    "Execution count of the cell."
-
     def __init__(self, **kwargs):
-        self.results = kwargs.pop("results", [])
-        self.logs = kwargs.pop("logs", Logs())
-        self.error = kwargs.pop("error", None)
-        self.execution_count = kwargs.pop("execution_count", None)
+        self.results: List[Result] = kwargs.pop("results", [])
+        """List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."""
+        self.logs: Logs = kwargs.pop("logs", Logs())
+        """Logs printed to stdout and stderr during execution."""
+        self.error: Optional[Error] = kwargs.pop("error", None)
+        """Error object if an error occurred, None otherwise."""
+        self.execution_count: Optional[int] = kwargs.pop("execution_count", None)
+        """Execution count of the cell."""
 
     def __repr__(self):
         return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
@@ -319,11 +305,11 @@ class KernelException(Exception):
 
 
 def parse_output(
-        execution: Execution,
-        output: str,
-        on_stdout: Optional[OutputHandler[Stdout]] = None,
-        on_stderr: Optional[OutputHandler[Stderr]] = None,
-        on_result: Optional[OutputHandler[Result]] = None,
+    execution: Execution,
+    output: str,
+    on_stdout: Optional[OutputHandler[Stdout]] = None,
+    on_stderr: Optional[OutputHandler[Stderr]] = None,
+    on_result: Optional[OutputHandler[Result]] = None,
 ) -> None:
     data = json.loads(output)
     data_type = data.pop("type")
@@ -334,7 +320,7 @@ def parse_output(
         if on_result:
             on_result(result)
     elif data_type == "stdout":
-        execution.logs.stdout += data['text']
+        execution.logs.stdout += data["text"]
         if on_stdout:
             on_stdout(data["text"])
     elif data_type == "stderr":
