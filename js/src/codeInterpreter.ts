@@ -1,6 +1,6 @@
 import { ConnectionConfig, Sandbox } from 'e2b'
 
-import { Result, Execution, ExecutionError } from './messaging'
+import { Result, Execution, ExecutionError, OutputMessage } from './messaging'
 
 async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
@@ -10,17 +10,26 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
     while (true) {
       const { done, value } = await reader.read();
 
+      if (value !== undefined) {
+        buffer += new TextDecoder().decode(value)
+      }
+
       if (done) {
-        yield buffer
+        if (buffer.length > 0) {
+          yield buffer
+        }
         break
       }
 
-      buffer += new TextDecoder().decode(value)
-      const newlineIdx = buffer.indexOf('\n')
-      if (newlineIdx !== -1) {
-        yield buffer.slice(0, newlineIdx)
-        buffer = buffer.slice(newlineIdx + 1)
-      }
+      let newlineIdx = -1
+
+      do {
+        newlineIdx = buffer.indexOf('\n')
+        if (newlineIdx !== -1) {
+          yield buffer.slice(0, newlineIdx)
+          buffer = buffer.slice(newlineIdx + 1)
+        }
+      } while (newlineIdx !== -1)
     }
   } finally {
     reader.releaseLock()
@@ -36,8 +45,8 @@ export class JupyterExtension {
     code: string,
     opts?: {
       kernelID?: string,
-      onStdout?: (output: string) => (Promise<any> | any),
-      onStderr?: (output: string) => (Promise<any> | any),
+      onStdout?: (output: OutputMessage) => (Promise<any> | any),
+      onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
       timeoutMs?: number,
       requestTimeoutMs?: number,
@@ -82,6 +91,7 @@ export class JupyterExtension {
     let stdout: string[] = []
     let stderr: string[] = []
     let error: ExecutionError | undefined = undefined
+    let executionCount: number | undefined = undefined
 
     try {
       for await (const chunk of readLines(res.body)) {
@@ -96,23 +106,31 @@ export class JupyterExtension {
             }
             break
           case 'stdout':
-            stdout.push(msg.value)
-            console.log(msg)
+            stdout.push(msg.text)
             if (opts?.onStdout) {
-              await opts.onStdout(msg.value)
+              await opts.onStdout({
+                error: false,
+                line: msg.text,
+                timestamp: new Date().getTime() * 1000,
+              })
             }
             break
           case 'stderr':
-            stderr.push(msg.value)
+            stderr.push(msg.text)
             if (opts?.onStderr) {
-              await opts.onStderr(msg.value)
+              await opts.onStderr({
+                error: true,
+                line: msg.text,
+                timestamp: new Date().getTime() * 1000,
+              })
             }
             break
           case 'error':
             error = new ExecutionError(msg.name, msg.value, msg.traceback)
             break
-          default:
-            console.warn(`Unhandled message type: ${msg.type}`)
+          case 'number_of_executions':
+            executionCount = msg.execution_count
+            break
         }
       }
     } finally {
@@ -126,6 +144,7 @@ export class JupyterExtension {
         stderr,
       },
       error,
+      executionCount,
     )
   }
 

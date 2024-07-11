@@ -1,5 +1,5 @@
 import json
-from typing import Iterable, Mapping, Optional, AsyncIterable, Union
+from typing import Mapping, Optional, AsyncIterable
 
 from fastapi.encoders import jsonable_encoder
 from starlette.background import BackgroundTask
@@ -17,7 +17,7 @@ async def async_enumerate(async_sequence: AsyncIterable, start=0):
         idx += 1
 
 
-class StreamingLisJsonResponse(StreamingResponse):
+class StreamingListJsonResponse(StreamingResponse):
     """Converts a pydantic model generator into a streaming HTTP Response
     that streams a JSON list, one element at a time.
 
@@ -26,16 +26,14 @@ class StreamingLisJsonResponse(StreamingResponse):
 
     def __init__(
         self,
-        content_generator: Union[Iterable, AsyncIterable],
+        content_generator: AsyncIterable,
         status_code: int = 200,
         headers: Optional[Mapping[str, str]] = None,
         media_type: Optional[str] = None,
         background: Optional[BackgroundTask] = None,
     ) -> None:
-        if isinstance(content_generator, AsyncIterable):
-            body_iterator = self._encoded_async_generator(content_generator)
-        else:
-            body_iterator = self._encoded_generator(content_generator)
+        body_iterator = self._encoded_async_generator(content_generator)
+
         super().__init__(
             content=body_iterator,
             status_code=status_code,
@@ -48,16 +46,6 @@ class StreamingLisJsonResponse(StreamingResponse):
         """Converts an asynchronous pydantic model generator
         into a streaming JSON list
         """
-        async for idx, item in async_enumerate(async_generator):
-            yield json.dumps(jsonable_encoder(item))
-            yield "\n"
-        yield '{"type": "end_of_execution"}'
-
-    async def _encoded_generator(self, generator):
-        """Converts a synchronous pydantic model generator
-        into a streaming JSON list
-        """
-        for idx, item in enumerate(generator):
-            yield json.dumps(jsonable_encoder(item))
-            yield "\n"
-        yield '{"type": "end_of_execution"}'
+        async for _, item in async_enumerate(async_generator):
+            yield f"{json.dumps(jsonable_encoder(item))}\n"
+        yield '{"type": "end_of_execution"}\n'

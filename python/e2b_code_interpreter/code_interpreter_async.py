@@ -3,7 +3,7 @@ import logging
 from typing import Optional, List
 from httpx import AsyncHTTPTransport, AsyncClient
 
-from e2b import AsyncSandbox, ConnectionConfig, Stdout, Stderr
+from e2b import AsyncSandbox, ConnectionConfig
 
 from e2b_code_interpreter.constants import DEFAULT_TEMPLATE, JUPYTER_PORT
 from e2b_code_interpreter.models import (
@@ -12,6 +12,7 @@ from e2b_code_interpreter.models import (
     Result,
     parse_output,
     OutputHandler,
+    OutputMessage,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,8 +39,8 @@ class JupyterExtension:
         self,
         code: str,
         kernel_id: Optional[str] = None,
-        on_stdout: Optional[OutputHandler[Stdout]] = None,
-        on_stderr: Optional[OutputHandler[Stderr]] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,

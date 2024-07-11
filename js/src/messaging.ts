@@ -1,7 +1,4 @@
-/**
- * A message from a process.
- */
-export class CellMessage {
+export class OutputMessage {
   constructor(
     public readonly line: string,
     /**
@@ -35,7 +32,7 @@ export class ExecutionError {
     /**
      * The raw traceback of the error.
      **/
-    public tracebackRaw: string[]
+    public tracebackRaw: string[],
   ) { }
 
   /**
@@ -270,31 +267,4 @@ export class Execution {
       error: this.error
     }
   }
-}
-
-/**
- * Represents the execution of a cell in the Jupyter kernel.
- * It's an internal class used by JupyterKernelWebSocket.
- */
-class CellExecution {
-  execution: Execution
-  onStdout?: (out: CellMessage) => any
-  onStderr?: (out: CellMessage) => any
-  onResult?: (data: Result) => any
-  inputAccepted: boolean = false
-
-  constructor(
-    onStdout?: (out: CellMessage) => any,
-    onStderr?: (out: CellMessage) => any,
-    onResult?: (data: Result) => any
-  ) {
-    this.execution = new Execution([], { stdout: [], stderr: [] })
-    this.onStdout = onStdout
-    this.onStderr = onStderr
-    this.onResult = onResult
-  }
-}
-
-interface Cells {
-  [id: string]: CellExecution
 }

@@ -12,7 +12,7 @@ from api.models.create_kernel import CreateKernel, RestartKernel, ShutdownKernel
 from messaging import JupyterKernelWebSocket
 from api.models.execution_request import ExecutionRequest
 from messaging import JupyterKernelWebSocket
-from stream import StreamingLisJsonResponse
+from stream import StreamingListJsonResponse
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -85,7 +85,7 @@ async def execute(request: ExecutionRequest):
     else:
         ws = websockets["default"]
 
-    return StreamingLisJsonResponse(ws.execute(request.code))
+    return StreamingListJsonResponse(ws.execute(request.code))
 
 
 @app.post("/contexts")

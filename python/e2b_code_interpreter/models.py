@@ -23,6 +23,19 @@ OutputHandler = Union[
 ]
 
 
+@dataclass
+class OutputMessage:
+    line: str
+    timestamp: int
+    """
+    Unix epoch in nanoseconds
+    """
+    error: bool = False
+
+    def __str__(self):
+        return self.line
+
+
 class Error:
     """
     Represents an error that occurred during the execution of a cell.
@@ -308,8 +321,8 @@ class KernelException(Exception):
 def parse_output(
     execution: Execution,
     output: str,
-    on_stdout: Optional[OutputHandler[Stdout]] = None,
-    on_stderr: Optional[OutputHandler[Stderr]] = None,
+    on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+    on_stderr: Optional[OutputHandler[OutputMessage]] = None,
     on_result: Optional[OutputHandler[Result]] = None,
 ) -> None:
     data = json.loads(output)
@@ -323,11 +336,11 @@ def parse_output(
     elif data_type == "stdout":
         execution.logs.stdout += data["text"]
         if on_stdout:
-            on_stdout(data["text"])
+            on_stdout(OutputMessage(data["text"], data["timestamp"], False))
     elif data_type == "stderr":
         execution.logs.stderr += data["text"]
         if on_stderr:
-            on_stderr(data["text"])
+            on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
         execution.error = Error(**data)
     elif data_type == "number_of_executions":

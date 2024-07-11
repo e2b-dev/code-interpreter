@@ -1,11 +1,11 @@
 import { expect } from 'vitest'
 
-import { Result, CellMessage } from '../src'
+import { Result, OutputMessage } from '../src'
 
 import { sandboxTest } from './setup'
 
 sandboxTest('streaming output', async ({ sandbox }) => {
-  const out: CellMessage[] = []
+  const out: OutputMessage[] = []
   await sandbox.notebook.execCell('print(1)', {
     onStdout: (msg) => out.push(msg)
   })
@@ -15,7 +15,7 @@ sandboxTest('streaming output', async ({ sandbox }) => {
 })
 
 sandboxTest('streaming error', async ({ sandbox }) => {
-  const out: CellMessage[] = []
+  const out: OutputMessage[] = []
   await sandbox.notebook.execCell('import sys;print(1, file=sys.stderr)', {
     onStderr: (msg) => out.push(msg)
   })
