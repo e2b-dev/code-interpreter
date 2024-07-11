@@ -245,7 +245,7 @@ export class JupyterExtension {
 
 export class CodeInterpreter extends Sandbox {
   protected static override readonly defaultTemplate: string = 'ci-no-ws'
-  protected static readonly jupyterPort = 8000
+  protected static readonly jupyterPort = 49999
 
   readonly notebook = new JupyterExtension(
     `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(CodeInterpreter.jupyterPort)}`,
