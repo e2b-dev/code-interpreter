@@ -64,8 +64,6 @@ class JupyterExtension:
             execution = Execution()
 
             async for line in response.aiter_lines():
-                print("line", line)
-
                 parse_output(
                     execution,
                     line,

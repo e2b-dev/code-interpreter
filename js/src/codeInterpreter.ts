@@ -10,12 +10,9 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
     while (true) {
       const { done, value } = await reader.read();
 
-      console.log('check')
-
       if (value !== undefined) {
         buffer += new TextDecoder().decode(value)
       }
-      console.log('inc message', buffer)
 
       if (done) {
         if (buffer.length > 0) {
