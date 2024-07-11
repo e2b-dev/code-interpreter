@@ -211,9 +211,6 @@ export class JupyterExtension {
 
     const res = await fetch(`${this.url}/contexts/${kernelID}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })

@@ -102,8 +102,7 @@ class JupyterExtension:
         logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
         kernel_id = kernel_id or "default"
-        response = self._client.request(
-            method="DELETE",
+        response = self._client.delete(
             url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
