@@ -22,7 +22,7 @@ websockets: Dict[Union[str, StrictStr, Literal["default"]], JupyterKernelWebSock
 global default_kernel_id
 
 
-client = httpx.AsyncClient()
+global client
 
 # TODO: Increase keepalive timeout
 # TODO: Increase timeout for requests to allow streaming
@@ -39,6 +39,9 @@ client = httpx.AsyncClient()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    global client
+    client = httpx.AsyncClient()
+
     # Load the default kernel
     session_id = str(uuid.uuid4())
 
@@ -60,6 +63,8 @@ async def lifespan(app: FastAPI):
 
     await default_ws.close()
     task.cancel()
+
+    await client.aclose()
 
 
 app = FastAPI(lifespan=lifespan)
