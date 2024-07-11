@@ -237,8 +237,15 @@ class JupyterKernelWebSocket:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 
     async def close(self):
-        logger.debug("Closing WebSocket")
-        self._stopped.set_result(None)
+        logger.debug(f"Closing WebSocket {self.kernel_id}")
+        try:
+            self._stopped.set_result(None)
+        except Exception as e:
+            logger.error(f"Error while closing WebSocket {self.kernel_id}: {e}")
+
+        for cleanup in self._process_cleanup:
+            cleanup()
+
         if self._ws is not None:
             await self._ws.close()
 

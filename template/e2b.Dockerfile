@@ -27,6 +27,4 @@ COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 COPY ./server $SERVER_PATH
 
-EXPOSE 8000
-
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
