@@ -24,8 +24,7 @@ global default_kernel_id
 
 global client
 
-# TODO: Increase keepalive timeout
-# TODO: Increase timeout for requests to allow streaming
+# TODO: Increase timeout for requests to allow streaming, increase max request/response sizes to acommodate larger results, Increase keepalive timeout
 # TODO: Handle pings from server so we can keep the connection from idling
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
 # TODO: Fix on_* handler types on clients for them to be the same as in current prod CI
