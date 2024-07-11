@@ -37,7 +37,7 @@ class JupyterExtension:
         on_result: Optional[OutputHandler[Result]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
-    ):
+    ) -> Execution:
         logger.debug(f"Executing code {code} for language {language}")
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
@@ -69,25 +69,44 @@ class JupyterExtension:
 
     def create_kernel(
         self,
-        language: Optional[str] = None,
+        cwd: Optional[str] = "/home/user",
+        kernel_name: Optional[str] = None,
         request_timeout: Optional[float] = None,
-    ):
-        logger.debug(f"Creating new kernel for language: {language}")
+    ) -> str:
+        logger.debug(f"Creating new kernel: {kernel_name}")
 
         response = self._client.post(
             f"{self._url}/contexts",
-            json={"language": language},
+            json={
+                "language": kernel_name,
+                "cwd": cwd,
+            },
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
 
-        return response.json()
+        return response.json().kernel_id
+
+    def shutdown_kernel(
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = None,
+    ) -> None:
+        logger.debug(f"Creating new kernel for language: {kernel_id}")
+
+        response = self._client.request(
+            method="DELETE",
+            url=f"{self._url}/contexts",
+            json={"kernel_id": kernel_id},
+            timeout=request_timeout or self._connection_config.request_timeout,
+        )
+        response.raise_for_status()
 
     def restart_kernel(
         self,
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
-    ):
+    ) -> None:
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
         response = self._client.post(
@@ -96,8 +115,6 @@ class JupyterExtension:
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
-
-        return response.json()
 
     def list_kernels(
         self,
@@ -118,7 +135,7 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return response.json()
+        return [k.kernel_id for k in response.json()]
 
 
 class CodeInterpreter(Sandbox):
