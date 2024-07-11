@@ -1,6 +1,6 @@
 import { ConnectionConfig, Sandbox } from 'e2b'
 
-import { Result, Execution, ExecutionError, OutputMessage, parseOutput } from './messaging'
+import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 
 async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
@@ -73,8 +73,13 @@ export class JupyterExtension {
       keepalive: true,
     })
 
-    if (!res.ok || !res.body) {
-      throw new Error(`Failed to execute code: ${res.statusText} ${await res?.text()}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
+    }
+
+    if (!res.body) {
+      throw new Error(`Not response body: ${res.statusText} ${await res?.text()}`)
     }
 
     clearTimeout(reqTimer)
@@ -122,8 +127,9 @@ export class JupyterExtension {
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
 
-    if (!res.ok || !res.body) {
-      throw new Error(`Failed to create kernel: ${res.statusText} ${await res?.text()}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
 
     const data = await res.json()
@@ -147,8 +153,9 @@ export class JupyterExtension {
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
 
-    if (!res.ok) {
-      throw new Error(`Failed to restart kernel: ${res.statusText} ${await res?.text()}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
   }
 
@@ -167,8 +174,9 @@ export class JupyterExtension {
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
 
-    if (!res.ok) {
-      throw new Error(`Failed to shutdown kernel: ${res.statusText} ${await res?.text()}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
   }
 
@@ -182,8 +190,9 @@ export class JupyterExtension {
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
     })
 
-    if (!res.ok) {
-      throw new Error(`Failed to list kernels: ${res.statusText} ${await res?.text()}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
 
     return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
