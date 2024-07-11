@@ -1,6 +1,6 @@
 import { ConnectionConfig, Sandbox } from 'e2b'
 
-import { Result, Execution, ExecutionError, OutputMessage } from './messaging'
+import { Result, Execution, ExecutionError, OutputMessage, parseOutput } from './messaging'
 
 async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
@@ -10,9 +10,12 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
     while (true) {
       const { done, value } = await reader.read();
 
+      console.log('check')
+
       if (value !== undefined) {
         buffer += new TextDecoder().decode(value)
       }
+      console.log('inc message', buffer)
 
       if (done) {
         if (buffer.length > 0) {
@@ -87,65 +90,17 @@ export class JupyterExtension {
       }, bodyTimeout)
       : undefined
 
-    const results: Result[] = []
-    let stdout: string[] = []
-    let stderr: string[] = []
-    let error: ExecutionError | undefined = undefined
-    let executionCount: number | undefined = undefined
+    const execution = new Execution()
 
     try {
       for await (const chunk of readLines(res.body)) {
-        const msg = JSON.parse(chunk)
-
-        switch (msg.type) {
-          case 'result':
-            const result = new Result({ ...msg, type: undefined, is_main_result: undefined }, msg.is_main_result)
-            results.push(result)
-            if (opts?.onResult) {
-              await opts.onResult(result)
-            }
-            break
-          case 'stdout':
-            stdout.push(msg.text)
-            if (opts?.onStdout) {
-              await opts.onStdout({
-                error: false,
-                line: msg.text,
-                timestamp: new Date().getTime() * 1000,
-              })
-            }
-            break
-          case 'stderr':
-            stderr.push(msg.text)
-            if (opts?.onStderr) {
-              await opts.onStderr({
-                error: true,
-                line: msg.text,
-                timestamp: new Date().getTime() * 1000,
-              })
-            }
-            break
-          case 'error':
-            error = new ExecutionError(msg.name, msg.value, msg.traceback)
-            break
-          case 'number_of_executions':
-            executionCount = msg.execution_count
-            break
-        }
+        await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult)
       }
     } finally {
       clearTimeout(bodyTimer)
     }
 
-    return new Execution(
-      results,
-      {
-        stdout,
-        stderr,
-      },
-      error,
-      executionCount,
-    )
+    return execution
   }
 
   async createKernel({

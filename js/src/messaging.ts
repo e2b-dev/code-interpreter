@@ -236,11 +236,11 @@ export class Execution {
     /**
      * List of result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots).
      */
-    public results: Result[],
+    public results: Result[] = [],
     /**
      * Logs printed to stdout and stderr during execution.
      */
-    public logs: Logs,
+    public logs: Logs = { stdout: [], stderr: [] },
     /**
      * An Error object if an error occurred, null otherwise.
      */
@@ -271,5 +271,51 @@ export class Execution {
       logs: this.logs,
       error: this.error
     }
+  }
+}
+
+export async function parseOutput(
+  execution: Execution,
+  line: string,
+  onStdout?: (output: OutputMessage) => (Promise<any> | any),
+  onStderr?: (output: OutputMessage) => (Promise<any> | any),
+  onResult?: (data: Result) => (Promise<any> | any),
+) {
+  const msg = JSON.parse(line)
+
+  switch (msg.type) {
+    case 'result':
+      const result = new Result({ ...msg, type: undefined, is_main_result: undefined }, msg.is_main_result)
+      execution.results.push(result)
+      if (onResult) {
+        await onResult(result)
+      }
+      break
+    case 'stdout':
+      execution.logs.stdout.push(msg.text)
+      if (onStdout) {
+        await onStdout({
+          error: false,
+          line: msg.text,
+          timestamp: new Date().getTime() * 1000,
+        })
+      }
+      break
+    case 'stderr':
+      execution.logs.stderr.push(msg.text)
+      if (onStderr) {
+        await onStderr({
+          error: true,
+          line: msg.text,
+          timestamp: new Date().getTime() * 1000,
+        })
+      }
+      break
+    case 'error':
+      execution.error = new ExecutionError(msg.name, msg.value, msg.traceback)
+      break
+    case 'number_of_executions':
+      execution.executionCount = msg.execution_count
+      break
   }
 }
