@@ -112,34 +112,39 @@ export class Result {
 
   readonly raw: RawData
 
-  constructor(data: RawData, public readonly isMainResult: boolean) {
-    this.text = data['text/plain']
-    this.html = data['text/html']
-    this.markdown = data['text/markdown']
-    this.svg = data['image/svg+xml']
-    this.png = data['image/png']
-    this.jpeg = data['image/jpeg']
-    this.pdf = data['application/pdf']
-    this.latex = data['text/latex']
-    this.json = data['application/json']
-    this.javascript = data['application/javascript']
+  constructor(rawData: RawData, public readonly isMainResult: boolean) {
+    const data = { ...rawData }
+    delete data['type']
+    delete data['is_main_result']
+
+    this.text = data['text']
+    this.html = data['html']
+    this.markdown = data['markdown']
+    this.svg = data['svg']
+    this.png = data['png']
+    this.jpeg = data['jpeg']
+    this.pdf = data['pdf']
+    this.latex = data['latex']
+    this.json = data['json']
+    this.javascript = data['javascript']
     this.isMainResult = isMainResult
     this.raw = data
 
     this.extra = {}
+
     for (const key of Object.keys(data)) {
       if (
         ![
-          'text/plain',
-          'text/html',
-          'text/markdown',
-          'image/svg+xml',
-          'image/png',
-          'image/jpeg',
-          'application/pdf',
-          'text/latex',
-          'application/json',
-          'application/javascript'
+          'plain',
+          'html',
+          'markdown',
+          'svg',
+          'png',
+          'jpeg',
+          'pdf',
+          'latex',
+          'json',
+          'javascript'
         ].includes(key)
       ) {
         this.extra[key] = data[key]

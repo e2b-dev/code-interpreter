@@ -99,7 +99,7 @@ export class JupyterExtension {
 
         switch (msg.type) {
           case 'result':
-            const result = new Result(msg.data, true)
+            const result = new Result({ ...msg, type: undefined, is_main_result: undefined }, msg.is_main_result)
             results.push(result)
             if (opts?.onResult) {
               await opts.onResult(result)
