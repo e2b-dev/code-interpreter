@@ -1,5 +1,6 @@
 import json
 
+from dataclasses import dataclass
 from typing import (
     List,
     Optional,
@@ -331,3 +332,9 @@ def parse_output(
         execution.error = Error(**data)
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]
+
+
+@dataclass
+class Kernel:
+    kernel_id: str
+    name: str

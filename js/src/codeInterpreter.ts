@@ -210,7 +210,7 @@ export class JupyterExtension {
     requestTimeoutMs,
   }: {
     requestTimeoutMs?: number,
-  }): Promise<string[]> {
+  }): Promise<{ kernelID: string, name: string }[]> {
     const res = await fetch(`${this.url}/contexts`, {
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
@@ -220,7 +220,7 @@ export class JupyterExtension {
       throw new Error(`Failed to list kernels: ${res.statusText} ${await res?.text()}`)
     }
 
-    return (await res.json()).map((kernel: any) => kernel.kernel_id)
+    return (await res.json()).map((kernel: any) => ({ kernelID: kernel.kernel_id, name: kernel.name }))
   }
 }
 

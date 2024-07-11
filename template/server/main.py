@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
     with open("/root/.jupyter/kernel_id") as file:
         default_kernel_id = file.read().strip()
 
-    default_ws = JupyterKernelWebSocket(default_kernel_id, session_id)
+    default_ws = JupyterKernelWebSocket(default_kernel_id, session_id, "python")
 
     websockets["default"] = default_ws
     websockets["python"] = default_ws
@@ -126,7 +126,7 @@ async def create_kernel(request: CreateKernel):
 
     logger.debug(f"Created kernel {kernel_id}")
 
-    ws = JupyterKernelWebSocket(kernel_id, session_id)
+    ws = JupyterKernelWebSocket(kernel_id, session_id, kernel_name)
     task = asyncio.create_task(ws.connect())
     await ws.started
 
@@ -142,7 +142,13 @@ async def list_kernels():
     kernel_ids = list(websockets.keys())
     kernel_ids.remove(default_kernel_id)
 
-    return [{"kernel_id": kernel_id} for kernel_id in kernel_ids]
+    return [
+        {
+            "kernel_id": websockets[kernel_id].kernel_id,
+            "name": websockets[kernel_id].name,
+        }
+        for kernel_id in kernel_ids
+    ]
 
 
 @app.post("/contexts/restart")
@@ -172,7 +178,7 @@ async def restart_kernel(request: RestartKernel):
             detail=f"Failed to restart kernel {kernel_id}",
         )
 
-    ws = JupyterKernelWebSocket(kernel_id, session_id)
+    ws = JupyterKernelWebSocket(kernel_id, session_id, ws.name)
 
     task = asyncio.create_task(ws.connect())
     await ws.started

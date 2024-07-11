@@ -40,8 +40,9 @@ class Execution:
 class JupyterKernelWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
 
-    def __init__(self, kernel_id: str, session_id: str):
+    def __init__(self, kernel_id: str, session_id: str, name: str):
         self.kernel_id = kernel_id
+        self.name = name
         self.url = f"ws://localhost:8888/api/kernels/{kernel_id}/channels"
         self.session_id = session_id
         self._executions: Dict[str, Execution] = {}

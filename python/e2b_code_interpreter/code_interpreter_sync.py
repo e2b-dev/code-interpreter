@@ -5,7 +5,13 @@ from httpx import HTTPTransport, Client
 from e2b import Sandbox, Stderr, Stdout, ConnectionConfig
 
 from e2b_code_interpreter.constants import DEFAULT_TEMPLATE, JUPYTER_PORT
-from e2b_code_interpreter.models import Execution, Result, parse_output, OutputHandler
+from e2b_code_interpreter.models import (
+    Execution,
+    Kernel,
+    Result,
+    parse_output,
+    OutputHandler,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +125,7 @@ class JupyterExtension:
     def list_kernels(
         self,
         request_timeout: Optional[float] = None,
-    ) -> List[str]:
+    ) -> List[Kernel]:
         """
         Lists all available Jupyter kernels.
 
@@ -135,7 +141,7 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return [k.kernel_id for k in response.json()]
+        return [Kernel(k.kernel_id, k.name) for k in response.json()]
 
 
 class CodeInterpreter(Sandbox):
