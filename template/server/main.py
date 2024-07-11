@@ -26,7 +26,7 @@ global client
 
 # TODO: Increase timeout for requests to allow streaming, increase max request/response sizes to acommodate larger results, Increase keepalive timeout
 # TODO: Handle pings from server so we can keep the connection from idling
-# TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
+# TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx | Why do we need to run behind nginx?
 # TODO: Fix on_* handler types on clients for them to be the same as in current prod CI
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
 # TODO: Fix returned values in JS
