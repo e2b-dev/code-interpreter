@@ -29,7 +29,7 @@ def test_list_kernels(sandbox: CodeInterpreter):
 
     kernel_id = sandbox.notebook.create_kernel()
     kernels = sandbox.notebook.list_kernels()
-    assert kernel_id in kernels
+    assert kernel_id in [kernel.kernel_id for kernel in kernels]
     assert len(kernels) == 2
 
 
