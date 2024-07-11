@@ -34,15 +34,14 @@ export class JupyterExtension {
 
   async execCell(
     code: string,
-    opts: {
+    opts?: {
       kernelID?: string,
-      language?: string,
-      onStdout?: (output: string) => (Promise<void> | void),
-      onStderr?: (output: string) => (Promise<void> | void),
-      onResult?: (data: Result) => (Promise<void> | void),
+      onStdout?: (output: string) => (Promise<any> | any),
+      onStderr?: (output: string) => (Promise<any> | any),
+      onResult?: (data: Result) => (Promise<any> | any),
       timeoutMs?: number,
       requestTimeoutMs?: number,
-    } = {}
+    },
   ): Promise<Execution> {
     const controller = new AbortController()
 
@@ -60,8 +59,7 @@ export class JupyterExtension {
       },
       body: JSON.stringify({
         code,
-        // language: opts.language,
-        kernel_id: opts.kernelID,
+        kernel_id: opts?.kernelID,
       }),
       keepalive: true,
     })
@@ -72,7 +70,7 @@ export class JupyterExtension {
 
     clearTimeout(reqTimer)
 
-    const bodyTimeout = opts.timeoutMs ?? JupyterExtension.execTimeoutMs
+    const bodyTimeout = opts?.timeoutMs ?? JupyterExtension.execTimeoutMs
 
     const bodyTimer = bodyTimeout
       ? setTimeout(() => {
@@ -93,19 +91,20 @@ export class JupyterExtension {
           case 'result':
             const result = new Result(msg.data, true)
             results.push(result)
-            if (opts.onResult) {
+            if (opts?.onResult) {
               await opts.onResult(result)
             }
             break
           case 'stdout':
             stdout.push(msg.value)
-            if (opts.onStdout) {
+            console.log(msg)
+            if (opts?.onStdout) {
               await opts.onStdout(msg.value)
             }
             break
           case 'stderr':
             stderr.push(msg.value)
-            if (opts.onStderr) {
+            if (opts?.onStderr) {
               await opts.onStderr(msg.value)
             }
             break
@@ -142,6 +141,7 @@ export class JupyterExtension {
       },
       body: JSON.stringify({
         language: kernelName,
+        cwd,
       }),
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
@@ -157,7 +157,7 @@ export class JupyterExtension {
   async restartKernel(
     kernelID?: string,
     requestTimeoutMs?: number,
-  ) {
+  ): Promise<void> {
     const res = await fetch(`${this.url}/contexts/restart`, {
       method: 'POST',
       headers: {
@@ -173,11 +173,25 @@ export class JupyterExtension {
     if (!res.ok) {
       throw new Error(`Failed to restart kernel: ${res.statusText} ${await res?.text()}`)
     }
-
-    return res.json()
   }
 
-  // async shutdownKernel(kernelID?: string) { }
+  async shutdownKernel(kernelID?: string, requestTimeoutMs?: number): Promise<void> {
+    const res = await fetch(`${this.url}/contexts`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        kernel_id: kernelID,
+      }),
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
+
+    if (!res.ok) {
+      throw new Error(`Failed to shutdown kernel: ${res.statusText} ${await res?.text()}`)
+    }
+  }
 
   async listKernels(
     requestTimeoutMs?: number,
@@ -191,7 +205,7 @@ export class JupyterExtension {
       throw new Error(`Failed to list kernels: ${res.statusText} ${await res?.text()}`)
     }
 
-    return res.json()
+    return (await res.json()).map((kernel: any) => kernel.kernel_id)
   }
 }
 
