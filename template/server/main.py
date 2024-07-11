@@ -34,6 +34,7 @@ client = httpx.AsyncClient()
 # TODO: Should we use kernel ids as context ids and have /contexts/{context_id}/restart, etc?
 # TODO: Fix returned values in JS
 # TODO: Handle all types of messages in JS
+# TODO: Change port so it is outside of the well known range
 
 
 @asynccontextmanager
