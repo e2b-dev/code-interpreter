@@ -103,8 +103,7 @@ class JupyterExtension:
 
         response = self._client.request(
             method="DELETE",
-            url=f"{self._url}/contexts",
-            json={"kernel_id": kernel_id},
+            url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
@@ -117,8 +116,7 @@ class JupyterExtension:
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
         response = self._client.post(
-            f"{self._url}/contexts/restart",
-            json={"kernel_id": kernel_id},
+            f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()

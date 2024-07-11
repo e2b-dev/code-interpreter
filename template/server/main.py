@@ -3,13 +3,13 @@ import logging
 import uuid
 import httpx
 
-from typing import Dict, Union, Literal
+from typing import Dict, Union, Literal, List
 from pydantic import StrictStr
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
-from api.models.create_kernel import CreateKernel, RestartKernel, ShutdownKernel
-from messaging import JupyterKernelWebSocket
+from api.models.context import Context
+from api.models.create_kernel import CreateContext, RestartContext, ShutdownKernel
 from api.models.execution_request import ExecutionRequest
 from messaging import JupyterKernelWebSocket
 from stream import StreamingListJsonResponse
@@ -29,8 +29,6 @@ global client
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
 # TODO: Fix on_* handler types on clients for them to be the same as in current prod CI
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
-# TODO: Return objects not just plain types from api (list kernels) so we can expand it later with more data (kernel language, cwd, etc.)
-# TODO: Should we use kernel ids as context ids and have /contexts/{context_id}/restart, etc?
 # TODO: Fix returned values in JS
 # TODO: Handle all types of messages in JS
 
@@ -88,7 +86,7 @@ async def execute(request: ExecutionRequest):
 
 
 @app.post("/contexts")
-async def create_kernel(request: CreateKernel):
+async def create_context(request: CreateContext) -> Context:
     logger.info(f"Creating new kernel for language: {request.language}")
 
     kernel_name = request.language or "python3"
@@ -131,85 +129,85 @@ async def create_kernel(request: CreateKernel):
 
     websockets[kernel_id] = ws
 
-    return {"kernel_id": kernel_id}
+    return Context(name=kernel_name, id=kernel_id)
 
 
 @app.get("/contexts")
-async def list_kernels():
-    logger.info(f"Listing kernels")
+async def list_contexts() -> List[Context]:
+    logger.info(f"Listing contexts")
 
     kernel_ids = list(websockets.keys())
     kernel_ids.remove(default_kernel_id)
 
     return [
-        {
-            "kernel_id": websockets[kernel_id].kernel_id,
-            "name": websockets[kernel_id].name,
-        }
+        Context(
+            id=websockets[kernel_id].kernel_id,
+            name=websockets[kernel_id].name,
+        )
         for kernel_id in kernel_ids
     ]
 
 
-@app.post("/contexts/restart")
-async def restart_kernel(request: RestartKernel):
-    logger.info(f"Restarting kernel")
+@app.post("/contexts/{context_id}/restart")
+async def restart_context(context_id: str) -> None:
+    logger.info(f"Restarting context {context_id}")
 
-    kernel_id = request.kernel_id or "default"
+    context_id = context_id or "default"
 
-    ws = websockets.get(kernel_id, None)
+    ws = websockets.get(context_id, None)
     if not ws:
         raise HTTPException(
             status_code=404,
-            detail=f"Kernel {kernel_id} not found",
+            detail=f"Kernel {context_id} not found",
         )
 
-    kernel_id = ws.kernel_id
+    context_id = ws.kernel_id
     session_id = ws.session_id
 
     await ws.close()
 
     response = await client.post(
-        f"http://localhost:8888/api/kernels/{kernel_id}/restart"
+        f"http://localhost:8888/api/kernels/{context_id}/restart"
     )
     if not response.is_success:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to restart kernel {kernel_id}",
+            detail=f"Failed to restart context {context_id}",
         )
 
-    ws = JupyterKernelWebSocket(kernel_id, session_id, ws.name)
+    ws = JupyterKernelWebSocket(context_id, session_id, ws.name)
 
-    task = asyncio.create_task(ws.connect())
+    _ = asyncio.create_task(ws.connect())
     await ws.started
 
-    websockets[kernel_id] = ws
+    websockets[context_id] = ws
 
 
-@app.delete("/contexts")
-async def shutdown_kernel(request: ShutdownKernel):
-    logger.info(f"Shutting down kernel")
+@app.delete("/contexts/{context_id}")
+async def remove_context(context_id: str) -> None:
+    logger.info(f"Removing context {context_id}")
 
-    kernel_id = request.kernel_id or "default"
+    context_id = context_id or "default"
 
-    ws = websockets.get(kernel_id, None)
+    ws = websockets.get(context_id, None)
     if not ws:
         raise HTTPException(
             status_code=404,
-            detail=f"Kernel {kernel_id} not found",
+            detail=f"Kernel {context_id} not found",
         )
 
-    kernel_id = ws.kernel_id
+    context_id = ws.kernel_id
 
     try:
         await ws.close()
     except:
         pass
 
-    response = await client.delete(f"http://localhost:8888/api/kernels/{kernel_id}")
+    response = await client.delete(f"http://localhost:8888/api/kernels/{context_id}")
     if not response.is_success:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to shutdown kernel {kernel_id}",
+            detail=f"Failed to remove context {context_id}",
         )
 
-    del websockets[kernel_id]
+    del websockets[context_id]

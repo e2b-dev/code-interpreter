@@ -97,8 +97,7 @@ class JupyterExtension:
         logger.debug(f"Restarting kernel: {kernel_id}")
 
         response = await self._client.post(
-            f"{self._url}/contexts/restart",
-            json={"kernel_id": kernel_id},
+            f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
@@ -112,8 +111,7 @@ class JupyterExtension:
 
         response = await self._client.request(
             method="DELETE",
-            url=f"{self._url}/contexts",
-            json={"kernel_id": kernel_id},
+            url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
