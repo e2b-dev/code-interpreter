@@ -315,8 +315,7 @@ def parse_output(
         if on_stderr:
             on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
-        print("all data", data)
-        execution.error = ExecutionError(**data)
+        execution.error = ExecutionError(data["name"], data["value"], data["traceback"])
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]
 
