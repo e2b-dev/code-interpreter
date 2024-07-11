@@ -1,6 +1,6 @@
 import json
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import (
     List,
     Optional,
@@ -12,8 +12,6 @@ from typing import (
     Any,
     Union,
 )
-
-from e2b.sandbox.process.process_handle import Stdout, Stderr
 
 
 T = TypeVar("T")
@@ -36,16 +34,16 @@ class OutputMessage:
         return self.line
 
 
-class Error:
+@dataclass
+class ExecutionError:
     """
     Represents an error that occurred during the execution of a cell.
     The error contains the name of the error, the value of the error, and the traceback.
     """
 
-    def __init__(self, name: str, value: str, traceback: List[str]):
-        self.name = name
-        self.value = value
-        self.traceback_raw = traceback
+    name: str
+    value: str
+    traceback_raw: List[str]
 
     @property
     def traceback(self) -> str:
@@ -70,6 +68,7 @@ class MIMEType(str):
     """
 
 
+@dataclass
 class Result:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -85,36 +84,20 @@ class Result:
     def __getitem__(self, item):
         return getattr(self, item)
 
-    # Allows to iterate over formats()
-    def __init__(
-        self,
-        text: Optional[str] = None,
-        html: Optional[str] = None,
-        markdown: Optional[str] = None,
-        svg: Optional[str] = None,
-        png: Optional[str] = None,
-        jpeg: Optional[str] = None,
-        pdf: Optional[str] = None,
-        latex: Optional[str] = None,
-        json: Optional[dict] = None,
-        javascript: Optional[str] = None,
-        is_main_result: bool = False,
-        extra: Optional[dict] = None,
-    ):
-        self.text = text
-        self.html = html
-        self.markdown = markdown
-        self.svg = svg
-        self.png = png
-        self.jpeg = jpeg
-        self.pdf = pdf
-        self.latex = latex
-        self.json = json
-        self.javascript = javascript
-        self.is_main_result = is_main_result
-        """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
-        self.extra = extra or {}
-        """Extra data that can be included. Not part of the standard types."""
+    text: Optional[str] = None
+    html: Optional[str] = None
+    markdown: Optional[str] = None
+    svg: Optional[str] = None
+    png: Optional[str] = None
+    jpeg: Optional[str] = None
+    pdf: Optional[str] = None
+    latex: Optional[str] = None
+    json: Optional[dict] = None
+    javascript: Optional[str] = None
+    is_main_result: bool = False
+    """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
+    extra: Optional[dict] = None
+    """Extra data that can be included. Not part of the standard types."""
 
     def formats(self) -> Iterable[str]:
         """
@@ -144,8 +127,9 @@ class Result:
         if self.javascript:
             formats.append("javascript")
 
-        for key in self.extra:
-            formats.append(key)
+        if self.extra:
+            for key in self.extra:
+                formats.append(key)
 
         return formats
 
@@ -233,20 +217,16 @@ class Result:
         return self.javascript
 
 
+@dataclass(repr=False)
 class Logs:
     """
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
 
-    def __init__(
-        self,
-        stdout: Optional[List[str]] = None,
-        stderr: Optional[List[str]] = None,
-    ):
-        self.stdout = stdout or []
-        """List of strings printed to stdout by prints, subprocesses, etc."""
-        self.stderr = stderr or []
-        """List of strings printed to stderr by prints, subprocesses, etc."""
+    stdout: List[str] = field(default_factory=list)
+    """List of strings printed to stdout by prints, subprocesses, etc."""
+    stderr: List[str] = field(default_factory=list)
+    """List of strings printed to stderr by prints, subprocesses, etc."""
 
     def __repr__(self):
         return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
@@ -271,20 +251,20 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     return serialized
 
 
+@dataclass(repr=False)
 class Execution:
     """
     Represents the result of a cell execution.
     """
 
-    def __init__(self, **kwargs):
-        self.results: List[Result] = kwargs.pop("results", [])
-        """List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."""
-        self.logs: Logs = kwargs.pop("logs", Logs())
-        """Logs printed to stdout and stderr during execution."""
-        self.error: Optional[Error] = kwargs.pop("error", None)
-        """Error object if an error occurred, None otherwise."""
-        self.execution_count: Optional[int] = kwargs.pop("execution_count", None)
-        """Execution count of the cell."""
+    results: List[Result] = field(default_factory=list)
+    """List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."""
+    logs: Logs = field(default_factory=Logs)
+    """Logs printed to stdout and stderr during execution."""
+    error: Optional[ExecutionError] = None
+    """Error object if an error occurred, None otherwise."""
+    execution_count: Optional[int] = None
+    """Execution count of the cell."""
 
     def __repr__(self):
         return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
@@ -326,7 +306,7 @@ def parse_output(
     on_stdout: Optional[OutputHandler[OutputMessage]] = None,
     on_stderr: Optional[OutputHandler[OutputMessage]] = None,
     on_result: Optional[OutputHandler[Result]] = None,
-) -> None:
+):
     data = json.loads(output)
     data_type = data.pop("type")
 
@@ -336,15 +316,15 @@ def parse_output(
         if on_result:
             on_result(result)
     elif data_type == "stdout":
-        execution.logs.stdout += data["text"]
+        execution.logs.stdout.append(data["text"])
         if on_stdout:
             on_stdout(OutputMessage(data["text"], data["timestamp"], False))
     elif data_type == "stderr":
-        execution.logs.stderr += data["text"]
+        execution.logs.stderr.append(data["text"])
         if on_stderr:
             on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
-        execution.error = Error(**data)
+        execution.error = ExecutionError(**data)
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]
 

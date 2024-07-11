@@ -49,7 +49,6 @@ class JupyterExtension:
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
-        execution = Execution()
 
         with self._client.stream(
             "POST",
@@ -62,6 +61,8 @@ class JupyterExtension:
         ) as response:
             response.raise_for_status()
 
+            execution = Execution()
+
             for line in response.iter_lines():
                 parse_output(
                     execution,
@@ -71,7 +72,7 @@ class JupyterExtension:
                     on_result=on_result,
                 )
 
-        return execution
+            return execution
 
     def create_kernel(
         self,

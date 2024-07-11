@@ -49,7 +49,6 @@ class JupyterExtension:
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
-        execution = Execution()
 
         async with self._client.stream(
             "POST",
@@ -62,7 +61,11 @@ class JupyterExtension:
         ) as response:
             response.raise_for_status()
 
+            execution = Execution()
+
             async for line in response.aiter_lines():
+                print("line", line)
+
                 parse_output(
                     execution,
                     line,
