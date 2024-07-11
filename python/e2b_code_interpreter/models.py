@@ -286,7 +286,7 @@ class Execution:
         return json.dumps(data)
 
 
-def extract_exception(res: Response) -> NotFoundException | TimeoutException | SandboxException | None:
+def extract_exception(res: Response):
     if res.is_success:
         return None
 
