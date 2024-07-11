@@ -49,23 +49,27 @@ class JupyterExtension:
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
+        execution = Execution()
 
         async with self._client.stream(
             "POST",
-            self._url,
+            f"{self._url}/execute",
             json={
                 "code": code,
                 "kernel_id": kernel_id,
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
         ) as response:
-
             response.raise_for_status()
 
-            execution = Execution()
-
             async for line in response.aiter_lines():
-                parse_output(execution, line, on_stdout, on_stderr, on_result)
+                parse_output(
+                    execution,
+                    line,
+                    on_stdout=on_stdout,
+                    on_stderr=on_stderr,
+                    on_result=on_result,
+                )
 
             return execution
 
@@ -87,7 +91,23 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return response.json().kernel_id
+        data = response.json()
+        return data["id"]
+
+    async def shutdown_kernel(
+        self,
+        kernel_id: Optional[str] = None,
+        request_timeout: Optional[float] = None,
+    ) -> None:
+        logger.debug(f"Shutting down a kernel with id {kernel_id}")
+
+        kernel_id = kernel_id or "default"
+        response = await self._client.request(
+            method="DELETE",
+            url=f"{self._url}/contexts/{kernel_id}",
+            timeout=request_timeout or self._connection_config.request_timeout,
+        )
+        response.raise_for_status()
 
     async def restart_kernel(
         self,
@@ -96,24 +116,9 @@ class JupyterExtension:
     ) -> None:
         logger.debug(f"Restarting kernel: {kernel_id}")
 
+        kernel_id = kernel_id or "default"
         response = await self._client.post(
-            f"{self._url}/contexts/restart",
-            json={"kernel_id": kernel_id},
-            timeout=request_timeout or self._connection_config.request_timeout,
-        )
-        response.raise_for_status()
-
-    async def shutdown_kernel(
-        self,
-        kernel_id: Optional[str] = None,
-        request_timeout: Optional[float] = None,
-    ) -> None:
-        logger.debug(f"Creating new kernel for language: {kernel_id}")
-
-        response = await self._client.request(
-            method="DELETE",
-            url=f"{self._url}/contexts",
-            json={"kernel_id": kernel_id},
+            f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
@@ -137,7 +142,7 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return [Kernel(k.kernel_id, k.name) for k in response.json()]
+        return [Kernel(k["id"], k["name"]) for k in response.json()]
 
 
 class AsyncCodeInterpreter(AsyncSandbox):
@@ -151,7 +156,7 @@ class AsyncCodeInterpreter(AsyncSandbox):
     def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
         super().__init__(sandbox_id, connection_config)
 
-        jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}/execute"
+        jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}"
 
         self._notebook = JupyterExtension(
             jupyter_url,

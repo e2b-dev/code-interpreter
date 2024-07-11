@@ -1,9 +1,6 @@
-import pytest_asyncio
-
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
 
 
-@pytest_asyncio.fixture
 async def test_reconnect(async_sandbox: AsyncCodeInterpreter):
     sandbox_id = async_sandbox.sandbox_id
 

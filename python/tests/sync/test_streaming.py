@@ -11,7 +11,7 @@ def test_streaming_output(sandbox: CodeInterpreter):
     sandbox.notebook.exec_cell("print(1)", on_stdout=test)
 
     assert len(out) == 1
-    assert out[0] == "1\n"
+    assert out[0].line == "1\n"
 
 
 def test_streaming_error(sandbox: CodeInterpreter):
@@ -22,7 +22,7 @@ def test_streaming_error(sandbox: CodeInterpreter):
     )
 
     assert len(out) == 1
-    assert out[0] == "1\n"
+    assert out[0].line == "1\n"
 
 
 def test_streaming_result(sandbox: CodeInterpreter):

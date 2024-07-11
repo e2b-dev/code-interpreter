@@ -3,7 +3,7 @@ from pydantic import BaseModel, StrictStr
 from pydantic import Field
 
 
-class CreateKernel(BaseModel):
+class CreateContext(BaseModel):
     cwd: Optional[StrictStr] = Field(
         default=None, description="Current working directory"
     )
@@ -15,7 +15,7 @@ class CreateKernel(BaseModel):
     )
 
 
-class RestartKernel(BaseModel):
+class RestartContext(BaseModel):
     kernel_id: Optional[StrictStr] = Field(default=None, description="Kernel ID")
 
 

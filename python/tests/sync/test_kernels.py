@@ -29,17 +29,17 @@ def test_list_kernels(sandbox: CodeInterpreter):
 
     kernel_id = sandbox.notebook.create_kernel()
     kernels = sandbox.notebook.list_kernels()
-    assert kernel_id in kernels
+    assert kernel_id in [kernel.kernel_id for kernel in kernels]
     assert len(kernels) == 2
 
 
 def test_shutdown(sandbox: CodeInterpreter):
     kernel_id = sandbox.notebook.create_kernel()
     kernels = sandbox.notebook.list_kernels()
-    assert kernel_id in kernels
+    assert kernel_id in [kernel.kernel_id for kernel in kernels]
     assert len(kernels) == 2
 
     sandbox.notebook.shutdown_kernel(kernel_id)
     kernels = sandbox.notebook.list_kernels()
-    assert kernel_id not in kernels
+    assert kernel_id not in [kernel.kernel_id for kernel in kernels]
     assert len(kernels) == 1

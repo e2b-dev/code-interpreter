@@ -12,4 +12,4 @@ generate:
 
 
 start-template-server:
-	docker run --rm -p 8000:8000 -it $$(docker build -q ./template -f ./template/e2b.Dockerfile)
+	docker run --rm -p 49999:49999 -it $$(docker build -q ./template -f ./template/e2b.Dockerfile)

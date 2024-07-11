@@ -56,7 +56,6 @@ class JupyterExtension:
             f"{self._url}/execute",
             json={
                 "code": code,
-                # "language": language,
                 "kernel_id": kernel_id,
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
@@ -92,19 +91,20 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return response.json().kernel_id
+        data = response.json()
+        return data["id"]
 
     def shutdown_kernel(
         self,
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
-        logger.debug(f"Creating new kernel for language: {kernel_id}")
+        logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
+        kernel_id = kernel_id or "default"
         response = self._client.request(
             method="DELETE",
-            url=f"{self._url}/contexts",
-            json={"kernel_id": kernel_id},
+            url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
@@ -116,9 +116,9 @@ class JupyterExtension:
     ) -> None:
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
+        kernel_id = kernel_id or "default"
         response = self._client.post(
-            f"{self._url}/contexts/restart",
-            json={"kernel_id": kernel_id},
+            f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
         response.raise_for_status()
@@ -142,7 +142,7 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return [Kernel(k.kernel_id, k.name) for k in response.json()]
+        return [Kernel(k["id"], k["name"]) for k in response.json()]
 
 
 class CodeInterpreter(Sandbox):
