@@ -3,7 +3,6 @@ import asyncio
 from dotenv import load_dotenv
 
 from e2b_code_interpreter import AsyncCodeInterpreter
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
 
 load_dotenv()
 

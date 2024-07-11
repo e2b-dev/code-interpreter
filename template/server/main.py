@@ -32,6 +32,7 @@ client = httpx.AsyncClient()
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
 # TODO: Return objects not just plain types from api (list kernels) so we can expand it later with more data (kernel language, cwd, etc.)
 # TODO: Should we use kernel ids as context ids and have /contexts/{context_id}/restart, etc?
+# TODO: Fix returned values in JS
 
 
 @asynccontextmanager

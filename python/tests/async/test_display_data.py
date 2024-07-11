@@ -1,6 +1,9 @@
+import pytest_asyncio
+
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
 
 
+@pytest_asyncio.fixture
 async def test_display_data(async_sandbox: AsyncCodeInterpreter):
     # plot random graph
     result = await async_sandbox.notebook.exec_cell(

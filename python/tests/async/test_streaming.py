@@ -1,6 +1,9 @@
+import pytest_asyncio
+
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
 
 
+@pytest_asyncio.fixture
 async def test_streaming_output(async_sandbox: AsyncCodeInterpreter):
     out = []
 
@@ -14,6 +17,7 @@ async def test_streaming_output(async_sandbox: AsyncCodeInterpreter):
     assert out[0] == "1\n"
 
 
+@pytest_asyncio.fixture
 async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
     out = []
 
@@ -25,6 +29,7 @@ async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
     assert out[0] == "1\n"
 
 
+@pytest_asyncio.fixture
 async def test_streaming_result(async_sandbox: AsyncCodeInterpreter):
     code = """
     import matplotlib.pyplot as plt
