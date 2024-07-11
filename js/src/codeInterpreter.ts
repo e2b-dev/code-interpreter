@@ -129,11 +129,15 @@ export class JupyterExtension {
     )
   }
 
-  async createKernel(
-    cwd: string = '/home/user',
+  async createKernel({
+    cwd,
+    kernelName,
+    requestTimeoutMs,
+  }: {
+    cwd?: string,
     kernelName?: string,
     requestTimeoutMs?: number,
-  ): Promise<string> {
+  }): Promise<string> {
     const res = await fetch(`${this.url}/contexts`, {
       method: 'POST',
       headers: {
@@ -141,7 +145,7 @@ export class JupyterExtension {
       },
       body: JSON.stringify({
         language: kernelName,
-        cwd,
+        cwd: cwd || '/home/user'
       }),
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
@@ -154,10 +158,13 @@ export class JupyterExtension {
     return res.json()
   }
 
-  async restartKernel(
+  async restartKernel({
+    kernelID,
+    requestTimeoutMs,
+  }: {
     kernelID?: string,
     requestTimeoutMs?: number,
-  ): Promise<void> {
+  }): Promise<void> {
     const res = await fetch(`${this.url}/contexts/restart`, {
       method: 'POST',
       headers: {
@@ -175,7 +182,13 @@ export class JupyterExtension {
     }
   }
 
-  async shutdownKernel(kernelID?: string, requestTimeoutMs?: number): Promise<void> {
+  async shutdownKernel({
+    kernelID,
+    requestTimeoutMs,
+  }: {
+    kernelID?: string,
+    requestTimeoutMs?: number,
+  }): Promise<void> {
     const res = await fetch(`${this.url}/contexts`, {
       method: 'DELETE',
       headers: {
@@ -193,9 +206,11 @@ export class JupyterExtension {
     }
   }
 
-  async listKernels(
+  async listKernels({
+    requestTimeoutMs,
+  }: {
     requestTimeoutMs?: number,
-  ): Promise<string[]> {
+  }): Promise<string[]> {
     const res = await fetch(`${this.url}/contexts`, {
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
