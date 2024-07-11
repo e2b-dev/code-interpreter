@@ -28,8 +28,6 @@ global client
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx | Why do we need to run behind nginx?
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
 # TODO: Error handling in SDKs
-# TODO: Why separated letters in python Execution?
-# TODO: Check correct results format in Python after dataclasses
 
 
 @asynccontextmanager

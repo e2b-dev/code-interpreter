@@ -1,5 +1,6 @@
 import json
 
+from e2b import NotFoundException, TimeoutException, SandboxException
 from dataclasses import dataclass, field
 from typing import (
     List,
@@ -12,6 +13,8 @@ from typing import (
     Any,
     Union,
 )
+
+from httpx import Response
 
 
 T = TypeVar("T")
@@ -283,12 +286,18 @@ class Execution:
         return json.dumps(data)
 
 
-class KernelException(Exception):
-    """
-    Exception raised when a kernel operation fails.
-    """
+def extract_exception(res: Response) -> NotFoundException | TimeoutException | SandboxException | None:
+    if res.is_success:
+        return None
 
-    pass
+    if res.status_code == 404:
+        return NotFoundException(res.text)
+    elif res.status_code == 502:
+        return TimeoutException(
+            f"{res.text}: This error is likely due to sandbox timeout. You can modify the sandbox timeout by passing 'timeout' when starting the sandbox or calling '.set_timeout' on the sandbox with the desired timeout."
+        )
+    else:
+        return SandboxException(f"{res.status_code}: {res.text}")
 
 
 def parse_output(

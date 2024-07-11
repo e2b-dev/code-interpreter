@@ -6,7 +6,6 @@ from .models import (
     Execution,
     ExecutionError,
     Result,
-    KernelException,
     MIMEType,
     Logs,
     OutputHandler,

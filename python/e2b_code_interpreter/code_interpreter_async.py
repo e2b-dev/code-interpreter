@@ -10,6 +10,7 @@ from e2b_code_interpreter.models import (
     Execution,
     Kernel,
     Result,
+    extract_exception,
     parse_output,
     OutputHandler,
     OutputMessage,
@@ -59,7 +60,10 @@ class JupyterExtension:
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
         ) as response:
-            response.raise_for_status()
+
+            err = extract_exception(response)
+            if err:
+                raise err
 
             execution = Execution()
 
@@ -90,7 +94,10 @@ class JupyterExtension:
             },
             timeout=request_timeout or self._connection_config.request_timeout,
         )
-        response.raise_for_status()
+
+        err = extract_exception(response)
+        if err:
+            raise err
 
         data = response.json()
         return data["id"]
@@ -107,7 +114,10 @@ class JupyterExtension:
             url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
-        response.raise_for_status()
+
+        err = extract_exception(response)
+        if err:
+            raise err
 
     async def restart_kernel(
         self,
@@ -121,7 +131,10 @@ class JupyterExtension:
             f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
-        response.raise_for_status()
+
+        err = extract_exception(response)
+        if err:
+            raise err
 
     async def list_kernels(
         self,
@@ -140,7 +153,10 @@ class JupyterExtension:
             f"{self._url}/contexts",
             timeout=request_timeout or self._connection_config.request_timeout,
         )
-        response.raise_for_status()
+
+        err = extract_exception(response)
+        if err:
+            raise err
 
         return [Kernel(k["id"], k["name"]) for k in response.json()]
 
