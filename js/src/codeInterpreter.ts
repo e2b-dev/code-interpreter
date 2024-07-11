@@ -137,7 +137,7 @@ export class JupyterExtension {
     cwd?: string,
     kernelName?: string,
     requestTimeoutMs?: number,
-  }): Promise<string> {
+  } = {}): Promise<string> {
     const res = await fetch(`${this.url}/contexts`, {
       method: 'POST',
       headers: {
@@ -164,7 +164,7 @@ export class JupyterExtension {
   }: {
     kernelID?: string,
     requestTimeoutMs?: number,
-  }): Promise<void> {
+  } = {}): Promise<void> {
     const res = await fetch(`${this.url}/contexts/restart`, {
       method: 'POST',
       headers: {
@@ -188,7 +188,7 @@ export class JupyterExtension {
   }: {
     kernelID?: string,
     requestTimeoutMs?: number,
-  }): Promise<void> {
+  } = {}): Promise<void> {
     const res = await fetch(`${this.url}/contexts`, {
       method: 'DELETE',
       headers: {
@@ -210,7 +210,7 @@ export class JupyterExtension {
     requestTimeoutMs,
   }: {
     requestTimeoutMs?: number,
-  }): Promise<{ kernelID: string, name: string }[]> {
+  } = {}): Promise<{ kernelID: string, name: string }[]> {
     const res = await fetch(`${this.url}/contexts`, {
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
