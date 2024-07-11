@@ -14,6 +14,7 @@ async def test_independence_of_kernels(async_sandbox: AsyncCodeInterpreter):
     await async_sandbox.notebook.exec_cell("x = 1")
 
     r = await async_sandbox.notebook.exec_cell("x", kernel_id=kernel_id)
+    assert r.error is not None
     assert r.error.value == "name 'x' is not defined"
 
 
@@ -23,6 +24,7 @@ async def test_restart_kernel(async_sandbox: AsyncCodeInterpreter):
     await async_sandbox.notebook.restart_kernel()
 
     r = await async_sandbox.notebook.exec_cell("x")
+    assert r.error is not None
     assert r.error.value == "name 'x' is not defined"
 
 

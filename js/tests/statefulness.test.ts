@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { expect } from 'vitest'
 
 import { sandboxTest } from './setup'
 

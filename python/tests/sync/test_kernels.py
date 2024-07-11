@@ -10,6 +10,7 @@ def test_independence_of_kernels(sandbox: CodeInterpreter):
     sandbox.notebook.exec_cell("x = 1")
 
     r = sandbox.notebook.exec_cell("x", kernel_id=kernel_id)
+    assert r.error is not None
     assert r.error.value == "name 'x' is not defined"
 
 
@@ -18,6 +19,7 @@ def test_restart_kernel(sandbox: CodeInterpreter):
     sandbox.notebook.restart_kernel()
 
     r = sandbox.notebook.exec_cell("x")
+    assert r.error is not None
     assert r.error.value == "name 'x' is not defined"
 
 
