@@ -244,10 +244,10 @@ export class JupyterExtension {
    * This method fetches a list of all currently available Jupyter kernels from the server. It can be used
    * to retrieve the IDs of all kernels that are currently running or available for connection.
    *
-   * @returns A promise that resolves to an array of kernel IDs.
+   * @returns A promise that resolves to an array of objects containing a kernel ID and kernel name.
    * @throws {Error} Throws an error if the request to list kernels fails.
    */
-  async listKernels(): Promise<string[]> {
+  async listKernels(): Promise<{ id: string, name: string }[]> {
     const response = await fetch(
       `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
         8888
@@ -261,7 +261,7 @@ export class JupyterExtension {
       throw new Error(`Failed to list kernels: ${response.statusText}`)
     }
 
-    return (await response.json()).map((kernel: { id: string }) => kernel.id)
+    return (await response.json()).map((kernel: { id: string, name: string }) => ({ id: kernel.id, name: kernel.name }))
   }
 
   /**
