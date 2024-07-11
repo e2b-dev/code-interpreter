@@ -28,11 +28,12 @@ client = httpx.AsyncClient()
 # TODO: Increase timeout for requests to allow streaming
 # TODO: Handle pings from server so we can keep the connection from idling
 # TODO: Check https://www.uvicorn.org/deployment/#running-behind-nginx
-# TODO: Update signatures and types on clients
+# TODO: Fix on_* handler types on clients for them to be the same as in current prod CI
 # TODO: Think about what to return from this API so later we can change only the SDK (not the API) when we change methods
 # TODO: Return objects not just plain types from api (list kernels) so we can expand it later with more data (kernel language, cwd, etc.)
 # TODO: Should we use kernel ids as context ids and have /contexts/{context_id}/restart, etc?
 # TODO: Fix returned values in JS
+# TODO: Handle all types of messages in JS
 
 
 @asynccontextmanager
@@ -136,7 +137,7 @@ async def list_kernels():
     kernel_ids = list(websockets.keys())
     kernel_ids.remove(default_kernel_id)
 
-    return kernel_ids
+    return [{"kernel_id": kernel_id} for kernel_id in kernel_ids]
 
 
 @app.post("/contexts/restart")
