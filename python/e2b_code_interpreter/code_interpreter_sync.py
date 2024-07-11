@@ -93,7 +93,7 @@ class JupyterExtension:
         response.raise_for_status()
 
         data = response.json()
-        return data['id']
+        return data["id"]
 
     def shutdown_kernel(
         self,
@@ -142,7 +142,7 @@ class JupyterExtension:
         )
         response.raise_for_status()
 
-        return [Kernel(k['id'], k['name']) for k in response.json()]
+        return [Kernel(k["id"], k["name"]) for k in response.json()]
 
 
 class CodeInterpreter(Sandbox):
