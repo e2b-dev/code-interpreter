@@ -1,13 +1,9 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { sandboxTest } from './setup'
 
-test('bash', async () => {
-  const sandbox = await CodeInterpreter.create()
-
+sandboxTest('bash', async ({ sandbox }) => {
   const result = await sandbox.notebook.execCell('!pwd')
 
   expect(result.logs.stdout.join().trim()).toEqual('/home/user')
-
-  await sandbox.close()
 })

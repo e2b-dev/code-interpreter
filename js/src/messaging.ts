@@ -1,10 +1,23 @@
-import IWebSocket from 'isomorphic-ws'
-import { id } from './utils'
+import { NotFoundError, SandboxError, TimeoutError } from 'e2b'
 
-/**
- * A message from a process.
- */
-export class CellMessage {
+export async function extractError(res: Response) {
+  if (res.ok) {
+    return
+  }
+
+  switch (res.status) {
+    case 502:
+      return new TimeoutError(
+        `${await res.text()}: This error is likely due to sandbox timeout. You can modify the sandbox timeout by passing 'timeoutMs' when starting the sandbox or calling '.setTimeout' on the sandbox with the desired timeout.`
+      )
+    case 404:
+      return new NotFoundError(await res.text())
+    default:
+      return new SandboxError(`${res.status} ${res.statusText}`)
+  }
+}
+
+export class OutputMessage {
   constructor(
     public readonly line: string,
     /**
@@ -19,7 +32,6 @@ export class CellMessage {
     return this.line
   }
 }
-
 
 /**
  * Represents an error that occurred during the execution of a cell.
@@ -38,15 +50,8 @@ export class ExecutionError {
     /**
      * The raw traceback of the error.
      **/
-    public tracebackRaw: string[]
+    public traceback: string,
   ) { }
-
-  /**
-   * Returns the traceback of the error as a string.
-   */
-  get traceback(): string {
-    return this.tracebackRaw.join('\n')
-  }
 }
 
 /**
@@ -118,34 +123,39 @@ export class Result {
 
   readonly raw: RawData
 
-  constructor(data: RawData, public readonly isMainResult: boolean) {
-    this.text = data['text/plain']
-    this.html = data['text/html']
-    this.markdown = data['text/markdown']
-    this.svg = data['image/svg+xml']
-    this.png = data['image/png']
-    this.jpeg = data['image/jpeg']
-    this.pdf = data['application/pdf']
-    this.latex = data['text/latex']
-    this.json = data['application/json']
-    this.javascript = data['application/javascript']
+  constructor(rawData: RawData, public readonly isMainResult: boolean) {
+    const data = { ...rawData }
+    delete data['type']
+    delete data['is_main_result']
+
+    this.text = data['text']
+    this.html = data['html']
+    this.markdown = data['markdown']
+    this.svg = data['svg']
+    this.png = data['png']
+    this.jpeg = data['jpeg']
+    this.pdf = data['pdf']
+    this.latex = data['latex']
+    this.json = data['json']
+    this.javascript = data['javascript']
     this.isMainResult = isMainResult
     this.raw = data
 
     this.extra = {}
+
     for (const key of Object.keys(data)) {
       if (
         ![
-          'text/plain',
-          'text/html',
-          'text/markdown',
-          'image/svg+xml',
-          'image/png',
-          'image/jpeg',
-          'application/pdf',
-          'text/latex',
-          'application/json',
-          'application/javascript'
+          'plain',
+          'html',
+          'markdown',
+          'svg',
+          'png',
+          'jpeg',
+          'pdf',
+          'latex',
+          'json',
+          'javascript'
         ].includes(key)
       ) {
         this.extra[key] = data[key]
@@ -237,11 +247,11 @@ export class Execution {
     /**
      * List of result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots).
      */
-    public results: Result[],
+    public results: Result[] = [],
     /**
      * Logs printed to stdout and stderr during execution.
      */
-    public logs: Logs,
+    public logs: Logs = { stdout: [], stderr: [] },
     /**
      * An Error object if an error occurred, null otherwise.
      */
@@ -275,271 +285,48 @@ export class Execution {
   }
 }
 
-/**
- * Represents the execution of a cell in the Jupyter kernel.
- * It's an internal class used by JupyterKernelWebSocket.
- */
-class CellExecution {
-  execution: Execution
-  onStdout?: (out: CellMessage) => any
-  onStderr?: (out: CellMessage) => any
-  onResult?: (data: Result) => any
-  inputAccepted: boolean = false
+export async function parseOutput(
+  execution: Execution,
+  line: string,
+  onStdout?: (output: OutputMessage) => (Promise<any> | any),
+  onStderr?: (output: OutputMessage) => (Promise<any> | any),
+  onResult?: (data: Result) => (Promise<any> | any),
+) {
+  const msg = JSON.parse(line)
 
-  constructor(
-    onStdout?: (out: CellMessage) => any,
-    onStderr?: (out: CellMessage) => any,
-    onResult?: (data: Result) => any
-  ) {
-    this.execution = new Execution([], { stdout: [], stderr: [] })
-    this.onStdout = onStdout
-    this.onStderr = onStderr
-    this.onResult = onResult
-  }
-}
-
-interface Cells {
-  [id: string]: CellExecution
-}
-
-export class JupyterKernelWebSocket {
-  // native websocket
-  private _ws?: IWebSocket
-
-  private set ws(ws: IWebSocket) {
-    this._ws = ws
-  }
-
-  private get ws() {
-    if (!this._ws) {
-      throw new Error('WebSocket is not connected.')
-    }
-    return this._ws
-  }
-
-  private idAwaiter: {
-    [id: string]: (data?: any) => void
-  } = {}
-
-  private cells: Cells = {}
-
-  // constructor
-  /**
-   * Does not start WebSocket connection!
-   * You need to call connect() method first.
-   */
-  constructor(private readonly url: string, private readonly sessionID: string) { }
-
-  // public
-  /**
-   * Starts WebSocket connection.
-   */
-  connect() {
-    this._ws = new IWebSocket(this.url)
-    return this.listen()
-  }
-
-  // events
-  /**
-   * Listens for messages from WebSocket server.
-   *
-   * Message types:
-   * https://jupyter-client.readthedocs.io/en/stable/messaging.html
-   *
-   */
-  public listenMessages() {
-    this.ws.onmessage = (e: IWebSocket.MessageEvent) => {
-      const message = JSON.parse(e.data.toString())
-
-      const parentMsgId = message.parent_header.msg_id
-      if (parentMsgId == undefined) {
-        console.warn(`Parent message ID not found.\n Message: ${message}`)
-        return
+  switch (msg.type) {
+    case 'result':
+      const result = new Result({ ...msg, type: undefined, is_main_result: undefined }, msg.is_main_result)
+      execution.results.push(result)
+      if (onResult) {
+        await onResult(result)
       }
-
-      const cell = this.cells[parentMsgId]
-      if (!cell) {
-        return
+      break
+    case 'stdout':
+      execution.logs.stdout.push(msg.text)
+      if (onStdout) {
+        await onStdout({
+          error: false,
+          line: msg.text,
+          timestamp: new Date().getTime() * 1000,
+        })
       }
-
-      const execution = cell.execution
-      if (message.msg_type == 'error') {
-        execution.error = new ExecutionError(
-          message.content.ename,
-          message.content.evalue,
-          message.content.traceback
-        )
-      } else if (message.msg_type == 'stream') {
-        if (message.content.name == 'stdout') {
-          execution.logs.stdout.push(message.content.text)
-          if (cell?.onStdout) {
-            cell.onStdout(
-              new CellMessage(
-                message.content.text,
-                new Date().getTime() * 1_000_000,
-                false
-              )
-            )
-          }
-        } else if (message.content.name == 'stderr') {
-          execution.logs.stderr.push(message.content.text)
-          if (cell?.onStderr) {
-            cell.onStderr(
-              new CellMessage(
-                message.content.text,
-                new Date().getTime() * 1_000_000,
-                true
-              )
-            )
-          }
-        }
-      } else if (message.msg_type == 'display_data') {
-        const result = new Result(message.content.data, false)
-        execution.results.push(result)
-        if (cell.onResult) {
-          cell.onResult(result)
-        }
-      } else if (message.msg_type == 'execute_result') {
-        const result = new Result(message.content.data, true)
-        execution.results.push(result)
-        if (cell.onResult) {
-          cell.onResult(result)
-        }
-      } else if (message.msg_type == 'status') {
-        if (message.content.execution_state == 'idle') {
-          if (cell.inputAccepted) {
-            this.idAwaiter[parentMsgId](execution)
-          }
-        } else if (message.content.execution_state == 'error') {
-          execution.error = new ExecutionError(
-            message.content.ename,
-            message.content.evalue,
-            message.content.traceback
-          )
-          this.idAwaiter[parentMsgId](execution)
-        }
-      } else if (message.msg_type == 'execute_reply') {
-        if (message.content.status == 'error') {
-          execution.error = new ExecutionError(
-            message.content.ename,
-            message.content.evalue,
-            message.content.traceback
-          )
-        } else if (message.content.status == 'ok') {
-          return
-        }
-      } else if (message.msg_type == 'execute_input') {
-        cell.inputAccepted = true
-        cell.execution.executionCount = message.content.execution_count
-      } else {
-        console.warn('[UNHANDLED MESSAGE TYPE]:', message.msg_type)
+      break
+    case 'stderr':
+      execution.logs.stderr.push(msg.text)
+      if (onStderr) {
+        await onStderr({
+          error: true,
+          line: msg.text,
+          timestamp: new Date().getTime() * 1000,
+        })
       }
-    }
-  }
-
-  // communication
-  /**
-   * Sends code to be executed by Jupyter kernel.
-   * @param code Code to be executed.
-   * @param onStdout Callback for stdout messages.
-   * @param onStderr Callback for stderr messages.
-   * @param onResult Callback function to handle the result and display calls of the code execution.
-   * @param timeoutMs Time in milliseconds to wait for response.
-   * @returns Promise with execution result.
-   */
-  public sendExecutionMessage(
-    code: string,
-    onStdout?: (out: CellMessage) => any,
-    onStderr?: (out: CellMessage) => any,
-    onResult?: (data: Result) => any,
-    timeoutMs?: number
-  ) {
-    return new Promise<Execution>((resolve, reject) => {
-      const msgID = id(16)
-      const data = this.sendExecuteRequest(msgID, code)
-
-      // give limited time for response
-      let timeoutSet: number | NodeJS.Timeout
-      if (timeoutMs) {
-        timeoutSet = setTimeout(() => {
-          // stop waiting for response
-          delete this.idAwaiter[msgID]
-          reject(
-            new Error(
-              `Awaiting response to "${code}" with id: ${msgID} timed out.`
-            )
-          )
-        }, timeoutMs)
-      }
-
-      // expect response
-      this.cells[msgID] = new CellExecution(onStdout, onStderr, onResult)
-      this.idAwaiter[msgID] = (responseData: Execution) => {
-        // stop timeout
-        clearInterval(timeoutSet as number)
-        // stop waiting for response
-        delete this.idAwaiter[msgID]
-
-        resolve(responseData)
-      }
-
-      const json = JSON.stringify(data)
-      this.ws.send(json)
-    })
-  }
-
-  /**
-   * Listens for messages from WebSocket server.
-   */
-  private listen() {
-    return new Promise((resolve, reject) => {
-      this.ws.onopen = (e: unknown) => {
-        resolve(e)
-      }
-
-      // listen for messages
-      this.listenMessages()
-
-      this.ws.onclose = (e: IWebSocket.CloseEvent) => {
-        reject(
-          new Error(
-            `WebSocket closed with code: ${e.code} and reason: ${e.reason}`
-          )
-        )
-      }
-    })
-  }
-
-  /**
-   * Creates a websocket message for code execution.
-   * @param msg_id Unique message id.
-   * @param code Code to be executed.
-   */
-  private sendExecuteRequest(msg_id: string, code: string) {
-    return {
-      header: {
-        msg_id: msg_id,
-        username: 'e2b',
-        session: this.sessionID,
-        msg_type: 'execute_request',
-        version: '5.3'
-      },
-      parent_header: {},
-      metadata: {},
-      content: {
-        code: code,
-        silent: false,
-        store_history: true,
-        user_expressions: {},
-        allow_stdin: false
-      }
-    }
-  }
-
-  /**
-   * Closes WebSocket connection.
-   */
-  close() {
-    this.ws.close()
+      break
+    case 'error':
+      execution.error = new ExecutionError(msg.name, msg.value, msg.traceback)
+      break
+    case 'number_of_executions':
+      execution.executionCount = msg.execution_count
+      break
   }
 }

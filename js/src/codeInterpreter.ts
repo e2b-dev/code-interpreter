@@ -1,275 +1,211 @@
-import { Sandbox } from 'e2b'
+import { ConnectionConfig, Sandbox } from 'e2b'
 
-import { Result, JupyterKernelWebSocket, Execution, CellMessage } from './messaging'
-import { createDeferredPromise, id } from './utils'
+import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 
-interface Kernels {
-  [kernelID: string]: JupyterKernelWebSocket
-}
+async function* readLines(stream: ReadableStream<Uint8Array>) {
+  const reader = stream.getReader();
+  let buffer = ''
 
-/**
- * E2B code interpreter sandbox extension.
- */
-export class CodeInterpreter extends Sandbox {
-  protected static override readonly defaultTemplate: string = 'code-interpreter-stateful'
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
 
-  readonly notebook = new JupyterExtension(this)
+      if (value !== undefined) {
+        buffer += new TextDecoder().decode(value)
+      }
 
-  protected override async onInit(opts: { requestTimeoutMs?: number }) {
-    await this.notebook.connect(opts?.requestTimeoutMs)
-  }
+      if (done) {
+        if (buffer.length > 0) {
+          yield buffer
+        }
+        break
+      }
 
-  async close() {
-    await this.notebook.close()
-  }
+      let newlineIdx = -1
 
-  getProtocol(baseProtocol: string = 'http') {
-    return this.connectionConfig.debug ? baseProtocol : `${baseProtocol}s`
+      do {
+        newlineIdx = buffer.indexOf('\n')
+        if (newlineIdx !== -1) {
+          yield buffer.slice(0, newlineIdx)
+          buffer = buffer.slice(newlineIdx + 1)
+        }
+      } while (newlineIdx !== -1)
+    }
+  } finally {
+    reader.releaseLock()
   }
 }
 
 export class JupyterExtension {
-  private readonly connectedKernels: Kernels = {}
+  private static readonly execTimeoutMs = 300_000
+  private static readonly defaultKernelID = 'default'
 
-  private readonly kernelIDPromise = createDeferredPromise<string>()
-  private readonly setDefaultKernelID = this.kernelIDPromise.resolve
+  constructor(private readonly url: string, private readonly connectionConfig: ConnectionConfig) { }
 
-  private get defaultKernelID() {
-    return this.kernelIDPromise.promise
-  }
-
-  constructor(private sandbox: CodeInterpreter) { }
-
-  async connect(requestTimeoutMs?: number) {
-    return this.startConnectingToDefaultKernel(this.setDefaultKernelID, {
-      requestTimeoutMs,
-    })
-  }
-
-  /**
-   * Executes a code cell in a notebool cell.
-   *
-   * This method sends the provided code to a specified kernel in a remote notebook for execution.
-
-   * @param code The code to be executed in the notebook cell.
-   * @param kernelID The ID of the kernel to execute the code on. If not provided, the default kernel is used.
-   * @param onStdout A callback function to handle standard output messages from the code execution.
-   * @param onStderr A callback function to handle standard error messages from the code execution.
-   * @param onResult A callback function to handle display data messages from the code execution.
-   * @param timeoutMs The maximum time to wait for the code execution to complete, in milliseconds.
-   * @returns A promise that resolves with the result of the code execution.
-   */
   async execCell(
     code: string,
-    {
-      kernelID,
-      onStdout,
-      onStderr,
-      onResult,
-      timeoutMs: timeout
-    }: {
-      kernelID?: string
-      onStdout?: (msg: CellMessage) => any
-      onStderr?: (msg: CellMessage) => any
-      onResult?: (data: Result) => any
-      timeoutMs?: number
-    } = {}
+    opts?: {
+      kernelID?: string,
+      onStdout?: (output: OutputMessage) => (Promise<any> | any),
+      onStderr?: (output: OutputMessage) => (Promise<any> | any),
+      onResult?: (data: Result) => (Promise<any> | any),
+      timeoutMs?: number,
+      requestTimeoutMs?: number,
+    },
   ): Promise<Execution> {
-    kernelID = kernelID || (await this.defaultKernelID)
-    const ws =
-      this.connectedKernels[kernelID] ||
-      (await this.connectToKernelWS(kernelID))
+    const controller = new AbortController()
 
-    return await ws.sendExecutionMessage(
-      code,
-      onStdout,
-      onStderr,
-      onResult,
-      timeout
-    )
-  }
+    const requestTimeout = opts?.requestTimeoutMs ?? this.connectionConfig.requestTimeoutMs
 
-  private async startConnectingToDefaultKernel(
-    resolve: (value: string) => void,
-    opts?: { requestTimeoutMs?: number }
-  ) {
-    const kernelID = (
-      await this.sandbox.files.read('/root/.jupyter/kernel_id', opts)
-    ).trim()
-    await this.connectToKernelWS(kernelID)
-    resolve(kernelID)
-  }
+    const reqTimer = requestTimeout ? setTimeout(() => {
+      controller.abort()
+    }, requestTimeout)
+      : undefined
 
-  /**
-   * Connects to a kernel's WebSocket.
-   *
-   * This method establishes a WebSocket connection to the specified kernel. It is used internally
-   * to facilitate real-time communication with the kernel, enabling operations such as executing
-   * code and receiving output. The connection details are managed within the method, including
-   * the retrieval of the necessary WebSocket URL from the kernel's information.
-   *
-   * @param kernelID The unique identifier of the kernel to connect to.
-   * @param sessionID The unique identifier of the session to connect to.
-   * @throws {Error} Throws an error if the connection to the kernel's WebSocket cannot be established.
-   */
-  private async connectToKernelWS(kernelID: string, sessionID?: string) {
-    const url = `${this.sandbox.getProtocol('ws')}://${this.sandbox.getHost(
-      8888
-    )}/api/kernels/${kernelID}/channels`
+    const res = await fetch(`${this.url}/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code,
+        context_id: opts?.kernelID,
+      }),
+      keepalive: true,
+    })
 
-    sessionID = sessionID || id(16)
-    const ws = new JupyterKernelWebSocket(url, sessionID)
-    await ws.connect()
-    this.connectedKernels[kernelID] = ws
+    const error = await extractError(res)
+    if (error) {
+      throw error
+    }
 
-    return ws
-  }
+    if (!res.body) {
+      throw new Error(`Not response body: ${res.statusText} ${await res?.text()}`)
+    }
 
-  /**
-   * Creates a new Jupyter kernel. It can be useful if you want to have multiple independent code execution environments.
-   *
-   * The kernel can be optionally configured to start in a specific working directory and/or
-   * with a specific kernel name. If no kernel name is provided, the default kernel will be used.
-   * Once the kernel is created, this method establishes a WebSocket connection to the new kernel for
-   * real-time communication.
-   *
-   * @param cwd Sets the current working directory where the kernel should start. Defaults to "/home/user".
-   * @param kernelName The name of the kernel to create, useful if you have multiple kernel types. If not provided, the default kernel will be used.
-   * @returns A promise that resolves with the ID of the newly created kernel.
-   * @throws {Error} Throws an error if the kernel creation fails.
-   */
-  async createKernel(
-    cwd: string = '/home/user',
-    kernelName?: string
-  ): Promise<string> {
-    kernelName = kernelName || 'python3'
+    clearTimeout(reqTimer)
 
+    const bodyTimeout = opts?.timeoutMs ?? JupyterExtension.execTimeoutMs
 
-    const data = { path: id(16), kernel: { name: kernelName }, type: "notebook", name: id(16) }
+    const bodyTimer = bodyTimeout
+      ? setTimeout(() => {
+        controller.abort()
+      }, bodyTimeout)
+      : undefined
 
-    const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
-        8888
-      )}/api/sessions`,
-      {
-        method: 'POST',
-        body: JSON.stringify(data)
+    const execution = new Execution()
+
+    try {
+      for await (const chunk of readLines(res.body)) {
+        await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult)
       }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Failed to create kernel: ${response.statusText}`)
+    } finally {
+      clearTimeout(bodyTimer)
     }
 
-
-    const sessionInfo = await response.json()
-    const kernelID = sessionInfo.kernel.id
-    const sessionID = sessionInfo.id
-
-    const patchResponse = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
-        8888
-      )}/api/sessions/${sessionID}`,
-      {
-        method: 'PATCH',
-        body: JSON.stringify({ path: cwd })
-      }
-    )
-
-    if (!patchResponse.ok) {
-      throw new Error(`Failed to create kernel: ${response.statusText}`)
-    }
-
-
-    await this.connectToKernelWS(kernelID, sessionID)
-
-    return kernelID
+    return execution
   }
 
-  /**
-   * Restarts an existing Jupyter kernel. This can be useful to reset the kernel's state or to recover from errors.
-   *
-   * @param kernelID The unique identifier of the kernel to restart. If not provided, the default kernel is restarted.
-   * @throws {Error} Throws an error if the kernel restart fails or if the operation times out.
-   */
-  async restartKernel(kernelID?: string) {
-    kernelID = kernelID || (await this.defaultKernelID)
-    this.connectedKernels[kernelID].close()
-    delete this.connectedKernels[kernelID]
+  async createKernel({
+    cwd,
+    kernelName,
+    requestTimeoutMs,
+  }: {
+    cwd?: string,
+    kernelName?: string,
+    requestTimeoutMs?: number,
+  } = {}): Promise<string> {
+    const res = await fetch(`${this.url}/contexts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: kernelName,
+        cwd,
+      }),
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
 
-    const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
-        8888
-      )}/api/kernels/${kernelID}/restart`,
-      {
-        method: 'POST'
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Failed to restart kernel ${kernelID}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
 
-    await this.connectToKernelWS(kernelID)
+    const data = await res.json()
+    return data.id
   }
 
-  /**
-   * Shuts down an existing Jupyter kernel. This method is used to gracefully terminate a kernel's process.
+  async restartKernel({
+    kernelID,
+    requestTimeoutMs,
+  }: {
+    kernelID?: string,
+    requestTimeoutMs?: number,
+  } = {}): Promise<void> {
+    kernelID = kernelID || JupyterExtension.defaultKernelID
+    const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
 
-   * @param kernelID The unique identifier of the kernel to shutdown. If not provided, the default kernel is shutdown.
-   * @throws {Error} Throws an error if the kernel shutdown fails or if the operation times out.
-   */
-  async shutdownKernel(kernelID?: string) {
-    kernelID = kernelID || (await this.defaultKernelID)
-    this.connectedKernels[kernelID].close()
-    delete this.connectedKernels[kernelID]
-
-    const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
-        8888
-      )}/api/kernels/${kernelID}`,
-      {
-        method: 'DELETE'
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`Failed to shutdown kernel ${kernelID}`)
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
   }
 
-  /**
-   * Lists all available Jupyter kernels.
-   *
-   * This method fetches a list of all currently available Jupyter kernels from the server. It can be used
-   * to retrieve the IDs of all kernels that are currently running or available for connection.
-   *
-   * @returns A promise that resolves to an array of objects containing a kernel ID and kernel name.
-   * @throws {Error} Throws an error if the request to list kernels fails.
-   */
-  async listKernels(): Promise<{ id: string, name: string }[]> {
-    const response = await fetch(
-      `${this.sandbox.getProtocol()}://${this.sandbox.getHost(
-        8888
-      )}/api/kernels`,
-      {
-        method: 'GET'
-      }
-    )
+  async shutdownKernel({
+    kernelID,
+    requestTimeoutMs,
+  }: {
+    kernelID?: string,
+    requestTimeoutMs?: number,
+  } = {}): Promise<void> {
+    kernelID = kernelID || JupyterExtension.defaultKernelID
 
-    if (!response.ok) {
-      throw new Error(`Failed to list kernels: ${response.statusText}`)
-    }
+    const res = await fetch(`${this.url}/contexts/${kernelID}`, {
+      method: 'DELETE',
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
 
-    return (await response.json()).map((kernel: { id: string, name: string }) => ({ id: kernel.id, name: kernel.name }))
-  }
-
-  /**
-   * Close all the websocket connections to the kernels. It doesn't shutdown the kernels.
-   */
-  async close() {
-    for (const kernelID of Object.keys(this.connectedKernels)) {
-      this.connectedKernels[kernelID].close()
+    const error = await extractError(res)
+    if (error) {
+      throw error
     }
   }
+
+  async listKernels({
+    requestTimeoutMs,
+  }: {
+    requestTimeoutMs?: number,
+  } = {}): Promise<{ kernelID: string, name: string }[]> {
+    const res = await fetch(`${this.url}/contexts`, {
+      keepalive: true,
+      signal: this.connectionConfig.getSignal(requestTimeoutMs),
+    })
+
+    const error = await extractError(res)
+    if (error) {
+      throw error
+    }
+
+    return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
+  }
+}
+
+export class CodeInterpreter extends Sandbox {
+  protected static override readonly defaultTemplate: string = 'ci-no-ws'
+  protected static readonly jupyterPort = 49999
+
+  readonly notebook = new JupyterExtension(
+    `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(CodeInterpreter.jupyterPort)}`,
+    this.connectionConfig,
+  )
 }

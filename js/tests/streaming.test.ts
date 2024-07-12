@@ -1,34 +1,31 @@
-import { CodeInterpreter, Result, CellMessage } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { Result, OutputMessage } from '../src'
 
-test('streaming output', async () => {
-  const out: CellMessage[] = []
-  const sandbox = await CodeInterpreter.create()
+import { sandboxTest } from './setup'
+
+sandboxTest('streaming output', async ({ sandbox }) => {
+  const out: OutputMessage[] = []
   await sandbox.notebook.execCell('print(1)', {
     onStdout: (msg) => out.push(msg)
   })
 
   expect(out.length).toEqual(1)
   expect(out[0].line).toEqual('1\n')
-  await sandbox.close()
 })
 
-test('streaming error', async () => {
-  const out: CellMessage[] = []
-  const sandbox = await CodeInterpreter.create()
+sandboxTest('streaming error', async ({ sandbox }) => {
+  const out: OutputMessage[] = []
   await sandbox.notebook.execCell('import sys;print(1, file=sys.stderr)', {
     onStderr: (msg) => out.push(msg)
   })
 
   expect(out.length).toEqual(1)
   expect(out[0].line).toEqual('1\n')
-  await sandbox.close()
 })
 
-test('streaming result', async () => {
+sandboxTest('streaming result', async ({ sandbox }) => {
   const out: Result[] = []
-  const sandbox = await CodeInterpreter.create()
   const code = `
         import matplotlib.pyplot as plt
         import numpy as np
@@ -46,5 +43,4 @@ test('streaming result', async () => {
   })
 
   expect(out.length).toEqual(2)
-  await sandbox.close()
 })

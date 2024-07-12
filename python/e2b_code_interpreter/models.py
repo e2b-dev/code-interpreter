@@ -1,29 +1,59 @@
-import copy
-from typing import List, Optional, Iterable, Dict
-from pydantic import BaseModel
+import json
+
+from e2b import NotFoundException, TimeoutException, SandboxException
+from dataclasses import dataclass, field
+from typing import (
+    List,
+    Optional,
+    Iterable,
+    Dict,
+    TypeVar,
+    Callable,
+    Awaitable,
+    Any,
+    Union,
+)
+
+from httpx import Response
 
 
-class Error(BaseModel):
+T = TypeVar("T")
+OutputHandler = Union[
+    Callable[[T], Any],
+    Callable[[T], Awaitable[Any]],
+]
+
+
+@dataclass
+class OutputMessage:
+    line: str
+    timestamp: int
+    """
+    Unix epoch in nanoseconds
+    """
+    error: bool = False
+
+    def __str__(self):
+        return self.line
+
+
+@dataclass
+class ExecutionError:
     """
     Represents an error that occurred during the execution of a cell.
     The error contains the name of the error, the value of the error, and the traceback.
     """
 
     name: str
-    "Name of the exception."
     value: str
-    "Value of the exception."
-    traceback_raw: List[str]
-    "List of strings representing the traceback."
+    traceback: str
 
-    @property
-    def traceback(self) -> str:
+    def to_json(self) -> str:
         """
-        Returns the traceback as a single string.
-
-        :return: The traceback as a single string.
+        Returns the JSON representation of the Error object.
         """
-        return "\n".join(self.traceback_raw)
+        data = {"name": self.name, "value": self.value, "traceback": self.traceback}
+        return json.dumps(data)
 
 
 class MIMEType(str):
@@ -32,6 +62,7 @@ class MIMEType(str):
     """
 
 
+@dataclass
 class Result:
     """
     Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -44,6 +75,9 @@ class Result:
     The class also provides methods to display the data in a Jupyter notebook.
     """
 
+    def __getitem__(self, item):
+        return getattr(self, item)
+
     text: Optional[str] = None
     html: Optional[str] = None
     markdown: Optional[str] = None
@@ -54,36 +88,10 @@ class Result:
     latex: Optional[str] = None
     json: Optional[dict] = None
     javascript: Optional[str] = None
+    is_main_result: bool = False
+    """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
     extra: Optional[dict] = None
-    "Extra data that can be included. Not part of the standard types."
-
-    is_main_result: bool
-    "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
-
-    raw: Dict[MIMEType, str]
-    "Dictionary that maps MIME types to their corresponding string representations of the data."
-
-    def __init__(self, is_main_result: bool, data: [MIMEType, str]):
-        self.is_main_result = is_main_result
-        self.raw = copy.deepcopy(data)
-
-        self.text = data.pop("text/plain", None)
-        self.html = data.pop("text/html", None)
-        self.markdown = data.pop("text/markdown", None)
-        self.svg = data.pop("image/svg+xml", None)
-        self.png = data.pop("image/png", None)
-        self.jpeg = data.pop("image/jpeg", None)
-        self.pdf = data.pop("application/pdf", None)
-        self.latex = data.pop("text/latex", None)
-        self.json = data.pop("application/json", None)
-        self.javascript = data.pop("application/javascript", None)
-        self.extra = data
-
-    # Allows to iterate over formats()
-    def __getitem__(self, item):
-        if item in self.raw:
-            return self.raw[item]
-        return getattr(self, item)
+    """Extra data that can be included. Not part of the standard types."""
 
     def formats(self) -> Iterable[str]:
         """
@@ -92,6 +100,8 @@ class Result:
         :return: All available formats of the result in MIME types.
         """
         formats = []
+        if self.text:
+            formats.append("text")
         if self.html:
             formats.append("html")
         if self.markdown:
@@ -111,8 +121,9 @@ class Result:
         if self.javascript:
             formats.append("javascript")
 
-        for key in self.extra:
-            formats.append(key)
+        if self.extra:
+            for key in self.extra:
+                formats.append(key)
 
         return formats
 
@@ -200,21 +211,31 @@ class Result:
         return self.javascript
 
 
-class Logs(BaseModel):
+@dataclass(repr=False)
+class Logs:
     """
     Data printed to stdout and stderr during execution, usually by print statements, logs, warnings, subprocesses, etc.
     """
 
-    stdout: List[str] = []
-    "List of strings printed to stdout by prints, subprocesses, etc."
-    stderr: List[str] = []
-    "List of strings printed to stderr by prints, subprocesses, etc."
+    stdout: List[str] = field(default_factory=list)
+    """List of strings printed to stdout by prints, subprocesses, etc."""
+    stderr: List[str] = field(default_factory=list)
+    """List of strings printed to stderr by prints, subprocesses, etc."""
+
+    def __repr__(self):
+        return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
+
+    def to_json(self) -> str:
+        """
+        Returns the JSON representation of the Logs object.
+        """
+        data = {"stdout": self.stdout, "stderr": self.stderr}
+        return json.dumps(data)
 
 
 def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     """
     Serializes the results to JSON.
-    This method is used by the Pydantic JSON encoder.
     """
     serialized = []
     for result in results:
@@ -224,25 +245,23 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     return serialized
 
 
-class Execution(BaseModel):
+@dataclass(repr=False)
+class Execution:
     """
     Represents the result of a cell execution.
     """
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_encoders = {
-            List[Result]: serialize_results,
-        }
-
-    results: List[Result] = []
-    "List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."
-    logs: Logs = Logs()
-    "Logs printed to stdout and stderr during execution."
-    error: Optional[Error] = None
-    "Error object if an error occurred, None otherwise."
+    results: List[Result] = field(default_factory=list)
+    """List of the result of the cell (interactively interpreted last line), display calls (e.g. matplotlib plots)."""
+    logs: Logs = field(default_factory=Logs)
+    """Logs printed to stdout and stderr during execution."""
+    error: Optional[ExecutionError] = None
+    """Error object if an error occurred, None otherwise."""
     execution_count: Optional[int] = None
-    "Execution count of the cell."
+    """Execution count of the cell."""
+
+    def __repr__(self):
+        return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
 
     @property
     def text(self) -> Optional[str]:
@@ -259,12 +278,74 @@ class Execution(BaseModel):
         """
         Returns the JSON representation of the Execution object.
         """
-        return self.model_dump_json(exclude_none=True)
+        data = {
+            "results": serialize_results(self.results),
+            "logs": self.logs.to_json(),
+            "error": self.error.to_json() if self.error else None,
+        }
+        return json.dumps(data)
 
 
-class KernelException(Exception):
-    """
-    Exception raised when a kernel operation fails.
-    """
+async def aextract_exception(res: Response):
+    if res.is_success:
+        return None
 
-    pass
+    await res.aread()
+    return extract_exception(res)
+
+
+def extract_exception(res: Response):
+    if res.is_success:
+        return None
+
+    res.read()
+    return format_exception(res)
+
+
+def format_exception(res: Response):
+    if res.is_success:
+        return None
+
+    if res.status_code == 404:
+        return NotFoundException(res.text)
+    elif res.status_code == 502:
+        return TimeoutException(
+            f"{res.text}: This error is likely due to sandbox timeout. You can modify the sandbox timeout by passing 'timeout' when starting the sandbox or calling '.set_timeout' on the sandbox with the desired timeout."
+        )
+    else:
+        return SandboxException(f"{res.status_code}: {res.text}")
+
+
+def parse_output(
+    execution: Execution,
+    output: str,
+    on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+    on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+    on_result: Optional[OutputHandler[Result]] = None,
+):
+    data = json.loads(output)
+    data_type = data.pop("type")
+
+    if data_type == "result":
+        result = Result(**data)
+        execution.results.append(result)
+        if on_result:
+            on_result(result)
+    elif data_type == "stdout":
+        execution.logs.stdout.append(data["text"])
+        if on_stdout:
+            on_stdout(OutputMessage(data["text"], data["timestamp"], False))
+    elif data_type == "stderr":
+        execution.logs.stderr.append(data["text"])
+        if on_stderr:
+            on_stderr(OutputMessage(data["text"], data["timestamp"], True))
+    elif data_type == "error":
+        execution.error = ExecutionError(data["name"], data["value"], data["traceback"])
+    elif data_type == "number_of_executions":
+        execution.execution_count = data["execution_count"]
+
+
+@dataclass
+class Kernel:
+    kernel_id: str
+    name: str

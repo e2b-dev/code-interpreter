@@ -1,15 +1,10 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { sandboxTest } from './setup'
 
-test('execution count', async () => {
-  const sandbox = await CodeInterpreter.create()
-
+sandboxTest('execution count', async ({ sandbox }) => {
   await sandbox.notebook.execCell('!pwd')
   const result = await sandbox.notebook.execCell('!pwd')
-
-
-  await sandbox.close()
 
   expect(result.executionCount).toEqual(2)
 })
