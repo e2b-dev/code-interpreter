@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: 0.16.2-beta.17
-        version: 0.16.2-beta.17
+        specifier: 0.16.2-beta.23
+        version: 0.16.2-beta.23
     devDependencies:
       '@types/node':
         specifier: ^18.18.6
@@ -1932,8 +1932,8 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /e2b@0.16.2-beta.17:
-    resolution: {integrity: sha512-8CiHIC4OBPDXnIqTezpEIOpUX56rryx0MDyQSto0MpL3ywBI3Lva4UH6GcSWIB5sCg6bNaNAuvNfOOfz+TjP3g==}
+  /e2b@0.16.2-beta.23:
+    resolution: {integrity: sha512-xpT2CiymnWaJWC0HmTYdcTaXYgXwMqY2NW3ikl4Ham2t9wT3+2Xyz0EdJceBaZpPjNMm7+BcPBvj6tp8HGLptA==}
     engines: {node: '>=18'}
     dependencies:
       '@bufbuild/protobuf': 1.10.0
