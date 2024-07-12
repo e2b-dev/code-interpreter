@@ -14,7 +14,7 @@ from e2b_code_interpreter.models import (
     Execution,
     Kernel,
     Result,
-    extract_exception,
+    aextract_exception,
     parse_output,
     OutputHandler,
     OutputMessage,
@@ -65,7 +65,7 @@ class JupyterExtension:
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
         ) as response:
 
-            err = extract_exception(response)
+            err = await aextract_exception(response)
             if err:
                 raise err
 
@@ -92,9 +92,9 @@ class JupyterExtension:
 
         data = {}
         if kernel_name:
-            data['name'] = kernel_name
+            data["name"] = kernel_name
         if cwd:
-            data['cwd'] = cwd
+            data["cwd"] = cwd
 
         response = await self._client.post(
             f"{self._url}/contexts",
@@ -102,7 +102,7 @@ class JupyterExtension:
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
-        err = extract_exception(response)
+        err = await aextract_exception(response)
         if err:
             raise err
 
@@ -122,7 +122,7 @@ class JupyterExtension:
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
-        err = extract_exception(response)
+        err = await aextract_exception(response)
         if err:
             raise err
 
@@ -139,7 +139,7 @@ class JupyterExtension:
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
-        err = extract_exception(response)
+        err = await aextract_exception(response)
         if err:
             raise err
 
@@ -161,7 +161,7 @@ class JupyterExtension:
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
-        err = extract_exception(response)
+        err = await aextract_exception(response)
         if err:
             raise err
 

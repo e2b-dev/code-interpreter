@@ -286,7 +286,23 @@ class Execution:
         return json.dumps(data)
 
 
+async def aextract_exception(res: Response):
+    if res.is_success:
+        return None
+
+    await res.aread()
+    return extract_exception(res)
+
+
 def extract_exception(res: Response):
+    if res.is_success:
+        return None
+
+    res.read()
+    return format_exception(res)
+
+
+def format_exception(res: Response):
     if res.is_success:
         return None
 
