@@ -89,12 +89,15 @@ class JupyterExtension:
     ) -> str:
         logger.debug(f"Creating new kernel: {kernel_name}")
 
+        data = {}
+        if kernel_name:
+            data['name'] = kernel_name
+        if cwd:
+            data['cwd'] = cwd
+
         response = self._client.post(
             f"{self._url}/contexts",
-            json={
-                "name": kernel_name,
-                "cwd": cwd,
-            },
+            json=data,
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
@@ -161,7 +164,7 @@ class JupyterExtension:
         if err:
             raise err
 
-        return [Kernel(k["id"], k["name"]) for k in response.json()]
+        return [Kernel(kernel_id=k["id"], name=k["name"]) for k in response.json()]
 
 
 class CodeInterpreter(Sandbox):

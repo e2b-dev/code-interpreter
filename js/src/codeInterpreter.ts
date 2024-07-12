@@ -69,7 +69,7 @@ export class JupyterExtension {
       },
       body: JSON.stringify({
         code,
-        kernel_id: opts?.kernelID,
+        context_id: opts?.kernelID,
       }),
       keepalive: true,
     })

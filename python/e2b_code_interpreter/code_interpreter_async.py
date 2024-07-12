@@ -90,12 +90,15 @@ class JupyterExtension:
     ) -> str:
         logger.debug(f"Creating new kernel: {kernel_name}")
 
+        data = {}
+        if kernel_name:
+            data['name'] = kernel_name
+        if cwd:
+            data['cwd'] = cwd
+
         response = await self._client.post(
             f"{self._url}/contexts",
-            json={
-                "name": kernel_name,
-                "cwd": cwd,
-            },
+            json=data,
             timeout=request_timeout or self._connection_config.request_timeout,
         )
 
