@@ -6,11 +6,6 @@ from pydantic import BaseModel
 
 from api.models.output import OutputType
 
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
-
 
 class Result(BaseModel):
     """
@@ -23,6 +18,7 @@ class Result(BaseModel):
 
     The class also provides methods to display the data in a Jupyter notebook.
     """
+
     type: OutputType = OutputType.RESULT
 
     text: Optional[str] = None

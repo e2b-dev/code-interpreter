@@ -38,6 +38,7 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
 
 export class JupyterExtension {
   private static readonly execTimeoutMs = 300_000
+  private static readonly defaultKernelID = 'default'
 
   constructor(private readonly url: string, private readonly connectionConfig: ConnectionConfig) { }
 
@@ -120,8 +121,8 @@ export class JupyterExtension {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        kernel_name: kernelName,
-        cwd: cwd || '/home/user'
+        name: kernelName,
+        cwd,
       }),
       keepalive: true,
       signal: this.connectionConfig.getSignal(requestTimeoutMs),
@@ -143,7 +144,7 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    kernelID = kernelID || 'default'
+    kernelID = kernelID || JupyterExtension.defaultKernelID
     const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
       method: 'POST',
       headers: {
@@ -166,7 +167,7 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    kernelID = kernelID || 'default'
+    kernelID = kernelID || JupyterExtension.defaultKernelID
 
     const res = await fetch(`${this.url}/contexts/${kernelID}`, {
       method: 'DELETE',

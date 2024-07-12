@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
 from api.models.context import Context
-from api.models.create_kernel import CreateContext
+from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
 from messaging import JupyterKernelWebSocket
 from stream import StreamingListJsonResponse
@@ -20,10 +20,11 @@ logger = logging.Logger(__name__)
 http_logger = logging.getLogger("httpcore.http11")
 http_logger.setLevel(logging.WARNING)
 
+
+jupyter_base_url = "http://localhost:8888"
+
 websockets: Dict[Union[str, StrictStr, Literal["default"]], JupyterKernelWebSocket] = {}
 global default_kernel_id
-
-
 global client
 
 
@@ -32,19 +33,21 @@ async def lifespan(app: FastAPI):
     global client
     client = httpx.AsyncClient()
 
-    # Load the default kernel
-    session_id = str(uuid.uuid4())
-
     global default_kernel_id
     with open("/root/.jupyter/kernel_id") as file:
         default_kernel_id = file.read().strip()
 
-    default_ws = JupyterKernelWebSocket(default_kernel_id, session_id, "python")
+    default_ws = JupyterKernelWebSocket(
+        default_kernel_id,
+        str(uuid.uuid4()),
+        "python",
+        "/home/user",
+    )
 
     websockets["default"] = default_ws
 
     logger.info("Connecting to default runtime")
-    _ = asyncio.create_task(default_ws.connect())
+    asyncio.create_task(default_ws.connect())
     await default_ws.started
 
     logger.info("Connected to default runtime")
@@ -63,15 +66,21 @@ logger.info("Starting Code Interpreter server")
 
 @app.get("/health")
 async def health():
-    return "Request was successful"
+    return "OK"
 
 
 @app.post("/execute")
 async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
-    if request.kernel_id:
-        ws = websockets.get(request.kernel_id, websockets["default"])
+    if request.context_id:
+        ws = websockets.get(request.context_id)
+
+        if not ws:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Kernel {request.context_id} not found",
+            )
     else:
         ws = websockets["default"]
 
@@ -80,20 +89,17 @@ async def execute(request: ExecutionRequest):
 
 @app.post("/contexts")
 async def create_context(request: CreateContext) -> Context:
-    logger.info(f"Creating new kernel for language: {request.language}")
-
-    kernel_name = request.language or "python3"
-    cwd = request.cwd or "/home/user"
+    logger.info(f"Creating new kernel")
 
     data = {
         "path": str(uuid.uuid4()),
-        "kernel": {"name": kernel_name},
+        "kernel": {"name": request.name},
         "type": "notebook",
         "name": str(uuid.uuid4()),
     }
-    logger.debug(f"Creating kernel with data: {data}")
+    logger.debug(f"Creating new kernel with data: {data}")
 
-    response = await client.post("http://localhost:8888/api/sessions", json=data)
+    response = await client.post(f"{jupyter_base_url}/api/sessions", json=data)
 
     if not response.is_success:
         raise HTTPException(
@@ -106,7 +112,8 @@ async def create_context(request: CreateContext) -> Context:
     kernel_id = session_data["kernel"]["id"]
 
     response = await client.patch(
-        f"http://localhost:8888/api/sessions/{session_id}", json={"path": cwd}
+        f"{jupyter_base_url}/api/sessions/{session_id}",
+        json={"path": request.cwd},
     )
     if not response.is_success:
         raise HTTPException(
@@ -116,18 +123,23 @@ async def create_context(request: CreateContext) -> Context:
 
     logger.debug(f"Created kernel {kernel_id}")
 
-    ws = JupyterKernelWebSocket(kernel_id, session_id, kernel_name)
-    task = asyncio.create_task(ws.connect())
+    ws = JupyterKernelWebSocket(
+        kernel_id,
+        session_id,
+        request.name,
+        request.cwd,
+    )
+    asyncio.create_task(ws.connect())
     await ws.started
 
     websockets[kernel_id] = ws
 
-    return Context(name=kernel_name, id=kernel_id)
+    return Context(name=request.name, id=kernel_id, cwd=request.cwd)
 
 
 @app.get("/contexts")
 async def list_contexts() -> List[Context]:
-    logger.info(f"Listing contexts")
+    logger.info(f"Listing kernels")
 
     kernel_ids = list(websockets.keys())
 
@@ -135,6 +147,7 @@ async def list_contexts() -> List[Context]:
         Context(
             id=websockets[kernel_id].kernel_id,
             name=websockets[kernel_id].name,
+            cwd=websockets[kernel_id].cwd,
         )
         for kernel_id in kernel_ids
     ]
@@ -142,7 +155,7 @@ async def list_contexts() -> List[Context]:
 
 @app.post("/contexts/{context_id}/restart")
 async def restart_context(context_id: str) -> None:
-    logger.info(f"Restarting context {context_id}")
+    logger.info(f"Restarting kernel {context_id}")
 
     ws = websockets.get(context_id, None)
     if not ws:
@@ -156,15 +169,20 @@ async def restart_context(context_id: str) -> None:
     await ws.close()
 
     response = await client.post(
-        f"http://localhost:8888/api/kernels/{ws.kernel_id}/restart"
+        f"{jupyter_base_url}/api/kernels/{ws.kernel_id}/restart"
     )
     if not response.is_success:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to restart context {context_id}",
+            detail=f"Failed to restart kernel {context_id}",
         )
 
-    ws = JupyterKernelWebSocket(ws.kernel_id, session_id, ws.name)
+    ws = JupyterKernelWebSocket(
+        ws.kernel_id,
+        session_id,
+        ws.name,
+        ws.cwd,
+    )
 
     _ = asyncio.create_task(ws.connect())
     await ws.started
@@ -174,7 +192,7 @@ async def restart_context(context_id: str) -> None:
 
 @app.delete("/contexts/{context_id}")
 async def remove_context(context_id: str) -> None:
-    logger.info(f"Removing context {context_id}")
+    logger.info(f"Removing kernel {context_id}")
 
     ws = websockets.get(context_id, None)
     if not ws:
@@ -188,7 +206,7 @@ async def remove_context(context_id: str) -> None:
     except:
         pass
 
-    response = await client.delete(f"http://localhost:8888/api/kernels/{ws.kernel_id}")
+    response = await client.delete(f"{jupyter_base_url}/api/kernels/{ws.kernel_id}")
     if not response.is_success:
         raise HTTPException(
             status_code=500,

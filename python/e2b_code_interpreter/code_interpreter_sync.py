@@ -4,7 +4,11 @@ from typing import Optional, Dict, List
 from httpx import HTTPTransport, Client
 from e2b import Sandbox, ConnectionConfig
 
-from e2b_code_interpreter.constants import DEFAULT_TEMPLATE, JUPYTER_PORT
+from e2b_code_interpreter.constants import (
+    DEFAULT_KERNEL_ID,
+    DEFAULT_TEMPLATE,
+    JUPYTER_PORT,
+)
 from e2b_code_interpreter.models import (
     Execution,
     Kernel,
@@ -56,7 +60,7 @@ class JupyterExtension:
             f"{self._url}/execute",
             json={
                 "code": code,
-                "kernel_id": kernel_id,
+                "context_id": kernel_id,
             },
             timeout=(request_timeout, timeout, request_timeout, request_timeout),
         ) as response:
@@ -79,7 +83,7 @@ class JupyterExtension:
 
     def create_kernel(
         self,
-        cwd: Optional[str] = "/home/user",
+        cwd: Optional[str] = None,
         kernel_name: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> str:
@@ -88,7 +92,7 @@ class JupyterExtension:
         response = self._client.post(
             f"{self._url}/contexts",
             json={
-                "language": kernel_name,
+                "name": kernel_name,
                 "cwd": cwd,
             },
             timeout=request_timeout or self._connection_config.request_timeout,
@@ -108,7 +112,7 @@ class JupyterExtension:
     ) -> None:
         logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
-        kernel_id = kernel_id or "default"
+        kernel_id = kernel_id or DEFAULT_KERNEL_ID
         response = self._client.delete(
             url=f"{self._url}/contexts/{kernel_id}",
             timeout=request_timeout or self._connection_config.request_timeout,
@@ -125,7 +129,7 @@ class JupyterExtension:
     ) -> None:
         logger.debug(f"Creating new kernel for language: {kernel_id}")
 
-        kernel_id = kernel_id or "default"
+        kernel_id = kernel_id or DEFAULT_KERNEL_ID
         response = self._client.post(
             f"{self._url}/contexts/{kernel_id}/restart",
             timeout=request_timeout or self._connection_config.request_timeout,

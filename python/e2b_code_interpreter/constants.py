@@ -1,2 +1,3 @@
 DEFAULT_TEMPLATE = "ci-no-ws"
 JUPYTER_PORT = 49999
+DEFAULT_KERNEL_ID = "default"

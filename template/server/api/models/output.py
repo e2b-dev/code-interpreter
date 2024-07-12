@@ -3,11 +3,6 @@ from __future__ import annotations
 from enum import Enum
 from pydantic import BaseModel
 
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
-
 
 class OutputType(Enum):
     """

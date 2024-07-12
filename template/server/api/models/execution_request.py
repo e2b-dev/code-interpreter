@@ -1,11 +1,8 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 from pydantic import BaseModel, StrictStr
 from pydantic import Field
 
 
 class ExecutionRequest(BaseModel):
     code: StrictStr = Field(description="Code to be executed")
-    language: Optional[StrictStr] = Field(
-        default=None, description="Language of the code to be executed"
-    )
-    kernel_id: Optional[StrictStr] = Field(default=None, description="Kernel ID")
+    context_id: Optional[StrictStr] = Field(default="default", description="Context ID")

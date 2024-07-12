@@ -21,6 +21,7 @@ from api.models.error import Error
 from api.models.logs import Stdout, Stderr
 from api.models.result import Result
 from api.models.output import EndOfExecution, NumberOfExecutions, OutputType
+
 from websockets.legacy.client import WebSocketClientProtocol, Connect
 from websockets.exceptions import ConnectionClosed
 
@@ -40,9 +41,16 @@ class Execution:
 class JupyterKernelWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
 
-    def __init__(self, kernel_id: str, session_id: str, name: str):
-        self.kernel_id = kernel_id
+    def __init__(
+        self,
+        kernel_id: str,
+        session_id: str,
+        name: str,
+        cwd: str,
+    ):
         self.name = name
+        self.cwd = cwd
+        self.kernel_id = kernel_id
         self.url = f"ws://localhost:8888/api/kernels/{kernel_id}/channels"
         self.session_id = session_id
         self._executions: Dict[str, Execution] = {}
