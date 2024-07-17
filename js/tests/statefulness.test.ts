@@ -1,8 +1,9 @@
 import { expect } from 'vitest'
 
-import { sandboxTest } from './setup'
+import { isDebug, sandboxTest } from './setup'
 
-sandboxTest('statefulness', async ({ sandbox }) => {
+// Skip this test if we are running in debug mode — the execution is persisted between all tests so the result is not reset.
+sandboxTest.skipIf(isDebug)('statefulness', async ({ sandbox }) => {
   await sandbox.notebook.execCell('x = 1')
 
   const result = await sandbox.notebook.execCell('x += 1; x')

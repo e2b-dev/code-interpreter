@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 
-import { sandboxTest } from './setup'
+import { isDebug, sandboxTest } from './setup'
 
 sandboxTest('create new kernel', async ({ sandbox }) => {
   await sandbox.notebook.createKernel()
@@ -23,7 +23,8 @@ sandboxTest('restart kernel', async ({ sandbox }) => {
   expect(output.error!.value).toEqual("name 'x' is not defined")
 })
 
-sandboxTest('list kernels', async ({ sandbox }) => {
+// Skip this test if we are running in debug mode — we don't know how many kernels are in the local debug testing container.
+sandboxTest.skipIf(isDebug)('list kernels', async ({ sandbox }) => {
   let kernels = await sandbox.notebook.listKernels()
   expect(kernels.length).toEqual(1)
 
@@ -32,7 +33,9 @@ sandboxTest('list kernels', async ({ sandbox }) => {
   expect(kernels.map(kernel => kernel.kernelID)).toContain(kernelID)
   expect(kernels.length).toEqual(2)
 })
-sandboxTest('shutdown kernel', async ({ sandbox }) => {
+
+// Skip this test if we are running in debug mode — we don't know how many kernels are in the local debug testing container.
+sandboxTest.skipIf(isDebug)('shutdown kernel', async ({ sandbox }) => {
   let kernels = await sandbox.notebook.listKernels()
   expect(kernels.length).toEqual(1)
 
