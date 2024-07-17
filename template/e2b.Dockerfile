@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10.14
 
 ENV JAVA_HOME=/opt/java/openjdk
 COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
@@ -24,6 +24,7 @@ RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3
     python install.py --sys-prefix
 
 # Javascript Kernel
+RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
 
