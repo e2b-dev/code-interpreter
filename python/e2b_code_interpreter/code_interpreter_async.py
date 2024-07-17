@@ -1,4 +1,5 @@
 import logging
+import httpx
 
 from typing import Optional, List
 from httpx import AsyncHTTPTransport, AsyncClient
@@ -18,6 +19,10 @@ from e2b_code_interpreter.models import (
     parse_output,
     OutputHandler,
     OutputMessage,
+)
+from e2b_code_interpreter.exceptions import (
+    format_execution_timeout_error,
+    format_request_timeout_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,32 +60,37 @@ class JupyterExtension:
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
 
-        async with self._client.stream(
-            "POST",
-            f"{self._url}/execute",
-            json={
-                "code": code,
-                "context_id": kernel_id,
-            },
-            timeout=(request_timeout, timeout, request_timeout, request_timeout),
-        ) as response:
+        try:
+            async with self._client.stream(
+                "POST",
+                f"{self._url}/execute",
+                json={
+                    "code": code,
+                    "context_id": kernel_id,
+                },
+                timeout=(request_timeout, timeout, request_timeout, request_timeout),
+            ) as response:
 
-            err = await aextract_exception(response)
-            if err:
-                raise err
+                err = await aextract_exception(response)
+                if err:
+                    raise err
 
-            execution = Execution()
+                execution = Execution()
 
-            async for line in response.aiter_lines():
-                parse_output(
-                    execution,
-                    line,
-                    on_stdout=on_stdout,
-                    on_stderr=on_stderr,
-                    on_result=on_result,
-                )
+                async for line in response.aiter_lines():
+                    parse_output(
+                        execution,
+                        line,
+                        on_stdout=on_stdout,
+                        on_stderr=on_stderr,
+                        on_result=on_result,
+                    )
 
-            return execution
+                return execution
+        except httpx.ReadTimeout:
+            raise format_execution_timeout_error()
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()
 
     async def create_kernel(
         self,
@@ -96,18 +106,21 @@ class JupyterExtension:
         if cwd:
             data["cwd"] = cwd
 
-        response = await self._client.post(
-            f"{self._url}/contexts",
-            json=data,
-            timeout=request_timeout or self._connection_config.request_timeout,
-        )
+        try:
+            response = await self._client.post(
+                f"{self._url}/contexts",
+                json=data,
+                timeout=request_timeout or self._connection_config.request_timeout,
+            )
 
-        err = await aextract_exception(response)
-        if err:
-            raise err
+            err = await aextract_exception(response)
+            if err:
+                raise err
 
-        data = response.json()
-        return data["id"]
+            data = response.json()
+            return data["id"]
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()
 
     async def shutdown_kernel(
         self,
@@ -117,14 +130,17 @@ class JupyterExtension:
         logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
-        response = await self._client.delete(
-            url=f"{self._url}/contexts/{kernel_id}",
-            timeout=request_timeout or self._connection_config.request_timeout,
-        )
+        try:
+            response = await self._client.delete(
+                url=f"{self._url}/contexts/{kernel_id}",
+                timeout=request_timeout or self._connection_config.request_timeout,
+            )
 
-        err = await aextract_exception(response)
-        if err:
-            raise err
+            err = await aextract_exception(response)
+            if err:
+                raise err
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()
 
     async def restart_kernel(
         self,
@@ -134,38 +150,36 @@ class JupyterExtension:
         logger.debug(f"Restarting kernel: {kernel_id}")
 
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
-        response = await self._client.post(
-            f"{self._url}/contexts/{kernel_id}/restart",
-            timeout=request_timeout or self._connection_config.request_timeout,
-        )
 
-        err = await aextract_exception(response)
-        if err:
-            raise err
+        try:
+            response = await self._client.post(
+                f"{self._url}/contexts/{kernel_id}/restart",
+                timeout=request_timeout or self._connection_config.request_timeout,
+            )
+
+            err = await aextract_exception(response)
+            if err:
+                raise err
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()
 
     async def list_kernels(
         self,
         request_timeout: Optional[float] = None,
     ) -> List[Kernel]:
-        """
-        Lists all available Jupyter kernels.
+        try:
+            response = await self._client.get(
+                f"{self._url}/contexts",
+                timeout=request_timeout or self._connection_config.request_timeout,
+            )
 
-        This method fetches a list of all currently available Jupyter kernels from the server. It can be used
-        to retrieve the IDs of all kernels that are currently running or available for connection.
+            err = await aextract_exception(response)
+            if err:
+                raise err
 
-        :param timeout: The timeout for the kernel list request.
-        :return: List of kernel ids
-        """
-        response = await self._client.get(
-            f"{self._url}/contexts",
-            timeout=request_timeout or self._connection_config.request_timeout,
-        )
-
-        err = await aextract_exception(response)
-        if err:
-            raise err
-
-        return [Kernel(k["id"], k["name"]) for k in response.json()]
+            return [Kernel(k["id"], k["name"]) for k in response.json()]
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()
 
 
 class AsyncCodeInterpreter(AsyncSandbox):
