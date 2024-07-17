@@ -1,6 +1,22 @@
-import { ConnectionConfig, Sandbox } from 'e2b'
+import { ConnectionConfig, Sandbox, TimeoutError } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
+
+function formatRequestTimeoutError(error: unknown) {
+  if (error instanceof Error && error.name === 'AbortError') {
+    return new TimeoutError('Request timed out — the \'requestTimeoutMs\' option can be used to increase this timeout')
+  }
+
+  return error
+}
+
+function formatExecutionTimeoutError(error: unknown) {
+  if (error instanceof Error && error.name === 'AbortError') {
+    return new TimeoutError('Execution timed out — the \'timeoutMs\' option can be used to increase this timeout')
+  }
+
+  return error
+}
 
 async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader();
@@ -62,48 +78,56 @@ export class JupyterExtension {
     }, requestTimeout)
       : undefined
 
-    const res = await fetch(`${this.url}/execute`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        code,
-        context_id: opts?.kernelID,
-      }),
-      keepalive: true,
-    })
-
-    const error = await extractError(res)
-    if (error) {
-      throw error
-    }
-
-    if (!res.body) {
-      throw new Error(`Not response body: ${res.statusText} ${await res?.text()}`)
-    }
-
-    clearTimeout(reqTimer)
-
-    const bodyTimeout = opts?.timeoutMs ?? JupyterExtension.execTimeoutMs
-
-    const bodyTimer = bodyTimeout
-      ? setTimeout(() => {
-        controller.abort()
-      }, bodyTimeout)
-      : undefined
-
-    const execution = new Execution()
-
     try {
-      for await (const chunk of readLines(res.body)) {
-        await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult)
-      }
-    } finally {
-      clearTimeout(bodyTimer)
-    }
+      const res = await fetch(`${this.url}/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          context_id: opts?.kernelID,
+        }),
+        signal: controller.signal,
+        keepalive: true,
+      })
 
-    return execution
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+
+      if (!res.body) {
+        throw new Error(`Not response body: ${res.statusText} ${await res?.text()}`)
+      }
+
+      clearTimeout(reqTimer)
+
+      const bodyTimeout = opts?.timeoutMs ?? JupyterExtension.execTimeoutMs
+
+      const bodyTimer = bodyTimeout
+        ? setTimeout(() => {
+          controller.abort()
+        }, bodyTimeout)
+        : undefined
+
+      const execution = new Execution()
+
+
+      try {
+        for await (const chunk of readLines(res.body)) {
+          await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult)
+        }
+      } catch (error) {
+        throw formatExecutionTimeoutError(error)
+      } finally {
+        clearTimeout(bodyTimer)
+      }
+
+      return execution
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
+    }
   }
 
   async createKernel({
@@ -115,26 +139,31 @@ export class JupyterExtension {
     kernelName?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<string> {
-    const res = await fetch(`${this.url}/contexts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        name: kernelName,
-        cwd,
-      }),
-      keepalive: true,
-      signal: this.connectionConfig.getSignal(requestTimeoutMs),
-    })
+    try {
 
-    const error = await extractError(res)
-    if (error) {
-      throw error
+      const res = await fetch(`${this.url}/contexts`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: kernelName,
+          cwd,
+        }),
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(requestTimeoutMs),
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+
+      const data = await res.json()
+      return data.id
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
     }
-
-    const data = await res.json()
-    return data.id
   }
 
   async restartKernel({
@@ -144,19 +173,23 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    kernelID = kernelID || JupyterExtension.defaultKernelID
-    const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      keepalive: true,
-      signal: this.connectionConfig.getSignal(requestTimeoutMs),
-    })
+    try {
+      kernelID = kernelID || JupyterExtension.defaultKernelID
+      const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(requestTimeoutMs),
+      })
 
-    const error = await extractError(res)
-    if (error) {
-      throw error
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
     }
   }
 
@@ -167,17 +200,22 @@ export class JupyterExtension {
     kernelID?: string,
     requestTimeoutMs?: number,
   } = {}): Promise<void> {
-    kernelID = kernelID || JupyterExtension.defaultKernelID
+    try {
 
-    const res = await fetch(`${this.url}/contexts/${kernelID}`, {
-      method: 'DELETE',
-      keepalive: true,
-      signal: this.connectionConfig.getSignal(requestTimeoutMs),
-    })
+      kernelID = kernelID || JupyterExtension.defaultKernelID
 
-    const error = await extractError(res)
-    if (error) {
-      throw error
+      const res = await fetch(`${this.url}/contexts/${kernelID}`, {
+        method: 'DELETE',
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(requestTimeoutMs),
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
     }
   }
 
@@ -186,17 +224,21 @@ export class JupyterExtension {
   }: {
     requestTimeoutMs?: number,
   } = {}): Promise<{ kernelID: string, name: string }[]> {
-    const res = await fetch(`${this.url}/contexts`, {
-      keepalive: true,
-      signal: this.connectionConfig.getSignal(requestTimeoutMs),
-    })
+    try {
+      const res = await fetch(`${this.url}/contexts`, {
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(requestTimeoutMs),
+      })
 
-    const error = await extractError(res)
-    if (error) {
-      throw error
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+
+      return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
     }
-
-    return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
   }
 }
 
