@@ -1,8 +1,9 @@
 import { expect } from 'vitest'
 
-import { sandboxTest } from './setup'
+import { isDebug, sandboxTest } from './setup'
 
-sandboxTest('bash', async ({ sandbox }) => {
+// Skip this test if we are running in debug mode — the pwd and user in the testing docker container are not the same as in the actual sandbox.
+sandboxTest.skipIf(isDebug)('bash', async ({ sandbox }) => {
   const result = await sandbox.notebook.execCell('!pwd')
 
   expect(result.logs.stdout.join().trim()).toEqual('/home/user')

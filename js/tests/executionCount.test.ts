@@ -1,8 +1,9 @@
 import { expect } from 'vitest'
 
-import { sandboxTest } from './setup'
+import { isDebug, sandboxTest } from './setup'
 
-sandboxTest('execution count', async ({ sandbox }) => {
+// Skip this test if we are running in debug mode — we don't create new sandbox for each test so the execution number is not reset.
+sandboxTest.skipIf(isDebug)('execution count', async ({ sandbox }) => {
   await sandbox.notebook.execCell('!pwd')
   const result = await sandbox.notebook.execCell('!pwd')
 
