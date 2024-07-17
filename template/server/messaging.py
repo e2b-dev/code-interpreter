@@ -2,31 +2,20 @@ import json
 import logging
 import uuid
 import asyncio
-import random
 
-from asyncio import Future, Queue
+from asyncio import Queue
 from typing import (
-    Callable,
     Dict,
-    Any,
-    AsyncIterator,
-    List,
-    AsyncIterable,
     Optional,
     Union,
 )
 from pydantic import StrictStr
+from websockets.client import WebSocketClientProtocol, connect
 
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
 from api.models.result import Result
 from api.models.output import EndOfExecution, NumberOfExecutions, OutputType
-
-from websockets.legacy.client import WebSocketClientProtocol, Connect
-from websockets.exceptions import ConnectionClosed
-
-
-TIMEOUT = 60
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +23,16 @@ logger = logging.getLogger(__name__)
 
 class Execution:
     def __init__(self):
-        self.queue = Queue()
+        self.queue = Queue[
+            Union[
+                Result,
+                Error,
+                Stdout,
+                Stderr,
+                EndOfExecution,
+                NumberOfExecutions,
+            ]
+        ]()
         self.input_accepted = False
 
 
@@ -53,11 +51,8 @@ class JupyterKernelWebSocket:
         self.kernel_id = kernel_id
         self.url = f"ws://localhost:8888/api/kernels/{kernel_id}/channels"
         self.session_id = session_id
+
         self._executions: Dict[str, Execution] = {}
-        self._process_cleanup: List[Callable[[], Any]] = []
-        self._waiting_for_replies: Dict[str, Future] = {}
-        self._stopped = Future()
-        self.started = Future()
 
     async def connect(self):
         logger.debug(f"WebSocket connecting to {self.url}")
@@ -65,38 +60,18 @@ class JupyterKernelWebSocket:
         ws_logger = logger.getChild("websockets.client")
         ws_logger.setLevel(logging.ERROR)
 
-        websocket_connector = E2BConnect(
+        self._ws = await connect(
             self.url,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
         )
 
-        websocket_connector.BACKOFF_MIN = 1
-        websocket_connector.BACKOFF_FACTOR = 1
-        websocket_connector.BACKOFF_INITIAL = 0.2  # type: ignore
-
-        async for websocket in websocket_connector:
-            try:
-                self._ws = websocket
-                self.started.set_result(None)
-
-                logger.info(f"WebSocket connected to {self.url}")
-
-                receive_task = asyncio.create_task(
-                    self._receive_message(), name="receive_message"
-                )
-                self._process_cleanup.append(receive_task.cancel)
-
-                while not self._stopped.done():
-                    await asyncio.sleep(0)
-
-                logger.info("WebSocket stopped")
-                break
-            except ConnectionClosed:
-                logger.warning("WebSocket disconnected, it will try to reconnect")
-                if self._stopped.done():
-                    break
+        logger.info(f"WebSocket connected to {self.url}")
+        self._receive_task = asyncio.create_task(
+            self._receive_message(),
+            name="receive_message",
+        )
 
     def _get_execute_request(self, msg_id: str, code: Union[str, StrictStr]) -> str:
         return json.dumps(
@@ -120,7 +95,7 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(self, code: Union[str, StrictStr]) -> AsyncIterable:
+    async def execute(self, code: Union[str, StrictStr]):
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
@@ -144,10 +119,11 @@ class JupyterKernelWebSocket:
         del self._executions[message_id]
 
     async def _receive_message(self):
+        if not self._ws:
+            logger.error("No WebSocket connection")
+            return
+
         try:
-            if not self._ws:
-                logger.error("No WebSocket connection")
-                return
             async for message in self._ws:
                 logger.debug(f"WebSocket received message: {message}".strip())
                 await self._process_message(json.loads(message))
@@ -246,58 +222,11 @@ class JupyterKernelWebSocket:
 
     async def close(self):
         logger.debug(f"Closing WebSocket {self.kernel_id}")
-        try:
-            self._stopped.set_result(None)
-        except Exception as e:
-            logger.error(f"Error while closing WebSocket {self.kernel_id}: {e}")
-
-        for cleanup in self._process_cleanup:
-            cleanup()
 
         if self._ws is not None:
             await self._ws.close()
 
-        for handler in self._waiting_for_replies.values():
-            logger.debug(f"Cancelling waiting for execution result for {handler}")
-            handler.cancel()
-            del handler
+        self._receive_task.cancel()
 
-
-class E2BConnect(Connect):
-    async def __aiter__(self) -> AsyncIterator[WebSocketClientProtocol]:
-        retries = 0
-        max_retries = 12
-        backoff_delay = 0.1
-        while True:
-            try:
-                async with self as protocol:
-                    yield protocol
-            except Exception:
-                retries += 1
-                if retries >= max_retries:
-                    raise Exception("Failed to connect to the server")
-                # Add a random initial delay between 0 and 5 seconds.
-                # See 7.2.3. Recovering from Abnormal Closure in RFC 6544.
-                if backoff_delay == 0.1:
-                    initial_delay = random.random()
-                    self.logger.info(
-                        "! connect failed; reconnecting in %.1f seconds",
-                        initial_delay,
-                        exc_info=True,
-                    )
-                    await asyncio.sleep(initial_delay)
-                else:
-                    self.logger.info(
-                        "! connect failed again; retrying in %d seconds",
-                        int(backoff_delay),
-                        exc_info=True,
-                    )
-                    await asyncio.sleep(int(backoff_delay))
-                # Increase delay with truncated exponential backoff.
-                if retries > 4:
-                    backoff_delay = backoff_delay * 1.2
-                backoff_delay = min(backoff_delay, 10)
-                continue
-            else:
-                # Connection succeeded - reset backoff delay
-                backoff_delay = 0.1
+        for execution in self._executions.values():
+            execution.queue.put_nowait(EndOfExecution())

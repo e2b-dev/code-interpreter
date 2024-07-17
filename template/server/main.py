@@ -44,11 +44,10 @@ async def lifespan(app: FastAPI):
         "/home/user",
     )
 
-    websockets["default"] = default_ws
-
     logger.info("Connecting to default runtime")
-    asyncio.create_task(default_ws.connect())
-    await default_ws.started
+    await default_ws.connect()
+
+    websockets["default"] = default_ws
 
     logger.info("Connected to default runtime")
     yield
@@ -129,8 +128,7 @@ async def create_context(request: CreateContext) -> Context:
         request.name,
         request.cwd,
     )
-    asyncio.create_task(ws.connect())
-    await ws.started
+    await ws.connect()
 
     websockets[kernel_id] = ws
 
@@ -184,8 +182,7 @@ async def restart_context(context_id: str) -> None:
         ws.cwd,
     )
 
-    _ = asyncio.create_task(ws.connect())
-    await ws.started
+    await ws.connect()
 
     websockets[context_id] = ws
 
