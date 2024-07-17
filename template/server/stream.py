@@ -6,17 +6,6 @@ from starlette.background import BackgroundTask
 from fastapi.responses import StreamingResponse
 
 
-async def async_enumerate(async_sequence: AsyncIterable, start=0):
-    """Asynchronously enumerate an async iterator from a given start value.
-
-    See https://stackoverflow.com/a/55930068/9639441
-    """
-    idx = start
-    async for element in async_sequence:
-        yield idx, element
-        idx += 1
-
-
 class StreamingListJsonResponse(StreamingResponse):
     """Converts a pydantic model generator into a streaming HTTP Response
     that streams a JSON list, one element at a time.
@@ -46,6 +35,6 @@ class StreamingListJsonResponse(StreamingResponse):
         """Converts an asynchronous pydantic model generator
         into a streaming JSON list
         """
-        async for _, item in async_enumerate(async_generator):
+        async for item in async_generator:
             yield f"{json.dumps(jsonable_encoder(item))}\n"
         yield '{"type": "end_of_execution"}\n'
