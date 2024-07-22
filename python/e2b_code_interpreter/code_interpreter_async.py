@@ -191,7 +191,7 @@ class AsyncCodeInterpreter(AsyncSandbox):
         return self._notebook
 
     def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
-        super().__init__(sandbox_id, connection_config)
+        super().__init__(sandbox_id=sandbox_id, connection_config=connection_config)
 
         jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}"
 
