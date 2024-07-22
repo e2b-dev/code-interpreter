@@ -24,7 +24,7 @@ pandas.DataFrame({"a": [1, 2, 3]})
 `
 
 const sandbox = await CodeInterpreter.connect("", { debug: true })
-console.log(sandbox.sandboxID)
+console.log(sandbox.sandboxId)
 
 const execution = await sandbox.notebook.execCell(code, {
   onStdout(msg) {

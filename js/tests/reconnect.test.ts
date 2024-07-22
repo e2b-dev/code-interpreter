@@ -4,7 +4,7 @@ import { CodeInterpreter } from '../src'
 import { sandboxTest } from './setup'
 
 sandboxTest('reconnect', async ({ sandbox }) => {
-  sandbox = await CodeInterpreter.connect(sandbox.sandboxID)
+  sandbox = await CodeInterpreter.connect(sandbox.sandboxId)
 
   const result = await sandbox.notebook.execCell('x =1; x')
 
