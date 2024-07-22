@@ -48,14 +48,13 @@ class JupyterExtension:
         self,
         code: str,
         kernel_id: Optional[str] = None,
-        language: Optional[str] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ) -> Execution:
-        logger.debug(f"Executing code {code} for language {language}")
+        logger.debug(f"Executing code {code}")
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
         request_timeout = request_timeout or self._connection_config.request_timeout
