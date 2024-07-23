@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "e2b-code-interpreter"
-version = "0.0.11a22"
+version = "0.0.11a23"
 description = "E2B Code Interpreter - Stateful code execution"
 authors = ["e2b <hello@e2b.dev>"]
 license = "Apache-2.0"
