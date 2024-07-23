@@ -7,6 +7,11 @@ permissions:
   contents: write
 
 jobs:
+  js-tests:
+    name: JS SDK Tests
+    uses: ./.github/workflows/js_tests.yml
+    secrets: inherit
+
   release:
     name: Release Candidate
     runs-on: ubuntu-latest
