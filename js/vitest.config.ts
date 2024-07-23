@@ -11,6 +11,12 @@ export default defineConfig({
         maxThreads: 4,
       },
     },
+    include: [
+      'tests/**/*.test.ts',
+    ],
+    exclude: [
+      'tests/runtimes/**',
+    ],
     globals: false,
     testTimeout: 20000,
     environment: 'node',
