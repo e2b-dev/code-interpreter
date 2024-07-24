@@ -6,7 +6,7 @@ on:
       - 'template/**'
       - '.github/workflows/template.yml'
     branches:
-      - main
+      - beta
 
 permissions:
   contents: read
