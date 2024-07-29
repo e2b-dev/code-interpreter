@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import uuid
 import httpx
@@ -8,11 +7,11 @@ from pydantic import StrictStr
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
-from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
 from messaging import JupyterKernelWebSocket
 from stream import StreamingListJsonResponse
+from api.models.context import Context
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -114,6 +113,7 @@ async def create_context(request: CreateContext) -> Context:
         f"{jupyter_base_url}/api/sessions/{session_id}",
         json={"path": request.cwd},
     )
+
     if not response.is_success:
         raise HTTPException(
             status_code=500,
@@ -128,7 +128,6 @@ async def create_context(request: CreateContext) -> Context:
         request.name,
         request.cwd,
     )
-    await ws.connect()
 
     websockets[kernel_id] = ws
 
@@ -181,8 +180,6 @@ async def restart_context(context_id: str) -> None:
         ws.name,
         ws.cwd,
     )
-
-    await ws.connect()
 
     websockets[context_id] = ws
 
