@@ -117,6 +117,10 @@ export class Result {
    */
   readonly javascript?: string
   /**
+   * Contains the data from DataFrame.
+   */
+  readonly data: object
+  /**
    * Extra data that can be included. Not part of the standard types.
    */
   readonly extra?: any
@@ -155,7 +159,8 @@ export class Result {
           'pdf',
           'latex',
           'json',
-          'javascript'
+          'javascript',
+          'data',
         ].includes(key)
       ) {
         this.extra[key] = data[key]
@@ -196,6 +201,9 @@ export class Result {
     }
     if (this.javascript) {
       formats.push('javascript')
+    }
+    if (this.data) {
+      formats.push('data')
     }
 
     for (const key of Object.keys(this.extra)) {
