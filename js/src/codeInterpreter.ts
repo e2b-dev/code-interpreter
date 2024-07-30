@@ -243,7 +243,7 @@ export class JupyterExtension {
 }
 
 export class CodeInterpreter extends Sandbox {
-  protected static override readonly defaultTemplate: string = 'code-interpreter-stateful'
+  protected static override readonly defaultTemplate: string = 'ci-df'
   protected static readonly jupyterPort = 49999
 
   readonly notebook = new JupyterExtension(
