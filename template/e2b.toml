@@ -1,16 +1,16 @@
 # This is a config for E2B sandbox template.
-# You can use 'template_id' (3e4rngfa34txe0gxc1zf) or 'template_name (code-interpreter-beta) from this config to spawn a sandbox:
+# You can use 'template_id' (se2g25klhfixqis2b57f) or 'template_name (ci-df) from this config to spawn a sandbox:
 
 # Python SDK
 # from e2b import Sandbox
-# sandbox = Sandbox(template='code-interpreter-beta')
+# sandbox = Sandbox(template='ci-df')
 
 # JS SDK
 # import { Sandbox } from 'e2b'
-# const sandbox = await Sandbox.create({ template: 'code-interpreter-beta' })
+# const sandbox = await Sandbox.create({ template: 'ci-df' })
 
 memory_mb = 1_024
 start_cmd = "/root/.jupyter/start-up.sh"
 dockerfile = "e2b.Dockerfile"
-template_name = "code-interpreter-beta"
-template_id = "3e4rngfa34txe0gxc1zf"
+template_name = "ci-df"
+template_id = "se2g25klhfixqis2b57f"
