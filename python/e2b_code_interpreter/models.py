@@ -88,6 +88,7 @@ class Result:
     latex: Optional[str] = None
     json: Optional[dict] = None
     javascript: Optional[str] = None
+    data: Optional[dict] = None
     is_main_result: bool = False
     """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
     extra: Optional[dict] = None
@@ -120,6 +121,8 @@ class Result:
             formats.append("json")
         if self.javascript:
             formats.append("javascript")
+        if self.data:
+            formats.append("data")
 
         if self.extra:
             for key in self.extra:
