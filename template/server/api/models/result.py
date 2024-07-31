@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-from typing import Optional
+from typing import Optional, Iterable
 from pydantic import BaseModel
 
 from api.models.output import OutputType
@@ -53,13 +53,29 @@ class Result(BaseModel):
         self.javascript = data.pop("application/javascript", None)
         self.extra = data
 
-    def __str__(self) -> Optional[str]:
+    def formats(self) -> Iterable[str]:
+        formats = []
+
+        for key in ["text", "html", "markdown", "svg", "png", "jpeg", "pdf", "latex", "json", "javascript"]:
+            if getattr(self, key):
+                formats.append(key)
+
+        if self.extra:
+            for key in self.extra:
+                formats.append(key)
+
+        return formats
+
+    def __str__(self) -> str:
         """
         Returns the text representation of the data.
 
         :return: The text representation of the data.
         """
-        return self.text
+        return self.__repr__()
 
     def __repr__(self) -> str:
-        return f"Result({self.text})"
+        if self.text:
+            return f"Result({self.text})"
+        formats = self.formats()
+        return f"Result with formats: {formats}"
