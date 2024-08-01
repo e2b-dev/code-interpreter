@@ -133,10 +133,11 @@ class Result:
 
         :return: The text representation of the data.
         """
-        return self.text
+        return self.__repr__()
 
     def __repr__(self) -> str:
-        return f"Result({self.text})"
+        text = self.text or ",".join(self.formats())
+        return f"Result({text})"
 
     def _repr_html_(self) -> Optional[str]:
         """
