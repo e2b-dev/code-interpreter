@@ -136,8 +136,10 @@ class Result:
         return self.__repr__()
 
     def __repr__(self) -> str:
-        text = self.text or ",".join(self.formats())
-        return f"Result({text})"
+        if self.text:
+            return f"Result({self.text})"
+        else:
+            return "Result(Formats: " + ", ".join(self.formats()) + ")"
 
     def _repr_html_(self) -> Optional[str]:
         """
