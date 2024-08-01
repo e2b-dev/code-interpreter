@@ -15,10 +15,15 @@ class OutputType(Enum):
     ERROR = "error"
     NUMBER_OF_EXECUTIONS = "number_of_executions"
     END_OF_EXECUTION = "end_of_execution"
+    UNEXPECTED_END_OF_EXECUTION = "unexpected_end_of_execution"
 
 
 class EndOfExecution(BaseModel):
     type: OutputType = OutputType.END_OF_EXECUTION
+
+
+class UnexpectedEndOfExecution(BaseModel):
+    type: OutputType = OutputType.UNEXPECTED_END_OF_EXECUTION
 
 
 class NumberOfExecutions(BaseModel):

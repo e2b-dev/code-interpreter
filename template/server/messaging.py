@@ -15,8 +15,7 @@ from websockets.client import WebSocketClientProtocol, connect
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
 from api.models.result import Result
-from api.models.output import EndOfExecution, NumberOfExecutions, OutputType
-
+from api.models.output import EndOfExecution, NumberOfExecutions, OutputType, UnexpectedEndOfExecution
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +30,7 @@ class Execution:
                 Stderr,
                 EndOfExecution,
                 NumberOfExecutions,
+                UnexpectedEndOfExecution
             ]
         ]()
         self.input_accepted = False
@@ -111,6 +111,15 @@ class JupyterKernelWebSocket:
         while True:
             output = await queue.get()
             if output.type == OutputType.END_OF_EXECUTION:
+                break
+
+            if output.type == OutputType.UNEXPECTED_END_OF_EXECUTION:
+                logger.error(f"Unexpected end of execution for code ({message_id})")
+                yield Error(
+                    name="UnexpectedEndOfExecution",
+                    value="Connection to the execution was closed before the execution was finished",
+                    traceback="",
+                )
                 break
 
             logger.debug(f"Got result for code ({message_id}): {output}")
@@ -229,4 +238,4 @@ class JupyterKernelWebSocket:
         self._receive_task.cancel()
 
         for execution in self._executions.values():
-            execution.queue.put_nowait(EndOfExecution())
+            execution.queue.put_nowait(UnexpectedEndOfExecution())
