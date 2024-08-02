@@ -18,6 +18,11 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
+# R Kernel
+RUN apt-get update && apt-get install -y r-base
+RUN R -e "install.packages('IRkernel')"
+RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
+
 # Java Kernel
 RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
     unzip ijava-1.3.0.zip && \
@@ -27,11 +32,6 @@ RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3
 RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
-
-# R Kernel
-RUN apt-get update && apt-get install -y r-base
-RUN R -e "install.packages('IRkernel')"
-RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Bash Kernel
 RUN pip install bash_kernel
