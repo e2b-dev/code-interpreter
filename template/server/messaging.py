@@ -55,6 +55,9 @@ class JupyterKernelWebSocket:
         self._executions: Dict[str, Execution] = {}
 
     async def connect(self):
+        if self._ws is not None:
+            return
+
         logger.debug(f"WebSocket connecting to {self.url}")
 
         ws_logger = logger.getChild("websockets.client")
@@ -96,6 +99,9 @@ class JupyterKernelWebSocket:
         )
 
     async def execute(self, code: Union[str, StrictStr]):
+        # Connect WS if not already connected
+        await self.connect()
+
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
