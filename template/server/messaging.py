@@ -149,7 +149,7 @@ class JupyterKernelWebSocket:
             if any(s in key.lower() for s in ('key', 'token', 'secret')):
                 async for output in self.execute(f"%env {key}"):
                     if output['type'] == OutputType.RESULT:
-                        env_vars[key] = output['text'].replace("'", '')
+                        env_vars[key] = output['text']
 
         return env_vars
 

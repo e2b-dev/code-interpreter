@@ -46,6 +46,9 @@ class Result(BaseModel):
         self.is_main_result = is_main_result
 
         self.text = data.pop("text/plain", None)
+        if self.text.startswith("'") and self.text.endswith("'"):
+            self.text = self.text[1:-1]
+
         self.html = data.pop("text/html", None)
         self.markdown = data.pop("text/markdown", None)
         self.svg = data.pop("image/svg+xml", None)
