@@ -123,16 +123,6 @@ async def create_context(request: CreateContext) -> Context:
     session_id = session_data["id"]
     kernel_id = session_data["kernel"]["id"]
 
-    response = await client.patch(
-        f"{JUPYTER_BASE_URL}/api/sessions/{session_id}",
-        json={"path": request.cwd},
-    )
-    if not response.is_success:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to create kernel: {response.text}",
-        )
-
     logger.debug(f"Created kernel {kernel_id}")
 
     ws = JupyterKernelWebSocket(
@@ -144,6 +134,13 @@ async def create_context(request: CreateContext) -> Context:
     await ws.connect()
 
     websockets[kernel_id] = ws
+
+    async for item in ws.execute(f"%cd {request.cwd}", background=True):
+        if item["type"] == "error":
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to set working directory: {item}",
+            )
 
     return Context(name=request.name, id=kernel_id, cwd=request.cwd)
 
