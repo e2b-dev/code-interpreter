@@ -1,4 +1,4 @@
-import { ConnectionConfig, Sandbox, TimeoutError } from 'e2b'
+import { ConnectionConfig, Sandbox, SandboxOpts, TimeoutError } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 
@@ -65,6 +65,7 @@ export class JupyterExtension {
       onStdout?: (output: OutputMessage) => (Promise<any> | any),
       onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
+      envs?: Record<string, string>,
       timeoutMs?: number,
       requestTimeoutMs?: number,
     },
@@ -87,6 +88,7 @@ export class JupyterExtension {
         body: JSON.stringify({
           code,
           context_id: opts?.kernelID,
+          env_vars: opts?.envs,
         }),
         signal: controller.signal,
         keepalive: true,
