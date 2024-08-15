@@ -15,7 +15,7 @@ async def test_env_vars_in_exec_cell(async_sandbox: AsyncCodeInterpreter):
 
 async def test_env_vars_override():
     sbx = await AsyncCodeInterpreter.create(envs={"FOO": "bar", "SBX": "value"})
-    await sbx.notebook.exec_cell("import os; os.environ['FOO'] = 'baz'; os.environ['RUNTIME_ENV'] = 'value'")
+    await sbx.notebook.exec_cell("import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'value'")
     result = await sbx.notebook.exec_cell("import os; os.getenv('FOO')", envs={"FOO": "baz"})
     assert result.text == "baz"
 

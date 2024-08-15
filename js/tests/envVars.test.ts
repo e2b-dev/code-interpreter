@@ -19,7 +19,7 @@ sandboxTest('env vars on sandbox', async ({sandbox}) => {
 
 sandboxTest('env vars on sandbox override', async () => {
   const sandbox = await CodeInterpreter.create('g0zptwsuemevq896f2u3', { envs: { FOO: "bar", SBX: "value" } })
-  await sandbox.notebook.execCell("import os; os.environ['FOO'] = 'bar'); os.environ['RUNTIME_ENV'] = 'value'")
+  await sandbox.notebook.execCell("import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'value'")
   const result = await sandbox.notebook.execCell("import os; os.getenv('FOO')", {envs: {FOO: "baz"}})
 
   expect(result.results[0].text.trim()).toEqual('baz')
