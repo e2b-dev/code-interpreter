@@ -51,6 +51,7 @@ class JupyterExtension:
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ) -> Execution:
@@ -66,6 +67,7 @@ class JupyterExtension:
                 json={
                     "code": code,
                     "context_id": kernel_id,
+                    "env_vars": envs,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
@@ -96,7 +98,7 @@ class JupyterExtension:
         kernel_name: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> str:
-        logger.debug(f"Creating new kernel: {kernel_name}")
+        logger.debug(f"Creating new kernel {kernel_name}")
 
         data = {}
         if kernel_name:
@@ -125,9 +127,9 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
-        logger.debug(f"Shutting down a kernel with id {kernel_id}")
-
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
+
+        logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
         try:
             response = self._client.delete(
@@ -145,9 +147,10 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
-        logger.debug(f"Creating new kernel for language: {kernel_id}")
-
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
+
+        logger.debug(f"Restarting kernel {kernel_id}")
+
         try:
             response = self._client.post(
                 f"{self._url}/contexts/{kernel_id}/restart",
@@ -164,6 +167,8 @@ class JupyterExtension:
         self,
         request_timeout: Optional[float] = None,
     ) -> List[Kernel]:
+        logger.debug("Listing kernels")
+
         try:
             response = self._client.get(
                 f"{self._url}/contexts",
@@ -192,6 +197,7 @@ class CodeInterpreter(Sandbox):
         template: Optional[str] = None,
         timeout: Optional[int] = None,
         metadata: Optional[Dict[str, str]] = None,
+        envs: Optional[Dict[str, str]] = None,
         api_key: Optional[str] = None,
         domain: Optional[str] = None,
         debug: Optional[bool] = None,
@@ -202,6 +208,7 @@ class CodeInterpreter(Sandbox):
             template=template,
             timeout=timeout,
             metadata=metadata,
+            envs=envs,
             api_key=api_key,
             domain=domain,
             debug=debug,
@@ -214,4 +221,5 @@ class CodeInterpreter(Sandbox):
             jupyter_url,
             self._transport,
             self.connection_config,
+            envs,
         )

@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 from httpx import AsyncHTTPTransport, AsyncClient
 
 from e2b import AsyncSandbox, ConnectionConfig
@@ -52,6 +52,7 @@ class JupyterExtension:
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ) -> Execution:
@@ -67,6 +68,7 @@ class JupyterExtension:
                 json={
                     "code": code,
                     "context_id": kernel_id,
+                    "env_vars": envs,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
@@ -97,14 +99,17 @@ class JupyterExtension:
         cwd: Optional[str] = None,
         kernel_name: Optional[str] = None,
         request_timeout: Optional[float] = None,
+        envs: Optional[Dict[str, str]] = None,
     ) -> str:
-        logger.debug(f"Creating new kernel: {kernel_name}")
+        logger.debug(f"Creating new kernel {kernel_name}")
 
         data = {}
         if kernel_name:
             data["name"] = kernel_name
         if cwd:
             data["cwd"] = cwd
+        if envs:
+            data["env_vars"] = envs
 
         try:
             response = await self._client.post(
@@ -127,9 +132,10 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
+        kernel_id = kernel_id or DEFAULT_KERNEL_ID
+
         logger.debug(f"Shutting down a kernel with id {kernel_id}")
 
-        kernel_id = kernel_id or DEFAULT_KERNEL_ID
         try:
             response = await self._client.delete(
                 url=f"{self._url}/contexts/{kernel_id}",
@@ -147,9 +153,9 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
-        logger.debug(f"Restarting kernel: {kernel_id}")
-
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
+
+        logger.debug(f"Restarting kernel {kernel_id}")
 
         try:
             response = await self._client.post(

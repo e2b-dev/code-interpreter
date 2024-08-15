@@ -14,7 +14,7 @@ python = "^3.8"
 
 httpx = ">=0.20.0,<0.28.0"
 attrs = ">=21.3.0"
-e2b = "0.17.2a43"
+e2b = "0.17.2a44"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.3.0"
