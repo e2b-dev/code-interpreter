@@ -1,9 +1,10 @@
-import asyncio
 import logging
 import uuid
 import httpx
 
 from typing import Dict, Union, Literal, List
+
+import requests
 from pydantic import StrictStr
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
@@ -21,9 +22,10 @@ http_logger = logging.getLogger("httpcore.http11")
 http_logger.setLevel(logging.WARNING)
 
 
-jupyter_base_url = "http://localhost:8888"
+JUPYTER_BASE_URL = "http://localhost:8888"
+ENVD_PORT = 49983
 
-websockets: Dict[Union[str, StrictStr, Literal["default"]], JupyterKernelWebSocket] = {}
+websockets: Dict[Union[StrictStr, Literal["default"]], JupyterKernelWebSocket] = {}
 global default_kernel_id
 global client
 
@@ -72,6 +74,7 @@ async def health():
 async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
+    global_env_vars: dict = requests.get(f"http://localhost:{ENVD_PORT}/envs").json()
     if request.context_id:
         ws = websockets.get(request.context_id)
 
@@ -83,7 +86,17 @@ async def execute(request: ExecutionRequest):
     else:
         ws = websockets["default"]
 
-    return StreamingListJsonResponse(ws.execute(request.code))
+    revert_env_vars = None
+    env_vars = {**global_env_vars, **(request.env_vars or {})}
+    if env_vars:
+        current_env_vars = await ws.get_env_vars()
+
+        env_vars = {**global_env_vars, **current_env_vars, **(request.env_vars or {})}
+        await ws.set_env_vars(env_vars)
+
+        revert_env_vars = {**global_env_vars, **current_env_vars}
+
+    return StreamingListJsonResponse(ws.execute(request.code, revert_env_vars=revert_env_vars))
 
 
 @app.post("/contexts")
@@ -98,7 +111,7 @@ async def create_context(request: CreateContext) -> Context:
     }
     logger.debug(f"Creating new kernel with data: {data}")
 
-    response = await client.post(f"{jupyter_base_url}/api/sessions", json=data)
+    response = await client.post(f"{JUPYTER_BASE_URL}/api/sessions", json=data)
 
     if not response.is_success:
         raise HTTPException(
@@ -111,7 +124,7 @@ async def create_context(request: CreateContext) -> Context:
     kernel_id = session_data["kernel"]["id"]
 
     response = await client.patch(
-        f"{jupyter_base_url}/api/sessions/{session_id}",
+        f"{JUPYTER_BASE_URL}/api/sessions/{session_id}",
         json={"path": request.cwd},
     )
     if not response.is_success:
@@ -167,7 +180,7 @@ async def restart_context(context_id: str) -> None:
     await ws.close()
 
     response = await client.post(
-        f"{jupyter_base_url}/api/kernels/{ws.kernel_id}/restart"
+        f"{JUPYTER_BASE_URL}/api/kernels/{ws.kernel_id}/restart"
     )
     if not response.is_success:
         raise HTTPException(
@@ -203,7 +216,7 @@ async def remove_context(context_id: str) -> None:
     except:
         pass
 
-    response = await client.delete(f"{jupyter_base_url}/api/kernels/{ws.kernel_id}")
+    response = await client.delete(f"{JUPYTER_BASE_URL}/api/kernels/{ws.kernel_id}")
     if not response.is_success:
         raise HTTPException(
             status_code=500,

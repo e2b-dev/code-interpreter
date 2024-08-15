@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class Execution:
-    def __init__(self):
+    def __init__(self, in_background: bool = False):
         self.queue = Queue[
             Union[
                 Result,
@@ -34,6 +34,7 @@ class Execution:
             ]
         ]()
         self.input_accepted = False
+        self.in_background = in_background
 
 
 class JupyterKernelWebSocket:
@@ -73,7 +74,7 @@ class JupyterKernelWebSocket:
             name="receive_message",
         )
 
-    def _get_execute_request(self, msg_id: str, code: Union[str, StrictStr]) -> str:
+    def _get_execute_request(self, msg_id: str, code: Union[str, StrictStr], background: bool) -> str:
         return json.dumps(
             {
                 "header": {
@@ -87,7 +88,7 @@ class JupyterKernelWebSocket:
                 "metadata": {},
                 "content": {
                     "code": code,
-                    "silent": False,
+                    "silent": background,
                     "store_history": True,
                     "user_expressions": {},
                     "allow_stdin": False,
@@ -95,12 +96,12 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(self, code: Union[str, StrictStr]):
+    async def execute(self, code: Union[str, StrictStr], background: bool = False, revert_env_vars: Dict[StrictStr, str] = None):
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
-        self._executions[message_id] = Execution()
-        request = self._get_execute_request(message_id, code)
+        self._executions[message_id] = Execution(in_background=background)
+        request = self._get_execute_request(message_id, code, background)
 
         if self._ws is None:
             raise Exception("WebSocket not connected")
@@ -125,7 +126,32 @@ class JupyterKernelWebSocket:
             logger.debug(f"Got result for code ({message_id}): {output}")
             yield output.model_dump(exclude_none=True)
 
+        if revert_env_vars:
+            code = "%reset"
+            code += "\n" + "\n".join([f"%set_env {key} {value}" for key, value in revert_env_vars.items()])
+            async for _ in self.execute(code):
+                pass
+
         del self._executions[message_id]
+
+    async def set_env_vars(self, env_vars: Dict[StrictStr, str]):
+        code = "\n".join([f"%set_env {key} {value}" for key, value in env_vars.items()])
+        async for _ in self.execute(code):
+            pass
+
+    async def get_env_vars(self) -> Dict[StrictStr, str]:
+        env_vars = {}
+        async for output in self.execute("%env"):
+            if output['type'] == OutputType.RESULT:
+                env_vars = json.loads(output['text'].replace("'", '"'))
+
+        for key in env_vars:
+            if any(s in key.lower() for s in ('key', 'token', 'secret')):
+                async for output in self.execute(f"%env {key}"):
+                    if output['type'] == OutputType.RESULT:
+                        env_vars[key] = output['text'].replace("'", '')
+
+        return env_vars
 
     async def _receive_message(self):
         if not self._ws:
@@ -191,6 +217,10 @@ class JupyterKernelWebSocket:
         elif data["msg_type"] == "execute_result":
             await queue.put(Result(is_main_result=True, data=data["content"]["data"]))
         elif data["msg_type"] == "status":
+            if data["content"]["execution_state"] == "busy" and execution.in_background:
+                logger.debug(f"Cell {parent_msg_ig} started execution")
+                execution.input_accepted = True
+
             if data["content"]["execution_state"] == "idle":
                 if execution.input_accepted:
                     logger.debug(f"Cell {parent_msg_ig} finished execution")
