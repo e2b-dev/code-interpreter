@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import warnings
 
 from typing import Optional, Iterable
 from pydantic import BaseModel
 
 from api.models.output import OutputType
+
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Result(BaseModel):
