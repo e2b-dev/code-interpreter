@@ -221,5 +221,4 @@ class CodeInterpreter(Sandbox):
             jupyter_url,
             self._transport,
             self.connection_config,
-            envs,
         )

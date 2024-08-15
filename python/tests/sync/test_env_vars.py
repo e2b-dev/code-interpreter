@@ -15,7 +15,7 @@ async def test_env_vars_in_exec_cell(sandbox: CodeInterpreter):
 
 async def test_env_vars_override():
     sbx = CodeInterpreter(envs={"FOO": "bar", "SBX": "value"})
-    sbx.notebook.exec_cell("import os; os.setenv('FOO', 'baz'); os.setenv('RUNTIME_ENV', 'value')")
+    sbx.notebook.exec_cell("import os; os.environ['FOO'] = 'baz'; os.environ['RUNTIME_ENV'] = 'value'")
     result = sbx.notebook.exec_cell("import os; os.getenv('FOO')", envs={"FOO": "baz"})
     assert result.text == "baz"
 

@@ -1,4 +1,4 @@
-import { ConnectionConfig, Sandbox, SandboxOpts, TimeoutError } from 'e2b'
+import { ConnectionConfig, Sandbox, TimeoutError } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 
