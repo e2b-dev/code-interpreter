@@ -2,7 +2,7 @@ import os
 
 import requests
 
-LOCAL = os.getenv("LOCAL", False)
+LOCAL = os.getenv("E2B_LOCAL", False)
 ENVD_PORT = 49983
 
 
