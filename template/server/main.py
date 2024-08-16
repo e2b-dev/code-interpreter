@@ -4,7 +4,6 @@ import httpx
 
 from typing import Dict, Union, Literal, List
 
-import requests
 from pydantic import StrictStr
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
@@ -12,6 +11,7 @@ from fastapi import FastAPI, HTTPException
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
+from envs import get_envs
 from messaging import JupyterKernelWebSocket
 from stream import StreamingListJsonResponse
 
@@ -23,7 +23,6 @@ http_logger.setLevel(logging.WARNING)
 
 
 JUPYTER_BASE_URL = "http://localhost:8888"
-ENVD_PORT = 49983
 
 websockets: Dict[Union[StrictStr, Literal["default"]], JupyterKernelWebSocket] = {}
 global default_kernel_id
@@ -74,7 +73,7 @@ async def health():
 async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
-    global_env_vars: dict = requests.get(f"http://localhost:{ENVD_PORT}/envs").json()
+    global_env_vars = get_envs()
     if request.context_id:
         ws = websockets.get(request.context_id)
 
