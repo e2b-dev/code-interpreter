@@ -6,7 +6,7 @@ on:
       - 'template/**'
       - '.github/workflows/template.yml'
     branches:
-      - beta
+      - beta-df
 
 permissions:
   contents: read
@@ -31,15 +31,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push to DockerHub
-        run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
-          docker buildx build \
-            --file e2b.Dockerfile \
-            --platform linux/amd64 \
-            --push \
-            --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest .
 
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
