@@ -46,7 +46,7 @@ class Result(BaseModel):
         self.is_main_result = is_main_result
 
         self.text = data.pop("text/plain", None)
-        if self.text.startswith("'") and self.text.endswith("'"):
+        if self.text and self.text.startswith("'") and self.text.endswith("'"):
             self.text = self.text[1:-1]
 
         self.html = data.pop("text/html", None)
