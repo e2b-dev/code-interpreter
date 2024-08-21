@@ -59,12 +59,16 @@ export class ExecutionError {
  */
 export type MIMEType = string
 
+type Data = {
+  data: Record<string, unknown>
+}
+
 /**
- * Dictionary that maps MIME types to their corresponding string representations of the data.
+ * Dictionary that maps MIME types to their corresponding representations of the data.
  */
 export type RawData = {
   [key: MIMEType]: string
-}
+} & Data
 
 /**
  * Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -119,7 +123,7 @@ export class Result {
   /**
    * Contains the data from DataFrame.
    */
-  readonly data: object
+  readonly data?: Record<string, unknown>
   /**
    * Extra data that can be included. Not part of the standard types.
    */
@@ -142,6 +146,7 @@ export class Result {
     this.latex = data['latex']
     this.json = data['json']
     this.javascript = data['javascript']
+    this.data = data['data']
     this.isMainResult = isMainResult
     this.raw = data
 
@@ -161,6 +166,7 @@ export class Result {
           'json',
           'javascript',
           'data',
+          'extra'
         ].includes(key)
       ) {
         this.extra[key] = data[key]
