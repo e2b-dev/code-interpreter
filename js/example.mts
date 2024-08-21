@@ -26,7 +26,7 @@ const sandbox = await CodeInterpreter.create()
 console.log(sandbox.sandboxId)
 
 const execution = await sandbox.notebook.execCell(code, {
-    onStdout(msg) {
+  onStdout(msg) {
     console.log('stdout', msg)
   },
   onStderr(msg) {
