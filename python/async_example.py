@@ -6,6 +6,7 @@ from e2b_code_interpreter import AsyncCodeInterpreter
 
 load_dotenv()
 
+
 code = """
 import matplotlib.pyplot as plt
 import numpy as np
