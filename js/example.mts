@@ -15,7 +15,6 @@ plt.plot(x, y)
 plt.show()
 
 x = np.linspace(0, 10, 100)
-
 plt.plot(x, y)
 plt.show()
 
@@ -23,7 +22,7 @@ import pandas
 pandas.DataFrame({"a": [1, 2, 3]})
 `
 
-const sandbox = await CodeInterpreter.connect("", { debug: true })
+const sandbox = await CodeInterpreter.create()
 console.log(sandbox.sandboxId)
 
 const execution = await sandbox.notebook.execCell(code, {
@@ -35,4 +34,5 @@ const execution = await sandbox.notebook.execCell(code, {
   },
 })
 console.log(execution.results[0].formats())
+console.log(execution.results[0].data)
 console.log(execution.results.length)

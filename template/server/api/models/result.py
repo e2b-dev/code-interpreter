@@ -35,6 +35,7 @@ class Result(BaseModel):
     latex: Optional[str] = None
     json: Optional[dict] = None
     javascript: Optional[str] = None
+    data: Optional[dict] = None
     extra: Optional[dict] = None
     "Extra data that can be included. Not part of the standard types."
 
@@ -58,6 +59,7 @@ class Result(BaseModel):
         self.latex = data.pop("text/latex", None)
         self.json = data.pop("application/json", None)
         self.javascript = data.pop("application/javascript", None)
+        self.data = data.pop("e2b/df", None)
         self.extra = data
 
     def formats(self) -> Iterable[str]:
