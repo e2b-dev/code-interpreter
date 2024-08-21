@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def _repr_mimebundle_(self, include=None, exclude=None):
+def _repr_mime_bundle_(self, include=None, exclude=None):
     data = {
         'text/html': self.to_html(),
         'text/plain': self.to_string(),
@@ -15,4 +15,4 @@ def _repr_mimebundle_(self, include=None, exclude=None):
     return data
 
 
-setattr(pd.DataFrame, '_repr_mimebundle_', _repr_mimebundle_)
+setattr(pd.DataFrame, '_repr_mimebundle_', _repr_mime_bundle_)
