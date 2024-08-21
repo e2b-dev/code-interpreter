@@ -12,3 +12,5 @@ async def test_data(async_sandbox: AsyncCodeInterpreter):
     # there's your image
     data = result.results[0]
     assert data.data
+    assert "a" in data.data
+    assert len(data.data["a"]) == 3
