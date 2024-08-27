@@ -15,7 +15,12 @@ from websockets.client import WebSocketClientProtocol, connect
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
 from api.models.result import Result
-from api.models.output import EndOfExecution, NumberOfExecutions, OutputType, UnexpectedEndOfExecution
+from api.models.output import (
+    EndOfExecution,
+    NumberOfExecutions,
+    OutputType,
+    UnexpectedEndOfExecution,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +35,7 @@ class Execution:
                 Stderr,
                 EndOfExecution,
                 NumberOfExecutions,
-                UnexpectedEndOfExecution
+                UnexpectedEndOfExecution,
             ]
         ]()
         self.input_accepted = False
@@ -74,7 +79,9 @@ class JupyterKernelWebSocket:
             name="receive_message",
         )
 
-    def _get_execute_request(self, msg_id: str, code: Union[str, StrictStr], background: bool) -> str:
+    def _get_execute_request(
+        self, msg_id: str, code: Union[str, StrictStr], background: bool
+    ) -> str:
         return json.dumps(
             {
                 "header": {
@@ -96,7 +103,12 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(self, code: Union[str, StrictStr], background: bool = False, revert_env_vars: Dict[StrictStr, str] = None):
+    async def execute(
+        self,
+        code: Union[str, StrictStr],
+        background: bool = False,
+        revert_env_vars: Dict[StrictStr, str] = None,
+    ):
         message_id = str(uuid.uuid4())
         logger.debug(f"Sending execution for code ({message_id}): {code}")
 
@@ -128,7 +140,9 @@ class JupyterKernelWebSocket:
 
         if revert_env_vars:
             code = "%reset"
-            code += "\n" + "\n".join([f"%set_env {key} {value}" for key, value in revert_env_vars.items()])
+            code += "\n" + "\n".join(
+                [f"%set_env {key} {value}" for key, value in revert_env_vars.items()]
+            )
             async for _ in self.execute(code):
                 pass
 
@@ -142,14 +156,14 @@ class JupyterKernelWebSocket:
     async def get_env_vars(self) -> Dict[StrictStr, str]:
         env_vars = {}
         async for output in self.execute("%env"):
-            if output['type'] == OutputType.RESULT:
-                env_vars = json.loads(output['text'].replace("'", '"'))
+            if output["type"] == OutputType.RESULT:
+                env_vars = json.loads(output["text"].replace("'", '"'))
 
         for key in env_vars:
-            if any(s in key.lower() for s in ('key', 'token', 'secret')):
+            if any(s in key.lower() for s in ("key", "token", "secret")):
                 async for output in self.execute(f"%env {key}"):
-                    if output['type'] == OutputType.RESULT:
-                        env_vars[key] = output['text']
+                    if output["type"] == OutputType.RESULT:
+                        env_vars[key] = output["text"]
 
         return env_vars
 

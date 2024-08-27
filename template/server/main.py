@@ -95,7 +95,9 @@ async def execute(request: ExecutionRequest):
 
         revert_env_vars = {**global_env_vars, **current_env_vars}
 
-    return StreamingListJsonResponse(ws.execute(request.code, revert_env_vars=revert_env_vars))
+    return StreamingListJsonResponse(
+        ws.execute(request.code, revert_env_vars=revert_env_vars)
+    )
 
 
 @app.post("/contexts")

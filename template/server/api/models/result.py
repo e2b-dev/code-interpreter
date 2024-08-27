@@ -65,7 +65,18 @@ class Result(BaseModel):
     def formats(self) -> Iterable[str]:
         formats = []
 
-        for key in ["text", "html", "markdown", "svg", "png", "jpeg", "pdf", "latex", "json", "javascript"]:
+        for key in [
+            "text",
+            "html",
+            "markdown",
+            "svg",
+            "png",
+            "jpeg",
+            "pdf",
+            "latex",
+            "json",
+            "javascript",
+        ]:
             if getattr(self, key):
                 formats.append(key)
 
