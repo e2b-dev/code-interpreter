@@ -59,7 +59,7 @@ class Result(BaseModel):
         self.latex = data.pop("text/latex", None)
         self.json = data.pop("application/json", None)
         self.javascript = data.pop("application/javascript", None)
-        self.data = data.pop("e2b/df", None)
+        self.data = data.pop("e2b/data", None)
         self.extra = data
 
     def formats(self) -> Iterable[str]:
