@@ -5,6 +5,7 @@ async def test_data(async_sandbox: AsyncCodeInterpreter):
     # plot random graph
     result = await async_sandbox.notebook.exec_cell(
         """
+        import pandas as pd
         pd.DataFrame({"a": [1, 2, 3]})
         """
     )

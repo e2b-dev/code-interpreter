@@ -5,6 +5,7 @@ def test_data(sandbox: CodeInterpreter):
     # plot random graph
     result = sandbox.notebook.exec_cell(
         """
+        import pandas as pd
         pd.DataFrame({"a": [1, 2, 3]})
         """
     )
