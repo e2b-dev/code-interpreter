@@ -106,8 +106,11 @@ class E2BFormatter(BaseFormatter):
     type_printers = {pandas.DataFrame: _data_frame_repr_e2b_data_}
 
     def __call__(self, obj):
+        # Figure object is for some reason removed on execution of the cell,
+        # so it can't be used in type_printers or with top-level import
+        from matplotlib.pyplot import Figure
+
         if isinstance(obj, Figure):
-            # Figure object is for some reason removed from type_printers
             return _figure_repr_e2b_data_(obj)
         return super().__call__(obj)
 
