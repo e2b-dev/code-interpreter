@@ -40,7 +40,7 @@ class Result(BaseModel):
     "Extra data that can be included. Not part of the standard types."
 
     is_main_result: Optional[bool] = None
-    "Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."
+    "Whether this data is the result of the execetution. Data can be produced by display calls of which can be multiple in a cell."
 
     def __init__(self, is_main_result: bool, data: [str, str]):
         super().__init__()

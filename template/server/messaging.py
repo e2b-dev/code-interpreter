@@ -44,6 +44,7 @@ class Execution:
 
 class JupyterKernelWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
+    _receive_task: Optional[asyncio.Task] = None
 
     def __init__(
         self,
@@ -110,7 +111,7 @@ class JupyterKernelWebSocket:
         revert_env_vars: Dict[StrictStr, str] = None,
     ):
         message_id = str(uuid.uuid4())
-        logger.debug(f"Sending execution for code ({message_id}): {code}")
+        logger.debug(f"Sending code for the execution ({message_id}): {code}")
 
         self._executions[message_id] = Execution(in_background=background)
         request = self._get_execute_request(message_id, code, background)
@@ -135,7 +136,6 @@ class JupyterKernelWebSocket:
                 )
                 break
 
-            logger.debug(f"Got result for code ({message_id}): {output}")
             yield output.model_dump(exclude_none=True)
 
         if revert_env_vars:
@@ -174,7 +174,6 @@ class JupyterKernelWebSocket:
 
         try:
             async for message in self._ws:
-                logger.debug(f"WebSocket received message: {message}".strip())
                 await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {e}")
@@ -194,15 +193,13 @@ class JupyterKernelWebSocket:
             logger.warning("Parent message ID not found. %s", data)
             return
 
-        logger.debug(f"Received message {data['msg_type']} for {parent_msg_ig}")
-
         execution = self._executions.get(parent_msg_ig)
         if not execution:
             return
 
         queue = execution.queue
         if data["msg_type"] == "error":
-            logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+            logger.debug(f"Execution {parent_msg_ig} finished execution with error")
             await queue.put(
                 Error(
                     name=data["content"]["ename"],
@@ -213,6 +210,7 @@ class JupyterKernelWebSocket:
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
+                logger.debug(f"Execution {parent_msg_ig} received stdout")
                 await queue.put(
                     Stdout(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
@@ -220,6 +218,7 @@ class JupyterKernelWebSocket:
                 )
 
             elif data["content"]["name"] == "stderr":
+                logger.debug(f"Execution {parent_msg_ig} received stderr")
                 await queue.put(
                     Stderr(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
@@ -227,21 +226,27 @@ class JupyterKernelWebSocket:
                 )
 
         elif data["msg_type"] in "display_data":
-            await queue.put(Result(is_main_result=False, data=data["content"]["data"]))
+            result = Result(is_main_result=False, data=data["content"]["data"])
+            logger.debug(f"Execution {parent_msg_ig} received display data with following formats: {result.formats()}")
+            await queue.put(result)
+
         elif data["msg_type"] == "execute_result":
-            await queue.put(Result(is_main_result=True, data=data["content"]["data"]))
+            result = Result(is_main_result=True, data=data["content"]["data"])
+            logger.debug(f"Execution {parent_msg_ig} received execution result with following formats: {result.formats()}")
+            await queue.put(result)
+
         elif data["msg_type"] == "status":
             if data["content"]["execution_state"] == "busy" and execution.in_background:
-                logger.debug(f"Cell {parent_msg_ig} started execution")
+                logger.debug(f"Execution {parent_msg_ig} started execution")
                 execution.input_accepted = True
 
             if data["content"]["execution_state"] == "idle":
                 if execution.input_accepted:
-                    logger.debug(f"Cell {parent_msg_ig} finished execution")
+                    logger.debug(f"Execution {parent_msg_ig} finished execution")
                     await queue.put(EndOfExecution())
 
             elif data["content"]["execution_state"] == "error":
-                logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+                logger.debug(f"Execution {parent_msg_ig} finished execution with error")
                 await queue.put(
                     Error(
                         name=data["content"]["ename"],
@@ -253,7 +258,7 @@ class JupyterKernelWebSocket:
 
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
-                logger.debug(f"Cell {parent_msg_ig} finished execution with error")
+                logger.debug(f"Execution {parent_msg_ig} finished execution with error")
                 await queue.put(
                     Error(
                         name=data["content"]["ename"],
