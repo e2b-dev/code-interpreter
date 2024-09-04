@@ -36,7 +36,7 @@ jobs:
         run: |
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
           docker buildx build \
-            --file e2b.Dockerfile \
+            --file Dockerfile \
             --platform linux/amd64 \
             --push \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest .
