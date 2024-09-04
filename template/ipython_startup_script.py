@@ -24,13 +24,13 @@ def get_type_of_plot(ax: Axes) -> PlotType:
     if any(isinstance(line, Line2D) for line in ax.get_lines()):
         return PlotType.LINE
 
-    # Check for Bar plots (Rectangle objects with height > 0)
-    if any(isinstance(rect, Rectangle) for rect in ax.get_children()):
-        return PlotType.BAR
-
     # Check for Scatter plots
     if any(isinstance(collection, PathCollection) for collection in ax.collections):
         return PlotType.SCATTER
+
+    # Check for Bar plots (Rectangle objects with height > 0)
+    if any(isinstance(rect, Rectangle) for rect in ax.get_children()):
+        return PlotType.BAR
 
     return PlotType.UNKNOWN
 
