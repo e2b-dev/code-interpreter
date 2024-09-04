@@ -37,10 +37,13 @@ RUN ijsinstall --install=global
 RUN pip install bash_kernel
 RUN python -m bash_kernel.install
 
+# Create separate virtual environment for server
+RUN python -m venv $SERVER_PATH/.venv
+
 # Copy server and its requirements
 RUN mkdir -p $SERVER_PATH/
 COPY ./server/requirements.txt $SERVER_PATH
-RUN pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
+RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
 COPY ./server $SERVER_PATH
 
 # Copy Jupyter configuration

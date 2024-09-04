@@ -26,7 +26,7 @@ function start_jupyter_server() {
 	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 
 	cd /root/.server/
-	uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
+	/root/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
 }
 
 export PATH="/opt/java/openjdk/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
