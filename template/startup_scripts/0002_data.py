@@ -1,4 +1,5 @@
 import enum
+from typing import Literal, Union
 
 import pandas
 from matplotlib.axes import Axes
@@ -9,6 +10,7 @@ from matplotlib.pyplot import Figure
 import IPython
 
 from IPython.core.formatters import BaseFormatter
+from matplotlib import ticker
 from traitlets.traitlets import Unicode, ObjectName
 
 
@@ -35,6 +37,15 @@ def get_type_of_plot(ax: Axes) -> PlotType:
     return PlotType.UNKNOWN
 
 
+def _get_ticks(ax: Axes, axes: Literal['x'] | Literal['y']) -> list:
+    formatter = getattr(ax, f"{axes}axis").get_major_formatter()
+    if isinstance(formatter, Union[ticker.ScalarFormatter, ticker.LogFormatter]):
+        return getattr(ax, f"get_{axes}ticks")()
+
+    labels = getattr(ax, f"get_{axes}ticklabels")()
+    return [line.get_text() for line in labels]
+
+
 def _figure_repr_e2b_data_(self: Figure):
     """
     This method is used to extract data from the figure object to a dictionary
@@ -49,8 +60,10 @@ def _figure_repr_e2b_data_(self: Figure):
             "title": ax.get_title(),
             "x_label": ax.get_xlabel(),
             "x_ticks": [line.get_text() for line in ax.get_xticklabels()],
+            "x_scale": ax.get_xscale(),
             "y_label": ax.get_ylabel(),
             "y_ticks": [line.get_text() for line in ax.get_yticklabels()],
+            "y_scale": ax.get_yscale(),
             "data": [],
         }
 
