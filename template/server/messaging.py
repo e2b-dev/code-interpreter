@@ -4,6 +4,7 @@ import uuid
 import asyncio
 
 from asyncio import Queue
+from envs import get_envs
 from typing import (
     Dict,
     Optional,
@@ -21,6 +22,7 @@ from api.models.output import (
     OutputType,
     UnexpectedEndOfExecution,
 )
+from errors import ExecutionError
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +62,7 @@ class JupyterKernelWebSocket:
         self.session_id = session_id
 
         self._executions: Dict[str, Execution] = {}
+        self._lock = asyncio.Lock()
 
     async def connect(self):
         logger.debug(f"WebSocket connecting to {self.url}")
@@ -104,24 +107,9 @@ class JupyterKernelWebSocket:
             }
         )
 
-    async def execute(
-        self,
-        code: Union[str, StrictStr],
-        background: bool = False,
-        revert_env_vars: Dict[StrictStr, str] = None,
-    ):
-        message_id = str(uuid.uuid4())
-        logger.debug(f"Sending code for the execution ({message_id}): {code}")
-
-        self._executions[message_id] = Execution(in_background=background)
-        request = self._get_execute_request(message_id, code, background)
-
-        if self._ws is None:
-            raise Exception("WebSocket not connected")
-
-        await self._ws.send(request)
-
+    async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
+
         while True:
             output = await queue.get()
             if output.type == OutputType.END_OF_EXECUTION:
@@ -138,34 +126,48 @@ class JupyterKernelWebSocket:
 
             yield output.model_dump(exclude_none=True)
 
-        if revert_env_vars:
-            code = "%reset"
-            code += "\n" + "\n".join(
-                [f"%set_env {key} {value}" for key, value in revert_env_vars.items()]
-            )
-            async for _ in self.execute(code):
-                pass
+    async def change_current_directory(self, path: Union[str, StrictStr]):
+        message_id = str(uuid.uuid4())
+        self._executions[message_id] = Execution(in_background=True)
+        request = self._get_execute_request(message_id, f"%cd {path}", True)
 
-        del self._executions[message_id]
+        await self._ws.send(request)
 
-    async def set_env_vars(self, env_vars: Dict[StrictStr, str]):
-        code = "\n".join([f"%set_env {key} {value}" for key, value in env_vars.items()])
-        async for _ in self.execute(code):
-            pass
+        async for item in self._wait_for_result(message_id):
+            if item["type"] == "error":
+                raise ExecutionError(f"Error during execution: {item}")
 
-    async def get_env_vars(self) -> Dict[StrictStr, str]:
-        env_vars = {}
-        async for output in self.execute("%env"):
-            if output["type"] == OutputType.RESULT:
-                env_vars = json.loads(output["text"].replace("'", '"'))
+    async def execute(
+        self,
+        code: Union[str, StrictStr],
+        env_vars: Dict[StrictStr, str] = None,
+    ):
+        message_id = str(uuid.uuid4())
+        logger.debug(f"Sending code for the execution ({message_id}): {code}")
 
-        for key in env_vars:
-            if any(s in key.lower() for s in ("key", "token", "secret")):
-                async for output in self.execute(f"%env {key}"):
-                    if output["type"] == OutputType.RESULT:
-                        env_vars[key] = output["text"]
+        self._executions[message_id] = Execution()
 
-        return env_vars
+        if self._ws is None:
+            raise Exception("WebSocket not connected")
+
+        global_env_vars = get_envs()
+        env_vars = {**global_env_vars, **env_vars} if env_vars else global_env_vars
+        async with self._lock:
+            if env_vars:
+                vars_to_set = {**global_env_vars, **env_vars}
+                code = f"os.environ.set_envs_for_execution({vars_to_set})\n" + code
+
+            logger.info(code)
+            request = self._get_execute_request(message_id, code, False)
+
+            # Send the code for execution
+            await self._ws.send(request)
+
+            # Stream the results
+            async for item in self._wait_for_result(message_id):
+                yield item
+
+            del self._executions[message_id]
 
     async def _receive_message(self):
         if not self._ws:
@@ -199,7 +201,9 @@ class JupyterKernelWebSocket:
 
         queue = execution.queue
         if data["msg_type"] == "error":
-            logger.debug(f"Execution {parent_msg_ig} finished execution with error")
+            logger.debug(
+                f"Execution {parent_msg_ig} finished execution with error: {data['content']['ename']}: {data['content']['evalue']}"
+            )
             await queue.put(
                 Error(
                     name=data["content"]["ename"],
@@ -227,12 +231,16 @@ class JupyterKernelWebSocket:
 
         elif data["msg_type"] in "display_data":
             result = Result(is_main_result=False, data=data["content"]["data"])
-            logger.debug(f"Execution {parent_msg_ig} received display data with following formats: {result.formats()}")
+            logger.debug(
+                f"Execution {parent_msg_ig} received display data with following formats: {result.formats()}"
+            )
             await queue.put(result)
 
         elif data["msg_type"] == "execute_result":
             result = Result(is_main_result=True, data=data["content"]["data"])
-            logger.debug(f"Execution {parent_msg_ig} received execution result with following formats: {result.formats()}")
+            logger.debug(
+                f"Execution {parent_msg_ig} received execution result with following formats: {result.formats()}"
+            )
             await queue.put(result)
 
         elif data["msg_type"] == "status":

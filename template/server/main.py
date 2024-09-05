@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
-from envs import get_envs
+from errors import ExecutionError
 from messaging import JupyterKernelWebSocket
 from stream import StreamingListJsonResponse
 
@@ -73,7 +73,6 @@ async def health():
 async def execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
-    global_env_vars = get_envs()
     if request.context_id:
         ws = websockets.get(request.context_id)
 
@@ -85,18 +84,8 @@ async def execute(request: ExecutionRequest):
     else:
         ws = websockets["default"]
 
-    revert_env_vars = None
-    env_vars = {**global_env_vars, **(request.env_vars or {})}
-    if env_vars:
-        current_env_vars = await ws.get_env_vars()
-
-        env_vars = {**global_env_vars, **current_env_vars, **(request.env_vars or {})}
-        await ws.set_env_vars(env_vars)
-
-        revert_env_vars = {**global_env_vars, **current_env_vars}
-
     return StreamingListJsonResponse(
-        ws.execute(request.code, revert_env_vars=revert_env_vars)
+        ws.execute(request.code, env_vars=request.env_vars)
     )
 
 
@@ -136,12 +125,15 @@ async def create_context(request: CreateContext) -> Context:
 
     websockets[kernel_id] = ws
 
-    async for item in ws.execute(f"%cd {request.cwd}", background=True):
-        if item["type"] == "error":
+    if request.cwd:
+        logger.info(f"Setting working directory to {request.cwd}")
+        try:
+            await ws.change_current_directory(request.cwd)
+        except ExecutionError as e:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed to set working directory: {item}",
-            )
+                detail="Failed to set working directory",
+            ) from e
 
     return Context(name=request.name, id=kernel_id, cwd=request.cwd)
 

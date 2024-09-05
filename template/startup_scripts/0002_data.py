@@ -70,10 +70,10 @@ def _figure_repr_e2b_data_(self: Figure):
             for collection in ax.collections:
                 offsets = collection.get_offsets()
                 scatter_data = {
-                        "label": collection.get_label(),
-                        "x": offsets[:, 0].tolist(),
-                        "y": offsets[:, 1].tolist(),
-                    }
+                    "label": collection.get_label(),
+                    "x": offsets[:, 0].tolist(),
+                    "y": offsets[:, 1].tolist(),
+                }
 
                 ax_data["data"].append(scatter_data)
 
@@ -90,7 +90,7 @@ def _figure_repr_e2b_data_(self: Figure):
         # If there are other types of plots (like bar plots), you can access them similarly
         data.append(ax_data)
 
-    return {'graphs': data}
+    return {"graphs": data}
 
 
 def _data_frame_repr_e2b_data_(self: pandas.DataFrame):
