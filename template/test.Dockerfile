@@ -59,4 +59,5 @@ RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
 COPY startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
 
 # Setup entrypoint for local development
+WORKDIR /home/user
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
