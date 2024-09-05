@@ -1,3 +1,5 @@
+import pytest
+
 from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
 
 
@@ -14,6 +16,7 @@ def test_independence_of_kernels(sandbox: CodeInterpreter):
     assert r.error.value == "name 'x' is not defined"
 
 
+@pytest.mark.skip_debug()
 def test_restart_kernel(sandbox: CodeInterpreter):
     sandbox.notebook.exec_cell("x = 1")
     sandbox.notebook.restart_kernel()
@@ -23,6 +26,7 @@ def test_restart_kernel(sandbox: CodeInterpreter):
     assert r.error.value == "name 'x' is not defined"
 
 
+@pytest.mark.skip_debug()
 def test_list_kernels(sandbox: CodeInterpreter):
     kernels = sandbox.notebook.list_kernels()
     assert len(kernels) == 1
@@ -33,6 +37,7 @@ def test_list_kernels(sandbox: CodeInterpreter):
     assert len(kernels) == 2
 
 
+@pytest.mark.skip_debug()
 def test_shutdown(sandbox: CodeInterpreter):
     kernel_id = sandbox.notebook.create_kernel()
     kernels = sandbox.notebook.list_kernels()
