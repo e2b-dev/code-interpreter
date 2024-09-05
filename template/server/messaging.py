@@ -155,7 +155,16 @@ class JupyterKernelWebSocket:
         async with self._lock:
             if env_vars:
                 vars_to_set = {**global_env_vars, **env_vars}
-                code = f"os.environ.set_envs_for_execution({vars_to_set})\n" + code
+
+                # if there is an indent in the code, we need to add the env vars at the beginning of the code
+                lines = code.split('\n')
+                indent = 0
+                for i, line in enumerate(lines):
+                    if line.strip() != "":
+                        indent = len(line) - len(line.lstrip())
+                        break
+
+                code = indent * " " + f"os.environ.set_envs_for_execution({vars_to_set})\n" + code
 
             logger.info(code)
             request = self._get_execute_request(message_id, code, False)
