@@ -1,5 +1,4 @@
 import enum
-from typing import Literal, Union
 
 import pandas
 from matplotlib.axes import Axes
@@ -10,7 +9,6 @@ from matplotlib.pyplot import Figure
 import IPython
 
 from IPython.core.formatters import BaseFormatter
-from matplotlib import ticker
 from traitlets.traitlets import Unicode, ObjectName
 
 
@@ -37,15 +35,6 @@ def get_type_of_plot(ax: Axes) -> PlotType:
     return PlotType.UNKNOWN
 
 
-def _get_ticks(ax: Axes, axes: Literal['x'] | Literal['y']) -> list:
-    formatter = getattr(ax, f"{axes}axis").get_major_formatter()
-    if isinstance(formatter, Union[ticker.ScalarFormatter, ticker.LogFormatter]):
-        return getattr(ax, f"get_{axes}ticks")()
-
-    labels = getattr(ax, f"get_{axes}ticklabels")()
-    return [line.get_text() for line in labels]
-
-
 def _figure_repr_e2b_data_(self: Figure):
     """
     This method is used to extract data from the figure object to a dictionary
@@ -59,10 +48,12 @@ def _figure_repr_e2b_data_(self: Figure):
         ax_data = {
             "title": ax.get_title(),
             "x_label": ax.get_xlabel(),
-            "x_ticks": [line.get_text() for line in ax.get_xticklabels()],
+            "x_ticks": ax.get_xticks(),
+            "x_tick_labels": [label.get_text() for label in ax.get_xticklabels()],
             "x_scale": ax.get_xscale(),
             "y_label": ax.get_ylabel(),
-            "y_ticks": [line.get_text() for line in ax.get_yticklabels()],
+            "y_ticks": ax.get_yticks(),
+            "y_tick_labels": [label.get_text() for label in ax.get_yticklabels()],
             "y_scale": ax.get_yscale(),
             "data": [],
         }
@@ -92,12 +83,25 @@ def _figure_repr_e2b_data_(self: Figure):
 
         if plot_type == PlotType.BAR:
             for container in ax.containers:
+                orientation = "unknown"
+
+                widths = [rect.get_width() for rect in container]
+                heights = [rect.get_height() for rect in container]
+                if all(height == heights[0] for height in heights):
+                    orientation = "vertical"
+
+                if all(width == widths[0] for width in widths):
+                    orientation = "horizontal"
+
                 container_data = {
                     "label": container.get_label(),
                     "x": [rect.get_x() for rect in container],
-                    "y": [rect.get_height() for rect in container],
-                    "width": [rect.get_width() for rect in container],
+                    "y": [rect.get_y() for rect in container],
+                    "widths": widths,
+                    "heights": heights,
+                    "orientation": orientation,
                 }
+
                 ax_data["data"].append(container_data)
 
         # If there are other types of plots (like bar plots), you can access them similarly
