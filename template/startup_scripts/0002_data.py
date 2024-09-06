@@ -4,7 +4,7 @@ import pandas
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Wedge
 from matplotlib.pyplot import Figure
 import IPython
 
@@ -16,6 +16,7 @@ class PlotType(enum.Enum):
     LINE = "line"
     SCATTER = "scatter"
     BAR = "bar"
+    PIE = "pie"
     UNKNOWN = "unknown"
 
 
@@ -28,8 +29,12 @@ def get_type_of_plot(ax: Axes) -> PlotType:
     if any(isinstance(collection, PathCollection) for collection in ax.collections):
         return PlotType.SCATTER
 
-    # Check for Bar plots (Rectangle objects with height > 0)
-    if any(isinstance(rect, Rectangle) for rect in ax.get_children()):
+    # Check for Pie plots
+    if any(isinstance(artist, Wedge) for artist in ax.patches):
+        return PlotType.PIE
+
+    # Check for Bar plots
+    if any(isinstance(rect, Rectangle) for rect in ax.patches):
         return PlotType.BAR
 
     return PlotType.UNKNOWN
@@ -104,7 +109,17 @@ def _figure_repr_e2b_data_(self: Figure):
 
                 ax_data["data"].append(container_data)
 
-        # If there are other types of plots (like bar plots), you can access them similarly
+        if plot_type == PlotType.PIE:
+            for wedge in ax.patches:
+                pie_data = {
+                    "label": wedge.get_label(),
+                    "theta": abs(wedge.theta2 - wedge.theta1),
+                    "center": wedge.center,
+                    "r": wedge.r,
+                }
+
+                ax_data["data"].append(pie_data)
+
         data.append(ax_data)
 
     return {"graphs": data}

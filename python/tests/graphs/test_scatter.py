@@ -22,7 +22,7 @@ plt.show()
 """
 
 
-async def test_scatter_plot(async_sandbox: AsyncCodeInterpreter):
+async def test_scatter_graph(async_sandbox: AsyncCodeInterpreter):
     result = await async_sandbox.notebook.exec_cell(code)
 
     data = result.results[0].data
