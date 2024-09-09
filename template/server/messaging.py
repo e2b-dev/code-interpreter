@@ -198,6 +198,12 @@ class JupyterKernelWebSocket:
 
         :param data: The message data
         """
+        if data["msg_type"] == "status" and data['content']['execution_state'] == 'restarting':
+            logger.error("Kernel is restarting")
+            for execution in self._executions.values():
+                await execution.queue.put(Error(name="KernelRestarting", value="Kernel was restarted", traceback=""))
+                await execution.queue.put(EndOfExecution())
+            return
 
         parent_msg_ig = data["parent_header"].get("msg_id", None)
         if parent_msg_ig is None:
