@@ -36,6 +36,9 @@ async def test_graph_bar(async_sandbox: AsyncCodeInterpreter):
     assert graphs[0]['x_label'] == "Authors"
     assert graphs[0]['y_label'] == "Number of Books Sold"
 
+    assert graphs[0]['x_unit'] is None
+    assert graphs[0]['y_unit'] is None
+
     assert all(isinstance(x, int) for x in graphs[0]['x_ticks'])
     assert all(isinstance(y, float) for y in graphs[0]['y_ticks'])
 
@@ -53,4 +56,3 @@ async def test_graph_bar(async_sandbox: AsyncCodeInterpreter):
     assert all(isinstance(x, (int, float)) for x in data['heights'])
     assert all(isinstance(y, (int, float)) for y in data['x'])
     assert all(isinstance(y, (int, float)) for y in data['y'])
-

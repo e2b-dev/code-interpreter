@@ -39,6 +39,8 @@ async def test_pie_graph(async_sandbox: AsyncCodeInterpreter):
     assert graphs[0]['title'] == "Will I wake up early tomorrow?"
     assert graphs[0]['x_label'] == "x"
     assert graphs[0]['y_label'] == "y"
+    assert graphs[0]['x_unit'] is None
+    assert graphs[0]['y_unit'] is None
 
     assert len(graphs[0]['x_ticks']) == 0
     assert len(graphs[0]['y_ticks']) == 0

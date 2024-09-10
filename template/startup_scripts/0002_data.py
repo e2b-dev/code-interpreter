@@ -1,14 +1,17 @@
 import enum
+import re
+from typing import Optional
 
 import pandas
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
-from matplotlib.patches import Rectangle, Wedge
+from matplotlib.patches import Rectangle, Wedge, PathPatch
 from matplotlib.pyplot import Figure
 import IPython
 
 from IPython.core.formatters import BaseFormatter
+from matplotlib.text import Text
 from traitlets.traitlets import Unicode, ObjectName
 
 
@@ -20,21 +23,34 @@ class PlotType(enum.Enum):
     UNKNOWN = "unknown"
 
 
-def get_type_of_plot(ax: Axes) -> PlotType:
+def _extract_units(label: str) -> Optional[str]:
+    """
+    Function to extract units from labels
+    """
+    # Look for units in parentheses or brackets
+    match = re.search(r"\s\((.*?)\)|\[(.*?)\]", label)
+    if match:
+        return match.group(1) or match.group(2)  # return the matched unit
+    return None  # No units found
+
+
+def _get_type_of_plot(ax: Axes) -> PlotType:
+    objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
+
     # Check for Line plots
-    if any(isinstance(line, Line2D) for line in ax.get_lines()):
+    if all(isinstance(line, Line2D) for line in objects):
         return PlotType.LINE
 
     # Check for Scatter plots
-    if any(isinstance(collection, PathCollection) for collection in ax.collections):
+    if all(isinstance(path, PathCollection) for path in objects):
         return PlotType.SCATTER
 
     # Check for Pie plots
-    if any(isinstance(artist, Wedge) for artist in ax.patches):
+    if all(isinstance(artist, Wedge) for artist in objects):
         return PlotType.PIE
 
     # Check for Bar plots
-    if any(isinstance(rect, Rectangle) for rect in ax.patches):
+    if all(isinstance(rect, Rectangle) for rect in objects):
         return PlotType.BAR
 
     return PlotType.UNKNOWN
@@ -53,17 +69,19 @@ def _figure_repr_e2b_data_(self: Figure):
         ax_data = {
             "title": ax.get_title(),
             "x_label": ax.get_xlabel(),
+            "x_unit": _extract_units(ax.get_xlabel()),
             "x_ticks": ax.get_xticks(),
             "x_tick_labels": [label.get_text() for label in ax.get_xticklabels()],
             "x_scale": ax.get_xscale(),
             "y_label": ax.get_ylabel(),
+            "y_unit": _extract_units(ax.get_ylabel()),
             "y_ticks": ax.get_yticks(),
             "y_tick_labels": [label.get_text() for label in ax.get_yticklabels()],
             "y_scale": ax.get_yscale(),
             "data": [],
         }
 
-        plot_type = get_type_of_plot(ax)
+        plot_type = _get_type_of_plot(ax)
         ax_data["type"] = plot_type.value
 
         if plot_type == PlotType.LINE:

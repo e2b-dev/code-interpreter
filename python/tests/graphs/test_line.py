@@ -17,8 +17,8 @@ plt.plot(x, y_sin, label='sin(x)')
 plt.plot(x, y_cos, label='cos(x)')
 
 # Add labels and title
-plt.xlabel('x')
-plt.ylabel('y')
+plt.xlabel("Time (s)")
+plt.ylabel("Amplitude (Hz)")
 plt.title('Plot of sin(x) and cos(x)')
 
 # Display the plot
@@ -37,8 +37,10 @@ async def test_line_graph(async_sandbox: AsyncCodeInterpreter):
 
     assert graphs[0]['type'] == "line"
     assert graphs[0]['title'] == "Plot of sin(x) and cos(x)"
-    assert graphs[0]['x_label'] == "x"
-    assert graphs[0]['y_label'] == "y"
+    assert graphs[0]['x_label'] == "Time (s)"
+    assert graphs[0]['y_label'] == "Amplitude (Hz)"
+    assert graphs[0]['x_unit'] == "s"
+    assert graphs[0]['y_unit'] == "Hz"
 
     assert all(isinstance(x, float) for x in graphs[0]['x_ticks'])
     assert all(isinstance(y, float) for y in graphs[0]['y_ticks'])
