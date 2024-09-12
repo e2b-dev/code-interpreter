@@ -5,7 +5,6 @@ await load({ envPath: '.env', export: true })
 
 import { CodeInterpreter } from '../../../dist/index.mjs'
 
-
 Deno.test('Deno test', async () => {
   const sbx = await CodeInterpreter.create({ timeoutMs: 5_000 })
   try {

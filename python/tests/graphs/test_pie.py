@@ -1,4 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.graphs import PieGraph
 
 code = """
 import matplotlib.pyplot as plt
@@ -29,30 +30,21 @@ plt.show()
 async def test_pie_graph(async_sandbox: AsyncCodeInterpreter):
     result = await async_sandbox.notebook.exec_cell(code)
 
-    data = result.results[0].data
-    assert data
+    graph = result.results[0].graph
+    assert graph
 
-    graphs = data.get("graphs")
-    assert graphs
+    assert isinstance(graph, PieGraph)
 
-    assert graphs[0]['type'] == "pie"
-    assert graphs[0]['title'] == "Will I wake up early tomorrow?"
-    assert graphs[0]['x_label'] == "x"
-    assert graphs[0]['y_label'] == "y"
-    assert graphs[0]['x_unit'] is None
-    assert graphs[0]['y_unit'] is None
+    assert graph.title == "Will I wake up early tomorrow?"
 
-    assert len(graphs[0]['x_ticks']) == 0
-    assert len(graphs[0]['y_ticks']) == 0
+    assert len(graph.elements) == 2
 
-    assert len(graphs[0]['data']) == 2
+    first_data = graph.elements[0]
+    assert first_data.label == "No"
+    assert first_data.angle == 324
+    assert first_data.radius == 1
 
-    first_data = graphs[0]['data'][0]
-    assert first_data['label'] == 'No'
-    assert round(first_data['theta']) == 324
-    assert first_data['r'] == 1
-
-    second_data = graphs[0]['data'][1]
-    assert second_data['label'] == 'No, in blue'
-    assert round(second_data['theta']) == 36
-    assert second_data['r'] == 1
+    second_data = graph.elements[1]
+    assert second_data.label == "No, in blue"
+    assert second_data.angle == 36
+    assert second_data.radius == 1

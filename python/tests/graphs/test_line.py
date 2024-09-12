@@ -1,4 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.graphs import LineGraph
 
 code = """
 import numpy as np
@@ -29,37 +30,35 @@ plt.show()
 async def test_line_graph(async_sandbox: AsyncCodeInterpreter):
     result = await async_sandbox.notebook.exec_cell(code)
 
-    data = result.results[0].data
-    assert data
+    graph = result.results[0].graph
+    assert graph
 
-    graphs = data.get("graphs")
-    assert graphs
+    assert isinstance(graph, LineGraph)
+    assert graph.title == "Plot of sin(x) and cos(x)"
 
-    assert graphs[0]['type'] == "line"
-    assert graphs[0]['title'] == "Plot of sin(x) and cos(x)"
-    assert graphs[0]['x_label'] == "Time (s)"
-    assert graphs[0]['y_label'] == "Amplitude (Hz)"
-    assert graphs[0]['x_unit'] == "s"
-    assert graphs[0]['y_unit'] == "Hz"
+    assert graph.x_label == "Time (s)"
+    assert graph.y_label == "Amplitude (Hz)"
 
-    assert all(isinstance(x, float) for x in graphs[0]['x_ticks'])
-    assert all(isinstance(y, float) for y in graphs[0]['y_ticks'])
+    assert graph.x_unit == "s"
+    assert graph.y_unit == "Hz"
 
-    assert all(isinstance(x, str) for x in graphs[0]['y_tick_labels'])
-    assert all(isinstance(y, str) for y in graphs[0]['y_tick_labels'])
+    assert all(isinstance(x, float) for x in graph.x_ticks)
+    assert all(isinstance(y, float) for y in graph.y_ticks)
 
-    assert len(graphs[0]['data']) == 2
+    assert all(isinstance(x, str) for x in graph.y_tick_labels)
+    assert all(isinstance(y, str) for y in graph.y_tick_labels)
 
-    first_data = graphs[0]['data'][0]
-    assert first_data['label'] == 'sin(x)'
-    assert len(first_data['x']) == 100
-    assert len(first_data['y']) == 100
-    assert all(isinstance(x, float) for x in first_data['x'])
-    assert all(isinstance(y, float) for y in first_data['y'])
+    lines = graph.elements
+    assert len(lines) == 2
 
-    second_data = graphs[0]['data'][1]
-    assert second_data['label'] == 'cos(x)'
-    assert len(second_data['x']) == 100
-    assert len(second_data['y']) == 100
-    assert all(isinstance(x, float) for x in second_data['x'])
-    assert all(isinstance(y, float) for y in second_data['y'])
+    first_line = lines[0]
+    assert first_line.label == "sin(x)"
+    assert len(first_line.points) == 100
+    assert all(isinstance(point, tuple) for point in first_line.points)
+    assert all(
+        isinstance(x, float) and isinstance(y, float) for x, y in first_line.points
+    )
+
+    second_line = lines[1]
+    assert second_line.label == "cos(x)"
+    assert len(second_line.points) == 100

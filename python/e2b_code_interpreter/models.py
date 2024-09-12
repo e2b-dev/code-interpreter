@@ -16,6 +16,7 @@ from typing import (
 
 from httpx import Response
 
+from e2b_code_interpreter.graphs import Graph, deserialize_graph
 
 T = TypeVar("T")
 OutputHandler = Union[
@@ -89,6 +90,7 @@ class Result:
     json: Optional[dict] = None
     javascript: Optional[str] = None
     data: Optional[dict] = None
+    graph: Optional[Graph] = None
     is_main_result: bool = False
     """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
     extra: Optional[dict] = None
@@ -123,12 +125,18 @@ class Result:
             formats.append("javascript")
         if self.data:
             formats.append("data")
+        if self.graph:
+            formats.append("graph")
 
         if self.extra:
             for key in self.extra:
                 formats.append(key)
 
         return formats
+
+    def __post_init__(self):
+        if isinstance(self.graph, dict):
+            self.graph = deserialize_graph(self.graph)
 
     def __str__(self) -> Optional[str]:
         """

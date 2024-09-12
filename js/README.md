@@ -24,7 +24,7 @@ const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell('x = 1')
 
 const execution = await sandbox.notebook.execCell('x+=1; x')
-console.log(execution.text)  // outputs 2
+console.log(execution.text) // outputs 2
 
 await sandbox.close()
 ```
@@ -48,7 +48,7 @@ plt.show()
 `
 
 // you can install dependencies in "jupyter notebook style"
-await sandbox.notebook.execCell("!pip install matplotlib")
+await sandbox.notebook.execCell('!pip install matplotlib')
 
 const execution = await sandbox.notebook.execCell(code)
 
@@ -80,7 +80,7 @@ const sandbox = await CodeInterpreter.create()
 await sandbox.notebook.execCell(code, {
   onStdout: (out) => console.log(out),
   onStderr: (outErr) => console.error(outErr),
-  onResult: (result) => console.log(result.text)
+  onResult: (result) => console.log(result.text),
 })
 
 await sandbox.close()

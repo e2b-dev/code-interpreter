@@ -11,12 +11,8 @@ export default defineConfig({
         maxThreads: 4,
       },
     },
-    include: [
-      'tests/**/*.test.ts',
-    ],
-    exclude: [
-      'tests/runtimes/**',
-    ],
+    include: ['tests/**/*.test.ts'],
+    exclude: ['tests/runtimes/**'],
     globals: false,
     testTimeout: 20000,
     environment: 'node',
@@ -26,7 +22,7 @@ export default defineConfig({
       interopDefault: true,
     },
     env: {
-      ...process.env as Record<string, string>,
+      ...(process.env as Record<string, string>),
       ...env.parsed,
     },
   },

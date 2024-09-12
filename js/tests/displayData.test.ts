@@ -3,7 +3,6 @@ import { expect } from 'vitest'
 import { sandboxTest } from './setup'
 
 sandboxTest('display data', async ({ sandbox }) => {
-
   // plot random graph
   const result = await sandbox.notebook.execCell(`
         import matplotlib.pyplot as plt

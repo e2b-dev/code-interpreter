@@ -7,7 +7,7 @@ import { sandboxTest } from './setup'
 sandboxTest('streaming output', async ({ sandbox }) => {
   const out: OutputMessage[] = []
   await sandbox.notebook.execCell('print(1)', {
-    onStdout: (msg) => out.push(msg)
+    onStdout: (msg) => out.push(msg),
   })
 
   expect(out.length).toEqual(1)
@@ -17,7 +17,7 @@ sandboxTest('streaming output', async ({ sandbox }) => {
 sandboxTest('streaming error', async ({ sandbox }) => {
   const out: OutputMessage[] = []
   await sandbox.notebook.execCell('import sys;print(1, file=sys.stderr)', {
-    onStderr: (msg) => out.push(msg)
+    onStderr: (msg) => out.push(msg),
   })
 
   expect(out.length).toEqual(1)
@@ -39,7 +39,7 @@ sandboxTest('streaming result', async ({ sandbox }) => {
         x
         `
   await sandbox.notebook.execCell(code, {
-    onResult: (result) => out.push(result)
+    onResult: (result) => out.push(result),
   })
 
   expect(out.length).toEqual(2)

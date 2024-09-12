@@ -1,4 +1,5 @@
 import { NotFoundError, SandboxError, TimeoutError } from 'e2b'
+import { GraphTypes } from './graphs'
 
 export async function extractError(res: Response) {
   if (res.ok) {
@@ -24,9 +25,8 @@ export class OutputMessage {
      * Unix epoch in nanoseconds
      */
     public readonly timestamp: number,
-    public readonly error: boolean,
-  ) {
-  }
+    public readonly error: boolean
+  ) {}
 
   public toString() {
     return this.line
@@ -50,8 +50,8 @@ export class ExecutionError {
     /**
      * The raw traceback of the error.
      **/
-    public traceback: string,
-  ) { }
+    public traceback: string
+  ) {}
 }
 
 /**
@@ -59,8 +59,9 @@ export class ExecutionError {
  */
 export type MIMEType = string
 
-type Data = {
+type E2BData = {
   data: Record<string, unknown>
+  graph: GraphTypes
 }
 
 /**
@@ -68,7 +69,7 @@ type Data = {
  */
 export type RawData = {
   [key: MIMEType]: string
-} & Data
+} & E2BData
 
 /**
  * Represents the data to be displayed as a result of executing a cell in a Jupyter notebook.
@@ -125,6 +126,10 @@ export class Result {
    */
   readonly data?: Record<string, unknown>
   /**
+   * Contains the graph data.
+   */
+  readonly graph?: GraphTypes
+  /**
    * Extra data that can be included. Not part of the standard types.
    */
   readonly extra?: any
@@ -146,9 +151,11 @@ export class Result {
     this.latex = data['latex']
     this.json = data['json']
     this.javascript = data['javascript']
-    this.data = data['data']
     this.isMainResult = isMainResult
     this.raw = data
+
+    this.data = data['data']
+    this.graph = data['graph']
 
     this.extra = {}
 
@@ -166,7 +173,7 @@ export class Result {
           'json',
           'javascript',
           'data',
-          'extra'
+          'extra',
         ].includes(key)
       ) {
         this.extra[key] = data[key]
@@ -234,7 +241,7 @@ export class Result {
       latex: this.latex,
       json: this.json,
       javascript: this.javascript,
-      ...(Object.keys(this.extra).length > 0 ? { extra: this.extra } : {})
+      ...(Object.keys(this.extra).length > 0 ? { extra: this.extra } : {}),
     }
   }
 }
@@ -274,7 +281,7 @@ export class Execution {
      * Execution count of the cell.
      */
     public executionCount?: number
-  ) { }
+  ) {}
 
   /**
    * Returns the text representation of the main result of the cell.
@@ -294,7 +301,7 @@ export class Execution {
     return {
       results: this.results,
       logs: this.logs,
-      error: this.error
+      error: this.error,
     }
   }
 }
@@ -302,15 +309,18 @@ export class Execution {
 export async function parseOutput(
   execution: Execution,
   line: string,
-  onStdout?: (output: OutputMessage) => (Promise<any> | any),
-  onStderr?: (output: OutputMessage) => (Promise<any> | any),
-  onResult?: (data: Result) => (Promise<any> | any),
+  onStdout?: (output: OutputMessage) => Promise<any> | any,
+  onStderr?: (output: OutputMessage) => Promise<any> | any,
+  onResult?: (data: Result) => Promise<any> | any
 ) {
   const msg = JSON.parse(line)
 
   switch (msg.type) {
     case 'result':
-      const result = new Result({ ...msg, type: undefined, is_main_result: undefined }, msg.is_main_result)
+      const result = new Result(
+        { ...msg, type: undefined, is_main_result: undefined },
+        msg.is_main_result
+      )
       execution.results.push(result)
       if (onResult) {
         await onResult(result)

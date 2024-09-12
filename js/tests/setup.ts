@@ -9,17 +9,18 @@ interface SandboxFixture {
 
 export const sandboxTest = base.extend<SandboxFixture>({
   sandbox: [
-    async ({ }, use) => {
+    async ({}, use) => {
       const sandbox = await CodeInterpreter.create({ timeoutMs })
       try {
         await use(sandbox)
-
       } finally {
         try {
           await sandbox.kill()
         } catch (err) {
           if (!isDebug) {
-            console.warn('Failed to kill sandbox — this is expected if the test runs with local envd.')
+            console.warn(
+              'Failed to kill sandbox — this is expected if the test runs with local envd.'
+            )
           }
         }
       }

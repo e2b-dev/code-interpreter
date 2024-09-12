@@ -30,7 +30,7 @@ sandboxTest.skipIf(isDebug)('list kernels', async ({ sandbox }) => {
 
   const kernelID = await sandbox.notebook.createKernel()
   kernels = await sandbox.notebook.listKernels()
-  expect(kernels.map(kernel => kernel.kernelID)).toContain(kernelID)
+  expect(kernels.map((kernel) => kernel.kernelID)).toContain(kernelID)
   expect(kernels.length).toEqual(2)
 })
 

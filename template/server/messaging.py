@@ -157,14 +157,18 @@ class JupyterKernelWebSocket:
                 vars_to_set = {**global_env_vars, **env_vars}
 
                 # if there is an indent in the code, we need to add the env vars at the beginning of the code
-                lines = code.split('\n')
+                lines = code.split("\n")
                 indent = 0
                 for i, line in enumerate(lines):
                     if line.strip() != "":
                         indent = len(line) - len(line.lstrip())
                         break
 
-                code = indent * " " + f"os.environ.set_envs_for_execution({vars_to_set})\n" + code
+                code = (
+                    indent * " "
+                    + f"os.environ.set_envs_for_execution({vars_to_set})\n"
+                    + code
+                )
 
             logger.info(code)
             request = self._get_execute_request(message_id, code, False)
@@ -198,10 +202,19 @@ class JupyterKernelWebSocket:
 
         :param data: The message data
         """
-        if data["msg_type"] == "status" and data['content']['execution_state'] == 'restarting':
+        if (
+            data["msg_type"] == "status"
+            and data["content"]["execution_state"] == "restarting"
+        ):
             logger.error("Kernel is restarting")
             for execution in self._executions.values():
-                await execution.queue.put(Error(name="KernelRestarting", value="Kernel was restarted", traceback=""))
+                await execution.queue.put(
+                    Error(
+                        name="KernelRestarting",
+                        value="Kernel was restarted",
+                        traceback="",
+                    )
+                )
                 await execution.queue.put(EndOfExecution())
             return
 
