@@ -159,7 +159,10 @@ GraphTypes = Union[
 ]
 
 
-def deserialize_graph(data: dict) -> GraphTypes:
+def deserialize_graph(data: Optional[dict]) -> Optional[GraphTypes]:
+    if not data:
+        return None
+
     if data["type"] == GraphType.LINE.value:
         graph = LineGraph(**data)
     elif data["type"] == GraphType.SCATTER.value:

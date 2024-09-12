@@ -16,7 +16,7 @@ from typing import (
 
 from httpx import Response
 
-from e2b_code_interpreter.graphs import Graph, deserialize_graph
+from .graphs import Graph, deserialize_graph
 
 T = TypeVar("T")
 OutputHandler = Union[
@@ -133,10 +133,6 @@ class Result:
                 formats.append(key)
 
         return formats
-
-    def __post_init__(self):
-        if isinstance(self.graph, dict):
-            self.graph = deserialize_graph(self.graph)
 
     def __str__(self) -> Optional[str]:
         """
@@ -341,7 +337,22 @@ def parse_output(
     data_type = data.pop("type")
 
     if data_type == "result":
-        result = Result(**data)
+        result = Result(
+            text=data.get("text"),
+            html=data.get("html"),
+            markdown=data.get("markdown"),
+            svg=data.get("svg"),
+            png=data.get("png"),
+            jpeg=data.get("jpeg"),
+            pdf=data.get("pdf"),
+            latex=data.get("latex"),
+            json=data.get("json"),
+            javascript=data.get("javascript"),
+            data=data.get("data"),
+            graph=deserialize_graph(data.get("graph")),
+            is_main_result=data.get("is_main_result", False),
+            extra=data.get("extra"),
+        )
         execution.results.append(result)
         if on_result:
             on_result(result)
