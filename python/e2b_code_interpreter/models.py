@@ -49,6 +49,11 @@ class ExecutionError:
     value: str
     traceback: str
 
+    def __init__(self, name: str, value: str, traceback: str, **kwargs):
+        self.name = name
+        self.value = value
+        self.traceback = traceback
+
     def to_json(self) -> str:
         """
         Returns the JSON representation of the Error object.
@@ -95,6 +100,39 @@ class Result:
     """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
     extra: Optional[dict] = None
     """Extra data that can be included. Not part of the standard types."""
+
+    def __init__(
+        self,
+        text: Optional[str] = None,
+        html: Optional[str] = None,
+        markdown: Optional[str] = None,
+        svg: Optional[str] = None,
+        png: Optional[str] = None,
+        jpeg: Optional[str] = None,
+        pdf: Optional[str] = None,
+        latex: Optional[str] = None,
+        json: Optional[dict] = None,
+        javascript: Optional[str] = None,
+        data: Optional[dict] = None,
+        graph: Optional[dict] = None,
+        is_main_result: bool = False,
+        extra: Optional[dict] = None,
+        **kwargs,  # Allows for future expansion
+    ):
+        self.text = text
+        self.html = html
+        self.markdown = markdown
+        self.svg = svg
+        self.png = png
+        self.jpeg = jpeg
+        self.pdf = pdf
+        self.latex = latex
+        self.json = json
+        self.javascript = javascript
+        self.data = data
+        self.graph = deserialize_graph(graph) if graph else None
+        self.is_main_result = is_main_result
+        self.extra = extra
 
     def formats(self) -> Iterable[str]:
         """
@@ -232,6 +270,10 @@ class Logs:
     stderr: List[str] = field(default_factory=list)
     """List of strings printed to stderr by prints, subprocesses, etc."""
 
+    def __init__(self, stdout: List[str] = None, stderr: List[str] = None, **kwargs):
+        self.stdout = stdout or []
+        self.stderr = stderr or []
+
     def __repr__(self):
         return f"Logs(stdout: {self.stdout}, stderr: {self.stderr})"
 
@@ -269,6 +311,19 @@ class Execution:
     """Error object if an error occurred, None otherwise."""
     execution_count: Optional[int] = None
     """Execution count of the cell."""
+
+    def __init__(
+        self,
+        results: List[Result] = None,
+        logs: Logs = None,
+        error: Optional[ExecutionError] = None,
+        execution_count: Optional[int] = None,
+        **kwargs,
+    ):
+        self.results = results or []
+        self.logs = logs or Logs()
+        self.error = error
+        self.execution_count = execution_count
 
     def __repr__(self):
         return f"Execution(Results: {self.results}, Logs: {self.logs}, Error: {self.error})"
@@ -337,22 +392,7 @@ def parse_output(
     data_type = data.pop("type")
 
     if data_type == "result":
-        result = Result(
-            text=data.get("text"),
-            html=data.get("html"),
-            markdown=data.get("markdown"),
-            svg=data.get("svg"),
-            png=data.get("png"),
-            jpeg=data.get("jpeg"),
-            pdf=data.get("pdf"),
-            latex=data.get("latex"),
-            json=data.get("json"),
-            javascript=data.get("javascript"),
-            data=data.get("data"),
-            graph=deserialize_graph(data.get("graph")),
-            is_main_result=data.get("is_main_result", False),
-            extra=data.get("extra"),
-        )
+        result = Result(**data)
         execution.results.append(result)
         if on_result:
             on_result(result)
@@ -374,3 +414,7 @@ def parse_output(
 class Kernel:
     kernel_id: str
     name: str
+
+    def __init__(self, kernel_id: str, name: str, **kwargs):
+        self.kernel_id = kernel_id
+        self.name = name
