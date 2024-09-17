@@ -10,67 +10,35 @@ load_dotenv()
 
 
 code = """
-import psutil
-import os
+import matplotlib.pyplot as plt
+import numpy as np
 
-def force_oom():
-    # Get current memory usage
-    mem_before = psutil.virtual_memory().used
-    
-    # Start creating large lists
-    size = 10000000  # Start with 10 million integers
-    increment = 5000000  # Increase by 5 million integers each iteration
-    
-    while True:
-        # Create a large list of integers
-        large_list = [i for i in range(size)]
-        
-        # Get current memory usage
-        mem_after = psutil.virtual_memory().used
-        
-        # Calculate memory difference
-        mem_diff = mem_after - mem_before
-        
-        print(f"Created list of size {size} MB")
-        print(f"Memory increase: {mem_diff / (1024 * 1024):.2f} GB")
-        
-        # Reset memory usage tracking
-        mem_before = mem_after
-        
-        # Increment size for next iteration
-        size += increment
-        
-        # Sleep briefly to allow OS to respond
-        import time
-        time.sleep(0.1)
+# Step 1: Define the data for the pie chart
+categories = ["No", "No, in blue"]
+sizes = [90, 10] 
 
-# Run the function
-force_oom()
+# Step 2: Create the figure and axis objects
+fig, ax = plt.subplots(figsize=(8, 8))
+
+plt.xlabel("x")
+plt.ylabel("y")
+
+# Step 3: Create the pie chart
+ax.pie(sizes, labels=categories, autopct='%1.1f%%', startangle=90, colors=plt.cm.Pastel1.colors[:len(categories)])
+
+# Step 4: Add title and legend
+ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+plt.title('Will I wake up early tomorrow?')
+
+# Step 5: Show the plot
+plt.show()
 """
 
 
-async def create_sbx(i: int):
-    sbx = await AsyncCodeInterpreter.create(timeout=60, template="rth7a7wt20f3ymyr74zo")
-    # with open('t2.csv') as f:
-    #     await sbx.files.write("/home/user/t.csv", f)
-    print("executing cell")
-    print(f"Created sandbox {sbx.sandbox_id}")
-    x = time.time()
-    r = await sbx.notebook.exec_cell(code)
-    print(f"Executed in {time.time() - x}")
-    print(r.logs.stdout)
-    print(r.error)
-
-
 async def run():
-    for j in range(1):
-        print(f"Creating {j}. batch of sandboxes")
-        futures = []
-        for i in range(1):
-            futures.append(create_sbx(i))
-
-        sbxs = await asyncio.gather(*futures)
-        sleep(2)
+    sbx = await AsyncCodeInterpreter.create(timeout=60)
+    e = await sbx.notebook.exec_cell(code)
+    print(e.results[0].graph)
 
 
 asyncio.run(run())
