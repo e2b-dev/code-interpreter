@@ -326,7 +326,7 @@ def get_graph_from_ax(
     elif graph_type == GraphType.BOX_AND_WHISKER:
         graph = BoxAndWhiskerGraph(ax=ax)
     else:
-        graph = Graph(ax=ax)
+        graph = Graph(ax=ax, type=graph_type)
 
     return graph
 

@@ -19,8 +19,9 @@ class Graph:
     elements: List[Any]
 
     def __init__(self, **kwargs):
-        self.type = GraphType(kwargs["type"])
+        self.type = GraphType(kwargs["type"] or GraphType.UNKNOWN)
         self.title = kwargs["title"]
+        self.elements = kwargs["elements"]
 
 
 class Graph2D(Graph):
@@ -176,6 +177,6 @@ def deserialize_graph(data: Optional[dict]) -> Optional[GraphTypes]:
     elif data["type"] == GraphType.SUPERGRAPH.value:
         graph = SuperGraph(**data)
     else:
-        graph = Graph(**data, type=GraphType.UNKNOWN)
+        graph = Graph(**data)
 
     return graph
