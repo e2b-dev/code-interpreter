@@ -40,6 +40,12 @@ jobs:
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: pnpm install --frozen-lockfile
 
+      - name: Test JS SDK
+        working-directory: js
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
+        run: |
+          pnpm run test
+
       - name: Release JS Candidate
         working-directory: js
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
@@ -63,6 +69,12 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
+
+      - name: Test Python SDK
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
+        working-directory: python
+        run: |
+          poetry run pytest -n 4 --verbose -x
 
       - name: Release Candidate
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
