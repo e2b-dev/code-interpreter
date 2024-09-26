@@ -76,6 +76,7 @@ jobs:
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         working-directory: python
         run: |
+          poetry install
           poetry run pytest -n 4 --verbose -x
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
