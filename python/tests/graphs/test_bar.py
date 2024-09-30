@@ -10,7 +10,7 @@ sales = [100, 200, 300, 400]
 
 # Create and customize the bar graph
 plt.figure(figsize=(10, 6))
-plt.bar(authors, sales)
+plt.bar(authors, sales, label='Books Sold', color='blue')
 plt.xlabel('Authors')
 plt.ylabel('Number of Books Sold')
 plt.title('Book Sales by Authors')
@@ -47,3 +47,4 @@ async def test_graph_bar(async_sandbox: AsyncCodeInterpreter):
         "Author C",
         "Author D",
     ]
+    assert [bar.group for bar in bars] == ["Books Sold"] * 4
