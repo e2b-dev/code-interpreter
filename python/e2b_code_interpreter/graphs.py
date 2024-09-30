@@ -78,11 +78,13 @@ class ScatterGraph(PointGraph):
 
 class BarData:
     label: str
+    group: str
     value: str
 
     def __init__(self, **kwargs):
         self.label = kwargs["label"]
         self.value = kwargs["value"]
+        self.group = kwargs["group"]
 
 
 class BarGraph(Graph2D):

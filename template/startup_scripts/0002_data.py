@@ -117,8 +117,13 @@ class LineGraph(PointGraph):
         super()._extract_info(ax)
 
         for line in ax.get_lines():
+            label = line.get_label()
+            if label.startswith("_child"):
+                number = int(label[7:])
+                label = f"Line {number}"
+
             points = [(x, y) for x, y in zip(line.get_xdata(), line.get_ydata())]
-            line_data = PointData(label=line.get_label(), points=points)
+            line_data = PointData(label=label, points=points)
             self.elements.append(line_data)
 
 
@@ -136,6 +141,7 @@ class ScatterGraph(PointGraph):
 
 class BarData(BaseModel):
     label: str
+    group: str
     value: float
 
 
@@ -147,6 +153,11 @@ class BarGraph(Graph2D):
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
         for container in ax.containers:
+            group_label = container.get_label()
+            if group_label.startswith("_container"):
+                number = int(group_label[11:])
+                group_label = f"Group {number}"
+
             heights = [rect.get_height() for rect in container]
             if all(height == heights[0] for height in heights):
                 # vertical bars
@@ -158,7 +169,8 @@ class BarGraph(Graph2D):
                 labels = [label.get_text() for label in ax.get_xticklabels()]
                 values = heights
             for label, value in zip(labels, values):
-                bar = BarData(label=label, value=value)
+
+                bar = BarData(label=label, value=value, group=group_label)
                 self.elements.append(bar)
 
 

@@ -45,6 +45,7 @@ export type ScatterGraph = PointGraph & {
 export type BarData = {
   label: string
   value: string
+  group: string
 }
 
 export type BarGraph = Graph2D & {
