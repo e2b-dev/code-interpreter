@@ -119,7 +119,7 @@ class LineGraph(PointGraph):
         for line in ax.get_lines():
             label = line.get_label()
             if label.startswith("_child"):
-                number = int(label[7:])
+                number = int(label[6:])
                 label = f"Line {number}"
 
             points = [(x, y) for x, y in zip(line.get_xdata(), line.get_ydata())]
@@ -155,7 +155,7 @@ class BarGraph(Graph2D):
         for container in ax.containers:
             group_label = container.get_label()
             if group_label.startswith("_container"):
-                number = int(group_label[11:])
+                number = int(group_label[10:])
                 group_label = f"Group {number}"
 
             heights = [rect.get_height() for rect in container]
