@@ -350,14 +350,17 @@ def _figure_repr_e2b_graph_(self: Figure):
     # Get all Axes objects from the Figure
     axes = self.get_axes()
 
-    if not axes:
+    try:
+        if not axes:
+            return {}
+        elif len(axes) > 1:
+            graph = SuperGraph(figure=self)
+        else:
+            ax = axes[0]
+            graph = get_graph_from_ax(ax)
+        return graph.model_dump()
+    except:
         return {}
-    elif len(axes) > 1:
-        graph = SuperGraph(figure=self)
-    else:
-        ax = axes[0]
-        graph = get_graph_from_ax(ax)
-    return graph.model_dump()
 
 
 def _dataframe_repr_e2b_data_(self: pandas.DataFrame):
