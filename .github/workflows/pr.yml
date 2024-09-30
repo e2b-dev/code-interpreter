@@ -42,13 +42,15 @@ jobs:
   python-tests:
     needs: [ changes ]
     name: Tests Python package
-    if: needs.changes.outputs.python == 'true'
+    #    If the PR does not have the label 'python-rc', the code is already tested in the prerelease workflow
+    if: needs.changes.outputs.python == 'true' && !contains( github.event.pull_request.labels.*.name, 'python-rc')
     uses: ./.github/workflows/python_tests.yml
     secrets: inherit
 
   js-tests:
     needs: [ changes ]
     name: Tests JS package
-    if: needs.changes.outputs.js == 'true'
+    #    If the PR does not have the label 'js-rc', the code is already tested in the prerelease workflow
+    if: needs.changes.outputs.js == 'true' && !contains( github.event.pull_request.labels.*.name, 'js-rc')
     uses: ./.github/workflows/js_tests.yml
     secrets: inherit
