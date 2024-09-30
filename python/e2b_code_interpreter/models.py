@@ -130,7 +130,11 @@ class Result:
         self.json = json
         self.javascript = javascript
         self.data = data
-        self.graph = deserialize_graph(graph) if graph else None
+        if graph:
+            try:
+                self.graph = deserialize_graph(graph)
+            except Exception:
+                pass
         self.is_main_result = is_main_result
         self.extra = extra
 
