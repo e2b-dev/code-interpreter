@@ -1,21 +1,25 @@
+import datetime
+
 from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
 from e2b_code_interpreter.graphs import LineGraph
 
 code = """
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
 
 # Generate x values
-x = np.linspace(0, 2*np.pi, 100)
+dates = [datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(100)]
 
+x = np.linspace(0, 2*np.pi, 100)
 # Calculate y values
 y_sin = np.sin(x)
 y_cos = np.cos(x)
 
 # Create the plot
 plt.figure(figsize=(10, 6))
-plt.plot(x, y_sin, label='sin(x)')
-plt.plot(x, y_cos, label='cos(x)')
+plt.plot(dates, y_sin, label='sin(x)')
+plt.plot(dates, y_cos, label='cos(x)')
 
 # Add labels and title
 plt.xlabel("Time (s)")
@@ -42,7 +46,9 @@ async def test_line_graph(async_sandbox: AsyncCodeInterpreter):
     assert graph.x_unit == "s"
     assert graph.y_unit == "Hz"
 
-    assert all(isinstance(x, float) for x in graph.x_ticks)
+    assert all(isinstance(x, str) for x in graph.x_ticks)
+    parsed_date = datetime.datetime.fromisoformat(graph.x_ticks[0])
+    assert isinstance(parsed_date, datetime.datetime)
     assert all(isinstance(y, float) for y in graph.y_ticks)
 
     assert all(isinstance(x, str) for x in graph.y_tick_labels)
@@ -56,8 +62,11 @@ async def test_line_graph(async_sandbox: AsyncCodeInterpreter):
     assert len(first_line.points) == 100
     assert all(isinstance(point, tuple) for point in first_line.points)
     assert all(
-        isinstance(x, float) and isinstance(y, float) for x, y in first_line.points
+        isinstance(x, str) and isinstance(y, float) for x, y in first_line.points
     )
+
+    parsed_date = datetime.datetime.fromisoformat(first_line.points[0][0])
+    assert isinstance(parsed_date, datetime.datetime)
 
     second_line = lines[1]
     assert second_line.label == "cos(x)"

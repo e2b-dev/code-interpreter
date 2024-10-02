@@ -1,4 +1,5 @@
 import json
+import logging
 
 from e2b import NotFoundException, TimeoutException, SandboxException
 from dataclasses import dataclass, field
@@ -23,6 +24,8 @@ OutputHandler = Union[
     Callable[[T], Any],
     Callable[[T], Awaitable[Any]],
 ]
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -133,8 +136,10 @@ class Result:
         if graph:
             try:
                 self.graph = deserialize_graph(graph)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(
+                    f"Error deserializing graph, check if you are using the latest version of the library: {e}"
+                )
         self.is_main_result = is_main_result
         self.extra = extra
 

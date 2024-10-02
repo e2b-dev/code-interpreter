@@ -40,31 +40,36 @@ class Graph2D(Graph):
 
 class PointData:
     label: str
-    points: List[Tuple[float, float]]
+    points: List[Tuple[Union[str, int, float], Union[str, int, float]]]
 
     def __init__(self, **kwargs):
         self.label = kwargs["label"]
-        self.points = [(float(x), float(y)) for x, y in kwargs["points"]]
+        self.points = [(x, y) for x, y in kwargs["points"]]
 
 
 class PointGraph(Graph2D):
-    x_ticks: List[float]
+    x_ticks: List[Union[str, int, float]]
     x_tick_labels: List[str]
-    y_ticks: List[float]
+    x_unit: Optional[str]
+
+    y_ticks: List[Union[str, int, float]]
     y_tick_labels: List[str]
+    y_unit: Optional[str]
 
     elements: List[PointData]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.x_label = kwargs["x_label"]
-        self.y_label = kwargs["y_label"]
         self.x_unit = kwargs["x_unit"]
-        self.y_unit = kwargs["y_unit"]
         self.x_ticks = kwargs["x_ticks"]
         self.x_tick_labels = kwargs["x_tick_labels"]
+
+        self.y_label = kwargs["y_label"]
+        self.y_unit = kwargs["y_unit"]
         self.y_ticks = kwargs["y_ticks"]
         self.y_tick_labels = kwargs["y_tick_labels"]
+
         self.elements = [PointData(**d) for d in kwargs["elements"]]
 
 

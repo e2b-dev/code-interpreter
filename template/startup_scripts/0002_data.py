@@ -1,18 +1,21 @@
+from datetime import date
 import enum
 import re
-from typing import Optional, List, Tuple, Literal, Any
+from typing import Optional, List, Tuple, Literal, Any, Union
 
+import matplotlib
 import pandas
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle, Wedge, PathPatch
 from matplotlib.pyplot import Figure
+from matplotlib.dates import _SwitchableDateConverter
 import IPython
 
 from IPython.core.formatters import BaseFormatter
 from matplotlib.text import Text
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from traitlets.traitlets import Unicode, ObjectName
 
 
@@ -87,13 +90,29 @@ class Graph2D(Graph):
 
 class PointData(BaseModel):
     label: str
-    points: List[Tuple[float, float]]
+    points: List[Tuple[Union[str, int, float], Union[str, int, float]]]
+
+    @field_validator("points", mode="before")
+    @classmethod
+    def transform_points(
+        cls, value
+    ) -> List[Tuple[Union[float, str], Union[float, str]]]:
+        parsed_value = []
+        for x, y in value:
+            if isinstance(x, date):
+                x = x.isoformat()
+
+            if isinstance(y, date):
+                y = y.isoformat()
+
+            parsed_value.append((x, y))
+        return parsed_value
 
 
 class PointGraph(Graph2D):
-    x_ticks: List[float] = Field(default_factory=list)
+    x_ticks: List[Union[str, int, float]] = Field(default_factory=list)
     x_tick_labels: List[str] = Field(default_factory=list)
-    y_ticks: List[float] = Field(default_factory=list)
+    y_ticks: List[Union[str, int, float]] = Field(default_factory=list)
     y_tick_labels: List[str] = Field(default_factory=list)
 
     elements: List[PointData] = Field(default_factory=list)
@@ -103,11 +122,27 @@ class PointGraph(Graph2D):
         Function to extract information for PointGraph
         """
         super()._extract_info(ax)
-        self.x_ticks = [float(tick) for tick in ax.get_xticks()]
-        self.x_tick_labels = [label.get_text() for label in ax.get_xticklabels()]
 
-        self.y_ticks = [float(tick) for tick in ax.get_yticks()]
+        self.x_tick_labels = [label.get_text() for label in ax.get_xticklabels()]
+        self.x_ticks = self._extract_ticks_info(ax.xaxis.converter, ax.get_xticks())
+
         self.y_tick_labels = [label.get_text() for label in ax.get_yticklabels()]
+        self.y_ticks = self._extract_ticks_info(ax.yaxis.converter, ax.get_yticks())
+
+    @staticmethod
+    def _extract_ticks_info(converter: Any, ticks: list) -> list:
+        example_tick = ticks[0]
+
+        if isinstance(converter, _SwitchableDateConverter):
+            return [matplotlib.dates.num2date(tick).isoformat() for tick in ticks]
+        else:
+            ticks_type = type(example_tick).__name__
+            if ticks_type == "float":
+                return [float(tick) for tick in ticks]
+            elif ticks_type == "int":
+                return [int(tick) for tick in ticks]
+            else:
+                return ticks
 
 
 class LineGraph(PointGraph):

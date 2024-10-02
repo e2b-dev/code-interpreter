@@ -6,18 +6,20 @@ sandboxTest('line', async ({ sandbox }) => {
   const code = `
 import numpy as np
 import matplotlib.pyplot as plt
+import datetime
 
 # Generate x values
-x = np.linspace(0, 2*np.pi, 100)
+dates = [datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(100)]
 
+x = np.linspace(0, 2*np.pi, 100)
 # Calculate y values
 y_sin = np.sin(x)
 y_cos = np.cos(x)
 
 # Create the plot
 plt.figure(figsize=(10, 6))
-plt.plot(x, y_sin, label='sin(x)')
-plt.plot(x, y_cos, label='cos(x)')
+plt.plot(dates, y_sin, label='sin(x)')
+plt.plot(dates, y_cos, label='cos(x)')
 
 # Add labels and title
 plt.xlabel("Time (s)")
@@ -39,9 +41,10 @@ plt.show()
   expect(graph.x_unit).toBe('s')
   expect(graph.y_unit).toBe('Hz')
 
-  expect(graph.x_ticks.every((tick: number) => typeof tick === 'number')).toBe(
+  expect(graph.x_ticks.every((tick: number) => typeof tick === 'string')).toBe(
     true
   )
+  expect(new Date(graph.x_ticks[0])).toBeInstanceOf(Date)
   expect(graph.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
     true
   )
@@ -63,16 +66,17 @@ plt.show()
   expect(
     firstLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'number' && typeof point[1] === 'number'
+        typeof point[0] === "string" && typeof point[1] === 'number'
     )
   ).toBe(true)
+  expect(new Date(firstLine.points[0][0])).toEqual(new Date('2023-09-01T00:00:00.000Z'))
 
   expect(secondLine.label).toBe('cos(x)')
   expect(secondLine.points.length).toBe(100)
   expect(
     secondLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'number' && typeof point[1] === 'number'
+        typeof point[0] === 'string' && typeof point[1] === 'number'
     )
   ).toBe(true)
 })
