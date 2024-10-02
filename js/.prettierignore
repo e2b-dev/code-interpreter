@@ -1,0 +1,8 @@
+/.next/
+
+# imporatant to keep // $HighlightLine comments at the end of the line
+apps/web/src/code/
+
+
+**/*.mdx
+**/code/**/*
