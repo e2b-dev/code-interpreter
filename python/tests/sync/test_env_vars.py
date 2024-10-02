@@ -23,6 +23,7 @@ async def test_env_vars_override(debug: bool):
     result = sbx.notebook.exec_cell("import os; os.getenv('FOO')", envs={"FOO": "baz"})
     assert result.text == "baz"
 
+    # This can fail if running in debug mode (there's a race condition with the restart kernel test)
     result = sbx.notebook.exec_cell("import os; os.getenv('RUNTIME_ENV')")
     assert result.text == "value"
 
@@ -30,6 +31,7 @@ async def test_env_vars_override(debug: bool):
         result = sbx.notebook.exec_cell("import os; os.getenv('SBX')")
         assert result.text == "value"
 
+    # This can fail if running in debug mode (there's a race condition with the restart kernel test)
     result = sbx.notebook.exec_cell("import os; os.getenv('FOO')")
     assert result.text == "bar"
 
