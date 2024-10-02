@@ -339,6 +339,31 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
     if all(isinstance(line, Line2D) for line in objects):
         return GraphType.LINE
 
+    if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
+        return GraphType.BOX_AND_WHISKER
+
+    def is_grid_line(line: Line2D) -> bool:
+        x_data = line.get_xdata()
+        if len(x_data) != 2:
+            return False
+
+        y_data = line.get_ydata()
+        if len(y_data) != 2:
+            return False
+
+        if x_data[0] == x_data[1] or y_data[0] == y_data[1]:
+            return True
+
+        return False
+
+    filtered = []
+    for obj in objects:
+        if isinstance(obj, Line2D) and is_grid_line(obj):
+            continue
+        filtered.append(obj)
+
+    objects = filtered
+
     # Check for Scatter plots
     if all(isinstance(path, PathCollection) for path in objects):
         return GraphType.SCATTER
@@ -350,9 +375,6 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
     # Check for Bar plots
     if all(isinstance(rect, Rectangle) for rect in objects):
         return GraphType.BAR
-
-    if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
-        return GraphType.BOX_AND_WHISKER
 
     return GraphType.UNKNOWN
 
