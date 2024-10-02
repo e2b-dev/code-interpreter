@@ -50,23 +50,23 @@ class PointData:
 class PointGraph(Graph2D):
     x_ticks: List[Union[str, int, float]]
     x_tick_labels: List[str]
-    x_unit: Optional[str]
+    x_scale: str
 
     y_ticks: List[Union[str, int, float]]
     y_tick_labels: List[str]
-    y_unit: Optional[str]
+    y_scale: str
 
     elements: List[PointData]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.x_label = kwargs["x_label"]
-        self.x_unit = kwargs["x_unit"]
+        self.x_scale = kwargs["x_scale"]
         self.x_ticks = kwargs["x_ticks"]
         self.x_tick_labels = kwargs["x_tick_labels"]
 
         self.y_label = kwargs["y_label"]
-        self.y_unit = kwargs["y_unit"]
+        self.y_scale = kwargs["y_scale"]
         self.y_ticks = kwargs["y_ticks"]
         self.y_tick_labels = kwargs["y_tick_labels"]
 

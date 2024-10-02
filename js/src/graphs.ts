@@ -23,13 +23,15 @@ type Graph2D = Graph & {
 
 export type PointData = {
   label: string
-  points: [(number| string), (number | string)][]
+  points: [number | string, number | string][]
 }
 
 type PointGraph = Graph2D & {
   x_ticks: (number | string)[]
+  x_scale: string
   x_tick_labels: string[]
   y_ticks: (number | string)[]
+  y_scale: string
   y_tick_labels: string[]
   elements: PointData[]
 }

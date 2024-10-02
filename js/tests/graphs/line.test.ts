@@ -66,10 +66,12 @@ plt.show()
   expect(
     firstLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === "string" && typeof point[1] === 'number'
+        typeof point[0] === 'string' && typeof point[1] === 'number'
     )
   ).toBe(true)
-  expect(new Date(firstLine.points[0][0])).toEqual(new Date('2023-09-01T00:00:00.000Z'))
+  expect(new Date(firstLine.points[0][0])).toEqual(
+    new Date('2023-09-01T00:00:00.000Z')
+  )
 
   expect(secondLine.label).toBe('cos(x)')
   expect(secondLine.points.length).toBe(100)

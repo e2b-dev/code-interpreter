@@ -44,7 +44,9 @@ sandboxTest('env vars on sandbox override', async () => {
   expect(result2.results[0].text.trim()).toEqual('runtime')
 
   if (!isDebug) {
-    const result3 = await sandbox.notebook.execCell("import os; os.getenv('SBX')")
+    const result3 = await sandbox.notebook.execCell(
+      "import os; os.getenv('SBX')"
+    )
     expect(result3.results[0].text.trim()).toEqual('value')
   }
 

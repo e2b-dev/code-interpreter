@@ -39,7 +39,12 @@ plt.show()
   expect(bars.length).toBe(4)
 
   expect(bars.map((bar) => bar.value)).toEqual([100, 200, 300, 400])
-  expect(bars.map((bar) => bar.group)).toEqual(['Books Sold', 'Books Sold', 'Books Sold', 'Books Sold'])
+  expect(bars.map((bar) => bar.group)).toEqual([
+    'Books Sold',
+    'Books Sold',
+    'Books Sold',
+    'Books Sold',
+  ])
   expect(bars.map((bar) => bar.label)).toEqual([
     'Author A',
     'Author B',

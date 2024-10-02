@@ -46,6 +46,9 @@ async def test_line_graph(async_sandbox: AsyncCodeInterpreter):
     assert graph.x_unit == "s"
     assert graph.y_unit == "Hz"
 
+    assert graph.x_scale == "datetime"
+    assert graph.y_scale == "linear"
+
     assert all(isinstance(x, str) for x in graph.x_ticks)
     parsed_date = datetime.datetime.fromisoformat(graph.x_ticks[0])
     assert isinstance(parsed_date, datetime.datetime)

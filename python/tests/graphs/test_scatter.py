@@ -34,6 +34,9 @@ async def test_scatter_graph(async_sandbox: AsyncCodeInterpreter):
     assert graph.x_label == "A"
     assert graph.y_label == "B"
 
+    assert graph.x_scale == "linear"
+    assert graph.y_scale == "linear"
+
     assert all(isinstance(x, float) for x in graph.x_ticks)
     assert all(isinstance(y, float) for y in graph.y_ticks)
 
