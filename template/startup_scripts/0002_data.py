@@ -128,21 +128,19 @@ class PointGraph(Graph2D):
 
         self.x_tick_labels = [label.get_text() for label in ax.get_xticklabels()]
         x_ticks = ax.get_xticks()
+        self.x_ticks = self._extract_ticks_info(ax.xaxis.converter, x_ticks)
         self.x_scale = ax.get_xscale()
         # Check if the x-axis is a date scale
         if isinstance(ax.xaxis.converter, _SwitchableDateConverter):
-            self.x_scale = type(matplotlib.dates.num2date(x_ticks[0])).__name__
-
-        self.x_ticks = self._extract_ticks_info(ax.xaxis.converter, x_ticks)
+            self.x_scale = "datetime"
 
         self.y_tick_labels = [label.get_text() for label in ax.get_yticklabels()]
         y_ticks = ax.get_yticks()
+        self.y_ticks = self._extract_ticks_info(ax.yaxis.converter, y_ticks)
         self.y_scale = ax.get_yscale()
         # Check if the y-axis is a date scale
         if isinstance(ax.yaxis.converter, _SwitchableDateConverter):
-            self.y_scale = type(matplotlib.dates.num2date(y_ticks[0]).__name__)
-
-        self.y_ticks = self._extract_ticks_info(ax.yaxis.converter, y_ticks)
+            self.y_scale = "datetime"
 
     @staticmethod
     def _extract_ticks_info(converter: Any, ticks: list) -> list:
