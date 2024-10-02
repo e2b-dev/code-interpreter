@@ -40,7 +40,7 @@ class Graph2D(Graph):
 
 class PointData:
     label: str
-    points: List[Tuple[Union[str, int, float], Union[str, int, float]]]
+    points: List[Tuple[Union[str, float], Union[str, float]]]
 
     def __init__(self, **kwargs):
         self.label = kwargs["label"]
@@ -48,11 +48,11 @@ class PointData:
 
 
 class PointGraph(Graph2D):
-    x_ticks: List[Union[str, int, float]]
+    x_ticks: List[Union[str, float]]
     x_tick_labels: List[str]
     x_scale: str
 
-    y_ticks: List[Union[str, int, float]]
+    y_ticks: List[Union[str, float]]
     y_tick_labels: List[str]
     y_scale: str
 

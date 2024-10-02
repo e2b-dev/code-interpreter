@@ -1,7 +1,7 @@
 from datetime import date
 import enum
 import re
-from typing import Optional, List, Tuple, Literal, Any, Union
+from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
 import pandas
@@ -90,13 +90,13 @@ class Graph2D(Graph):
 
 class PointData(BaseModel):
     label: str
-    points: List[Tuple[Union[str, int, float], Union[str, int, float]]]
+    points: List[Tuple[Union[str, float], Union[str, float]]]
 
     @field_validator("points", mode="before")
     @classmethod
     def transform_points(
         cls, value
-    ) -> List[Tuple[Union[float, str], Union[float, str]]]:
+    ) -> List[Tuple[Union[str, float], Union[str, float]]]:
         parsed_value = []
         for x, y in value:
             if isinstance(x, date):
@@ -110,11 +110,11 @@ class PointData(BaseModel):
 
 
 class PointGraph(Graph2D):
-    x_ticks: List[Union[str, int, float]] = Field(default_factory=list)
+    x_ticks: List[Union[str, float]] = Field(default_factory=list)
     x_tick_labels: List[str] = Field(default_factory=list)
     x_scale: str = Field(default="linear")
 
-    y_ticks: List[Union[str, int, float]] = Field(default_factory=list)
+    y_ticks: List[Union[str, float]] = Field(default_factory=list)
     y_tick_labels: List[str] = Field(default_factory=list)
     y_scale: str = Field(default="linear")
 
@@ -143,19 +143,16 @@ class PointGraph(Graph2D):
             self.y_scale = "datetime"
 
     @staticmethod
-    def _extract_ticks_info(converter: Any, ticks: list) -> list:
-        example_tick = ticks[0]
-
+    def _extract_ticks_info(converter: Any, ticks: Sequence) -> list:
         if isinstance(converter, _SwitchableDateConverter):
             return [matplotlib.dates.num2date(tick).isoformat() for tick in ticks]
         else:
-            ticks_type = type(example_tick).__name__
-            if ticks_type == "float":
+            example_tick = ticks[0]
+
+            if isinstance(example_tick, (int, float)):
                 return [float(tick) for tick in ticks]
-            elif ticks_type == "int":
-                return [int(tick) for tick in ticks]
             else:
-                return ticks
+                return list(ticks)
 
 
 class LineGraph(PointGraph):
