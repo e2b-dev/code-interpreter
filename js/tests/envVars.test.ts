@@ -29,7 +29,7 @@ sandboxTest('env vars on sandbox override', async () => {
     envs: { FOO: 'bar', SBX: 'value' },
   })
   await sandbox.notebook.execCell(
-    "import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'runtime'"
+    "import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'js_runtime'"
   )
   const result = await sandbox.notebook.execCell(
     "import os; os.getenv('FOO')",
@@ -41,7 +41,7 @@ sandboxTest('env vars on sandbox override', async () => {
   const result2 = await sandbox.notebook.execCell(
     "import os; os.getenv('RUNTIME_ENV')"
   )
-  expect(result2.results[0].text.trim()).toEqual('runtime')
+  expect(result2.results[0].text.trim()).toEqual('js_runtime')
 
   if (!isDebug) {
     const result3 = await sandbox.notebook.execCell(
