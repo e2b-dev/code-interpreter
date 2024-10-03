@@ -4,6 +4,7 @@ import re
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
+import numpy
 import pandas
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
@@ -101,9 +102,13 @@ class PointData(BaseModel):
         for x, y in value:
             if isinstance(x, date):
                 x = x.isoformat()
+            if isinstance(x, numpy.datetime64):
+                x = x.astype("datetime64[s]").astype(str)
 
             if isinstance(y, date):
                 y = y.isoformat()
+            if isinstance(y, numpy.datetime64):
+                y = y.astype("datetime64[s]").astype(str)
 
             parsed_value.append((x, y))
         return parsed_value
