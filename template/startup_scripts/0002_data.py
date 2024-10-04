@@ -1,6 +1,7 @@
 from datetime import date
 import enum
 import re
+from dateutil import parser
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
@@ -131,7 +132,14 @@ class PointGraph(Graph2D):
         """
         super()._extract_info(ax)
 
-        self.x_tick_labels = [label.get_text() for label in ax.get_xticklabels()]
+        try:
+            self.x_tick_labels = [
+                parser.parse(label.get_text()).isoformat()
+                for label in ax.get_xticklabels()
+            ]
+        except:
+            self.x_tick_labels = [label.get_text() for label in ax.get_xticklabels()]
+
         x_ticks = ax.get_xticks()
         self.x_ticks = self._extract_ticks_info(ax.xaxis.converter, x_ticks)
         self.x_scale = ax.get_xscale()
