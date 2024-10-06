@@ -1,6 +1,8 @@
 from datetime import date
 import enum
 import re
+
+import dateutil.parser
 from dateutil import parser
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
@@ -103,13 +105,23 @@ class PointData(BaseModel):
         for x, y in value:
             if isinstance(x, date):
                 x = x.isoformat()
-            if isinstance(x, numpy.datetime64):
+            elif isinstance(x, numpy.datetime64):
                 x = x.astype("datetime64[s]").astype(str)
+            elif isinstance(x, str):
+                try:
+                    x = parser.parse(x).isoformat()
+                except:
+                    pass
 
             if isinstance(y, date):
                 y = y.isoformat()
-            if isinstance(y, numpy.datetime64):
+            elif isinstance(y, numpy.datetime64):
                 y = y.astype("datetime64[s]").astype(str)
+            elif isinstance(y, str):
+                try:
+                    y = parser.parse(y).isoformat()
+                except:
+                    pass
 
             parsed_value.append((x, y))
         return parsed_value
@@ -140,6 +152,17 @@ class PointGraph(Graph2D):
         # Check if the x-axis is a date scale
         if isinstance(ax.xaxis.converter, _SwitchableDateConverter):
             self.x_scale = "datetime"
+        # If the ticks are in order from 0 to n-1, then they are likely to correspond to string values
+        elif all(tick == i for i, tick in enumerate(self.x_ticks)):
+            try:
+                parsed_x_ticks = [
+                    dateutil.parser.parse(label.get_text()).isoformat()
+                    for label in ax.get_xticklabels()
+                ]
+                self.x_ticks = parsed_x_ticks
+                self.x_scale = "datetime"
+            except:
+                pass
 
         self.y_tick_labels = [label.get_text() for label in ax.get_yticklabels()]
         y_ticks = ax.get_yticks()
@@ -148,6 +171,17 @@ class PointGraph(Graph2D):
         # Check if the y-axis is a date scale
         if isinstance(ax.yaxis.converter, _SwitchableDateConverter):
             self.y_scale = "datetime"
+        # If the ticks are in order from 0 to n-1, then they are likely to correspond to string values
+        elif all(tick == i for i, tick in enumerate(self.y_ticks)):
+            try:
+                parsed_y_ticks = [
+                    dateutil.parser.parse(label.get_text()).isoformat()
+                    for label in ax.get_yticklabels()
+                ]
+                self.y_ticks = parsed_y_ticks
+                self.y_scale = "datetime"
+            except:
+                pass
 
     @staticmethod
     def _extract_ticks_info(converter: Any, ticks: Sequence) -> list:
