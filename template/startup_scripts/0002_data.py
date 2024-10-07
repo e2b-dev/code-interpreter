@@ -136,18 +136,36 @@ class PointGraph(Graph2D):
 
         x_ticks = ax.get_xticks()
         self.x_ticks = self._extract_ticks_info(ax.xaxis.converter, x_ticks)
-        self.x_scale = ax.get_xscale()
-        # Check if the x-axis is a date scale
-        if isinstance(ax.xaxis.converter, _SwitchableDateConverter):
-            self.x_scale = "datetime"
+        self.x_scale = self._detect_scale(
+            ax.xaxis.converter, ax.get_xscale(), self.x_ticks, self.x_tick_labels
+        )
 
         self.y_tick_labels = [label.get_text() for label in ax.get_yticklabels()]
-        y_ticks = ax.get_yticks()
-        self.y_ticks = self._extract_ticks_info(ax.yaxis.converter, y_ticks)
-        self.y_scale = ax.get_yscale()
-        # Check if the y-axis is a date scale
-        if isinstance(ax.yaxis.converter, _SwitchableDateConverter):
-            self.y_scale = "datetime"
+        self.y_ticks = self._extract_ticks_info(ax.yaxis.converter, ax.get_yticks())
+        self.y_scale = self._detect_scale(
+            ax.yaxis.converter, ax.get_yscale(), self.y_ticks, self.y_tick_labels
+        )
+
+    @staticmethod
+    def _detect_scale(converter, scale: str, ticks: Sequence, labels: Sequence) -> str:
+        # If the converter is a date converter, it's a datetime scale
+        if isinstance(converter, _SwitchableDateConverter):
+            return "datetime"
+
+        # If the scale is not linear, it can't be categorical
+        if scale != "linear":
+            return scale
+
+        # If all the ticks are integers and are in order from 0 to n-1
+        # and the labels aren't corresponding to the ticks, it's categorical
+        for i, tick_and_label in enumerate(zip(ticks, labels)):
+            tick, label = tick_and_label
+            if isinstance(tick, (int, float)) and tick == i and str(i) != label:
+                continue
+            # Found a tick, which wouldn't be in a categorical scale
+            return "linear"
+
+        return "categorical"
 
     @staticmethod
     def _extract_ticks_info(converter: Any, ticks: Sequence) -> list:
