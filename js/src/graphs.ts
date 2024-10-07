@@ -8,6 +8,18 @@ export enum GraphType {
   UNKNOWN = 'unknown',
 }
 
+export enum ScaleType {
+  LINEAR = "linear",
+  DATETIME = "datetime",
+  CATEGORICAL = "categorical",
+  LOG = "log",
+  SYMLOG = "symlog",
+  LOGIT = "logit",
+  FUNCTION = "function",
+  FUNCTIONLOG = "functionlog",
+  ASINH = "asinh",
+}
+
 export type Graph = {
   type: GraphType
   title: string
@@ -28,10 +40,10 @@ export type PointData = {
 
 type PointGraph = Graph2D & {
   x_ticks: (number | string)[]
-  x_scale: string
+  x_scale: ScaleType
   x_tick_labels: string[]
   y_ticks: (number | string)[]
-  y_scale: string
+  y_scale: ScaleType
   y_tick_labels: string[]
   elements: PointData[]
 }

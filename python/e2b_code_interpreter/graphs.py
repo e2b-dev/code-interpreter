@@ -2,13 +2,26 @@ import enum
 from typing import List, Tuple, Any, Optional, Union
 
 
-class GraphType(enum.Enum):
+class GraphType(str, enum.Enum):
     LINE = "line"
     SCATTER = "scatter"
     BAR = "bar"
     PIE = "pie"
     BOX_AND_WHISKER = "box_and_whisker"
     SUPERGRAPH = "supergraph"
+    UNKNOWN = "unknown"
+
+
+class ScaleType(str, enum.Enum):
+    LINEAR = "linear"
+    DATETIME = "datetime"
+    CATEGORICAL = "categorical"
+    LOG = "log"
+    SYMLOG = "symlog"
+    LOGIT = "logit"
+    FUNCTION = "function"
+    FUNCTIONLOG = "functionlog"
+    ASINH = "asinh"
     UNKNOWN = "unknown"
 
 
@@ -50,23 +63,33 @@ class PointData:
 class PointGraph(Graph2D):
     x_ticks: List[Union[str, float]]
     x_tick_labels: List[str]
-    x_scale: str
+    x_scale: ScaleType
 
     y_ticks: List[Union[str, float]]
     y_tick_labels: List[str]
-    y_scale: str
+    y_scale: ScaleType
 
     elements: List[PointData]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.x_label = kwargs["x_label"]
-        self.x_scale = kwargs["x_scale"]
+
+        try:
+            self.x_scale = ScaleType(kwargs.get("x_scale"))
+        except ValueError:
+            self.x_scale = ScaleType.UNKNOWN
+
         self.x_ticks = kwargs["x_ticks"]
         self.x_tick_labels = kwargs["x_tick_labels"]
 
         self.y_label = kwargs["y_label"]
-        self.y_scale = kwargs["y_scale"]
+
+        try:
+            self.y_scale = ScaleType(kwargs.get("y_scale"))
+        except ValueError:
+            self.y_scale = ScaleType.UNKNOWN
+
         self.y_ticks = kwargs["y_ticks"]
         self.y_tick_labels = kwargs["y_tick_labels"]
 
@@ -171,17 +194,17 @@ def deserialize_graph(data: Optional[dict]) -> Optional[GraphTypes]:
     if not data:
         return None
 
-    if data["type"] == GraphType.LINE.value:
+    if data["type"] == GraphType.LINE:
         graph = LineGraph(**data)
-    elif data["type"] == GraphType.SCATTER.value:
+    elif data["type"] == GraphType.SCATTER:
         graph = ScatterGraph(**data)
-    elif data["type"] == GraphType.BAR.value:
+    elif data["type"] == GraphType.BAR:
         graph = BarGraph(**data)
-    elif data["type"] == GraphType.PIE.value:
+    elif data["type"] == GraphType.PIE:
         graph = PieGraph(**data)
-    elif data["type"] == GraphType.BOX_AND_WHISKER.value:
+    elif data["type"] == GraphType.BOX_AND_WHISKER:
         graph = BoxAndWhiskerGraph(**data)
-    elif data["type"] == GraphType.SUPERGRAPH.value:
+    elif data["type"] == GraphType.SUPERGRAPH:
         graph = SuperGraph(**data)
     else:
         graph = Graph(**data)

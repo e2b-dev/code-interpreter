@@ -12,6 +12,7 @@ export type {
   OutputMessage,
 } from './messaging'
 export type {
+  ScaleType,
   GraphType,
   GraphTypes,
   Graph,
