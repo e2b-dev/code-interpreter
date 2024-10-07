@@ -33,6 +33,7 @@ plt.show()
   const graph = result.results[0].graph
 
   expect(graph).toBeDefined()
+  expect(graph.type).toBe('line')
 
   expect(graph.title).toBe('Plot of sin(x) and cos(x)')
   expect(graph.x_label).toBe('Time (s)')
@@ -42,18 +43,18 @@ plt.show()
   expect(graph.y_unit).toBe('Hz')
 
   expect(graph.x_ticks.every((tick: number) => typeof tick === 'string')).toBe(
-    true
+    true,
   )
   expect(new Date(graph.x_ticks[0])).toBeInstanceOf(Date)
   expect(graph.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
-    true
+    true,
   )
 
   expect(
-    graph.y_tick_labels.every((label: string) => typeof label === 'string')
+    graph.y_tick_labels.every((label: string) => typeof label === 'string'),
   ).toBe(true)
   expect(
-    graph.x_tick_labels.every((label: string) => typeof label === 'string')
+    graph.x_tick_labels.every((label: string) => typeof label === 'string'),
   ).toBe(true)
 
   const lines = graph.elements
@@ -66,11 +67,11 @@ plt.show()
   expect(
     firstLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'string' && typeof point[1] === 'number'
-    )
+        typeof point[0] === 'string' && typeof point[1] === 'number',
+    ),
   ).toBe(true)
   expect(new Date(firstLine.points[0][0])).toEqual(
-    new Date('2023-09-01T00:00:00.000Z')
+    new Date('2023-09-01T00:00:00.000Z'),
   )
 
   expect(secondLine.label).toBe('cos(x)')
@@ -78,7 +79,7 @@ plt.show()
   expect(
     secondLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'string' && typeof point[1] === 'number'
-    )
+        typeof point[0] === 'string' && typeof point[1] === 'number',
+    ),
   ).toBe(true)
 })
