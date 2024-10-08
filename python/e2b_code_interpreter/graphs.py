@@ -3,6 +3,10 @@ from typing import List, Tuple, Any, Optional, Union
 
 
 class GraphType(str, enum.Enum):
+    """
+    Graph types
+    """
+
     LINE = "line"
     SCATTER = "scatter"
     BAR = "bar"
@@ -13,6 +17,10 @@ class GraphType(str, enum.Enum):
 
 
 class ScaleType(str, enum.Enum):
+    """
+    Ax scale types
+    """
+
     LINEAR = "linear"
     DATETIME = "datetime"
     CATEGORICAL = "categorical"
@@ -26,6 +34,10 @@ class ScaleType(str, enum.Enum):
 
 
 class Graph:
+    """
+    Extracted data from a graph. It's useful for building an interactive graphs or custom visualizations.
+    """
+
     type: GraphType
     title: str
 

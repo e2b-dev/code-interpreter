@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 
 
 class JupyterExtension:
+    """
+    Code interpreter module for executing code in a stateful context.
+    """
+
     _exec_timeout = 300
 
     @property
@@ -56,6 +60,20 @@ class JupyterExtension:
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ) -> Execution:
+        """
+        Runs the code in the specified context, if not specified, the default context is used.
+        You can reference previously defined variables, imports, and functions in the code.
+
+        :param code: The code to execute
+        :param kernel_id: The context id
+        :param on_stdout: Callback for stdout messages
+        :param on_stderr: Callback for stderr messages
+        :param on_result: Callback for the `Result` object
+        :param envs: Environment variables
+        :param timeout: Max time to wait for the execution to finish
+        :param request_timeout: Max time to wait for the request to finish
+        :return: Execution object
+        """
         logger.debug(f"Executing code {code}")
 
         timeout = None if timeout == 0 else (timeout or self._exec_timeout)
@@ -98,9 +116,18 @@ class JupyterExtension:
         self,
         cwd: Optional[str] = None,
         kernel_name: Optional[str] = None,
-        request_timeout: Optional[float] = None,
         envs: Optional[Dict[str, str]] = None,
+        request_timeout: Optional[float] = None,
     ) -> str:
+        """
+        Creates a new context to run code in.
+
+        :param cwd: Set the current working directory for the context
+        :param kernel_name: Type of the context
+        :param envs: Environment variables
+        :param request_timeout: Max time to wait for the request to finish
+        :return: Context id
+        """
         logger.debug(f"Creating new kernel {kernel_name}")
 
         data = {}
@@ -132,6 +159,12 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
+        """
+        Shuts down a context.
+
+        :param kernel_id: Context id
+        :param request_timeout: Max time to wait for the request to finish
+        """
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
 
         logger.debug(f"Shutting down a kernel with id {kernel_id}")
@@ -153,6 +186,13 @@ class JupyterExtension:
         kernel_id: Optional[str] = None,
         request_timeout: Optional[float] = None,
     ) -> None:
+        """
+        Restarts the context.
+        Restarting will clear all variables, imports, and other settings set during previous executions.
+
+        :param kernel_id: Context id
+        :param request_timeout: Max time to wait for the request to finish
+        """
         kernel_id = kernel_id or DEFAULT_KERNEL_ID
 
         logger.debug(f"Restarting kernel {kernel_id}")
@@ -173,6 +213,14 @@ class JupyterExtension:
         self,
         request_timeout: Optional[float] = None,
     ) -> List[Kernel]:
+        """
+        Lists all available contexts.
+
+        :param request_timeout: Max time to wait for the request to finish
+        :return: List of Kernel objects
+        """
+        logger.debug("Listing kernels")
+
         try:
             response = await self._client.get(
                 f"{self._url}/contexts",
@@ -194,6 +242,9 @@ class AsyncCodeInterpreter(AsyncSandbox):
 
     @property
     def notebook(self) -> JupyterExtension:
+        """
+        Code interpreter module for executing code in a stateful context.
+        """
         return self._notebook
 
     def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):

@@ -52,12 +52,30 @@ async function* readLines(stream: ReadableStream<Uint8Array>) {
   }
 }
 
+/**
+ * Code interpreter module for executing code in a stateful context.
+ */
 export class JupyterExtension {
   private static readonly execTimeoutMs = 300_000
   private static readonly defaultKernelID = 'default'
 
   constructor(private readonly url: string, private readonly connectionConfig: ConnectionConfig) { }
 
+  /**
+   * Runs the code in the specified context, if not specified, the default context is used.
+   * You can reference previously defined variables, imports, and functions in the code.
+   *
+   * @param code The code to execute
+   * @param opts Options for executing the code
+   * @param opts.kernelID The context ID to run the code in
+   * @param opts.onStdout Callback for handling stdout messages
+   * @param opts.onStderr Callback for handling stderr messages
+   * @param opts.onResult Callback for handling the final result
+   * @param opts.envs Environment variables to set for the execution
+   * @param opts.timeoutMs Max time to wait for the execution to finish
+   * @param opts.requestTimeoutMs Max time to wait for the request to finish
+   * @returns Execution object
+   */
   async execCell(
     code: string,
     opts?: {
@@ -132,6 +150,14 @@ export class JupyterExtension {
     }
   }
 
+  /**
+   * Creates a new context to run code in.
+   *
+   * @param cwd The working directory for the context
+   * @param kernelName The name of the context
+   * @param requestTimeoutMs Max time to wait for the request to finish
+   * @returns The context ID
+   */
   async createKernel({
     cwd,
     kernelName,
@@ -168,6 +194,13 @@ export class JupyterExtension {
     }
   }
 
+  /**
+   * Restarts the context.
+   * Restarting will clear all variables, imports, and other settings set during previous executions.
+   *
+   * @param kernelID The context ID to restart
+   * @param requestTimeoutMs Max time to wait for the request to finish
+   */
   async restartKernel({
     kernelID,
     requestTimeoutMs,
@@ -195,6 +228,12 @@ export class JupyterExtension {
     }
   }
 
+  /**
+   * Shuts down the context.
+   *
+   * @param kernelID The context ID to shut down
+   * @param requestTimeoutMs Max time to wait for the request to finish
+   */
   async shutdownKernel({
     kernelID,
     requestTimeoutMs,
@@ -221,6 +260,12 @@ export class JupyterExtension {
     }
   }
 
+  /**
+   * Lists all available contexts.
+   *
+   * @param requestTimeoutMs Max time to wait for the request to finish
+   * @returns List of context IDs and names
+   */
   async listKernels({
     requestTimeoutMs,
   }: {
@@ -244,6 +289,9 @@ export class JupyterExtension {
   }
 }
 
+/**
+ * Code interpreter module for executing code in a stateful context.
+ */
 export class CodeInterpreter extends Sandbox {
   protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
   protected static readonly jupyterPort = 49999

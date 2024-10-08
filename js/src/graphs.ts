@@ -1,3 +1,6 @@
+/**
+ * Graph types
+ */
 export enum GraphType {
   LINE = 'line',
   SCATTER = 'scatter',
@@ -8,6 +11,10 @@ export enum GraphType {
   UNKNOWN = 'unknown',
 }
 
+
+/**
+ * Ax scale types
+ */
 export enum ScaleType {
   LINEAR = "linear",
   DATETIME = "datetime",

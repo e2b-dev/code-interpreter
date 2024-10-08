@@ -39,6 +39,9 @@ plt.show()
   expect(graph.x_label).toBe('Time (s)')
   expect(graph.y_label).toBe('Amplitude (Hz)')
 
+  expect(graph.x_scale).toBe('datetime')
+  expect(graph.y_scale).toBe('linear')
+
   expect(graph.x_unit).toBe('s')
   expect(graph.y_unit).toBe('Hz')
 
