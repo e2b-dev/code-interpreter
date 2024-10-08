@@ -19,12 +19,14 @@ jobs:
 
       - uses: pnpm/action-setup@v3
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
+        with:
+          version: 9.5
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 18
         uses: actions/setup-node@v4
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
-          node-version: 20
+          node-version: '18.x'
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
@@ -37,6 +39,14 @@ jobs:
       - name: Install dependencies
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: pnpm install --frozen-lockfile
+
+      - name: Test JS SDK
+        working-directory: js
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
+        run: |
+          pnpm run test
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
 
       - name: Release JS Candidate
         working-directory: js
@@ -51,7 +61,7 @@ jobs:
         uses: actions/setup-python@v4
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         with:
-          python-version: "3.10"
+          python-version: "3.8"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
@@ -61,6 +71,15 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
+
+      - name: Test Python SDK
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
+        working-directory: python
+        run: |
+          poetry install
+          poetry run pytest -n 4 --verbose -x
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
 
       - name: Release Candidate
         if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}

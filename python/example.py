@@ -1,5 +1,10 @@
-from e2b_code_interpreter.main import CodeInterpreter
+import asyncio
+import time
+from time import sleep
+
 from dotenv import load_dotenv
+
+from e2b_code_interpreter import AsyncCodeInterpreter
 
 load_dotenv()
 
@@ -8,24 +13,32 @@ code = """
 import matplotlib.pyplot as plt
 import numpy as np
 
-x = np.linspace(0, 20, 100)
-y = np.sin(x)
+# Step 1: Define the data for the pie chart
+categories = ["No", "No, in blue"]
+sizes = [90, 10] 
 
-plt.plot(x, y)
+# Step 2: Create the figure and axis objects
+fig, ax = plt.subplots(figsize=(8, 8))
+
+plt.xlabel("x")
+plt.ylabel("y")
+
+# Step 3: Create the pie chart
+ax.pie(sizes, labels=categories, autopct='%1.1f%%', startangle=90, colors=plt.cm.Pastel1.colors[:len(categories)])
+
+# Step 4: Add title and legend
+ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
+plt.title('Will I wake up early tomorrow?')
+
+# Step 5: Show the plot
 plt.show()
-
-x = np.linspace(0, 10, 100)
-
-plt.plot(x, y)
-plt.show()
-
-import pandas
-pandas.DataFrame({"a": [1, 2, 3]})
 """
 
-with CodeInterpreter() as sandbox:
-    print(sandbox.id)
-    execution = sandbox.notebook.exec_cell(code)
 
-print(execution.results[0].formats())
-print(len(execution.results))
+async def run():
+    sbx = await AsyncCodeInterpreter.create(timeout=60)
+    e = await sbx.notebook.exec_cell(code)
+    print(e.results[0].graph)
+
+
+asyncio.run(run())
