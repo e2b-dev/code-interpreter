@@ -369,9 +369,6 @@ class SuperGraph(Graph):
 def _get_type_of_graph(ax: Axes) -> GraphType:
     objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
 
-    if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
-        return GraphType.BOX_AND_WHISKER
-
     def is_grid_line(line: Line2D) -> bool:
         x_data = line.get_xdata()
         if len(x_data) != 2:
@@ -386,29 +383,32 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
 
         return False
 
-    filtered = []
+    objects_without_grid_lines = []
     for obj in objects:
         if isinstance(obj, Line2D) and is_grid_line(obj):
             continue
-        filtered.append(obj)
-
-    objects = filtered
+        objects_without_grid_lines.append(obj)
 
     # Check for Line plots
-    if all(isinstance(line, Line2D) for line in objects):
+    if all(isinstance(line, Line2D) for line in objects_without_grid_lines):
         return GraphType.LINE
 
     # Check for Scatter plots
-    if all(isinstance(path, PathCollection) for path in objects):
+    if all(isinstance(path, PathCollection) for path in objects_without_grid_lines):
         return GraphType.SCATTER
 
     # Check for Pie plots
-    if all(isinstance(artist, Wedge) for artist in objects):
+    if all(isinstance(artist, Wedge) for artist in objects_without_grid_lines):
         return GraphType.PIE
 
     # Check for Bar plots
-    if all(isinstance(rect, Rectangle) for rect in objects):
+    if all(isinstance(rect, Rectangle) for rect in objects_without_grid_lines):
         return GraphType.BAR
+
+    # Check for Box and Whisker plots — we use the objects including grid lines.
+    # We also check for the Box and Whiskers only after we've already checked for Line2D/Line graph.
+    if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
+        return GraphType.BOX_AND_WHISKER
 
     return GraphType.UNKNOWN
 
