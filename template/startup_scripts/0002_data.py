@@ -1,7 +1,6 @@
 from datetime import date
 import enum
 import re
-from dateutil import parser
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
@@ -370,10 +369,6 @@ class SuperGraph(Graph):
 def _get_type_of_graph(ax: Axes) -> GraphType:
     objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
 
-    # Check for Line plots
-    if all(isinstance(line, Line2D) for line in objects):
-        return GraphType.LINE
-
     if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
         return GraphType.BOX_AND_WHISKER
 
@@ -398,6 +393,10 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
         filtered.append(obj)
 
     objects = filtered
+
+    # Check for Line plots
+    if all(isinstance(line, Line2D) for line in objects):
+        return GraphType.LINE
 
     # Check for Scatter plots
     if all(isinstance(path, PathCollection) for path in objects):
