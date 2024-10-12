@@ -1,3 +1,15 @@
+## 🚨 Code Interpreter SDK merged into E2B SDK.
+
+The Code Interpreter SDK repository has been consolidated into the "core" [E2B SDK repository](https://github.com/e2b-dev/E2B).
+
+### What this means for you
+
+- **All Capabilities Preserved**: The E2B SDK includes all functionalities previously available in the Code Interpreter SDK.
+- **Single Source**: You can now find all relevant code and functionalities in one repository and in one place in the docs.
+- **How to switch to the merged SDK version**: TBD
+
+
+<!---
 # Code Interpreter SDK
 E2B's [Code Interpreter SDK](https://github.com/e2b-dev/code-interpreter) allows you to add code interpreting capabilities to your AI apps.
 
@@ -77,3 +89,4 @@ Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello
 - 🦜🕸️ [LangGraph with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langgraph-python)
 - [Autogen with secure sandboxed code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/e2b_autogen)
 
+--->
