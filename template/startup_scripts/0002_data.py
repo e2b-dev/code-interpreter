@@ -1,7 +1,6 @@
 from datetime import date
 import enum
 import re
-from dateutil import parser
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
@@ -19,6 +18,21 @@ from IPython.core.formatters import BaseFormatter
 from matplotlib.text import Text
 from pydantic import BaseModel, Field, field_validator
 from traitlets.traitlets import Unicode, ObjectName
+
+
+def _is_grid_line(line: Line2D) -> bool:
+    x_data = line.get_xdata()
+    if len(x_data) != 2:
+        return False
+
+    y_data = line.get_ydata()
+    if len(y_data) != 2:
+        return False
+
+    if x_data[0] == x_data[1] or y_data[0] == y_data[1]:
+        return True
+
+    return False
 
 
 class GraphType(str, enum.Enum):
@@ -187,6 +201,8 @@ class LineGraph(PointGraph):
         super()._extract_info(ax)
 
         for line in ax.get_lines():
+            if _is_grid_line(line):
+                continue
             label = line.get_label()
             if label.startswith("_child"):
                 number = int(label[6:])
@@ -377,23 +393,9 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
     if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
         return GraphType.BOX_AND_WHISKER
 
-    def is_grid_line(line: Line2D) -> bool:
-        x_data = line.get_xdata()
-        if len(x_data) != 2:
-            return False
-
-        y_data = line.get_ydata()
-        if len(y_data) != 2:
-            return False
-
-        if x_data[0] == x_data[1] or y_data[0] == y_data[1]:
-            return True
-
-        return False
-
     filtered = []
     for obj in objects:
-        if isinstance(obj, Line2D) and is_grid_line(obj):
+        if isinstance(obj, Line2D) and _is_grid_line(obj):
             continue
         filtered.append(obj)
 
