@@ -3,6 +3,9 @@ jupyter-server==2.13.0
 ipykernel==6.29.3
 ipython==8.22.2
 
+# Latest version for
+e2b_code_interpreter_data_extraction
+
 # Other packages
 aiohttp==3.9.3
 beautifulsoup4==4.12.3
