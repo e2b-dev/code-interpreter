@@ -8,5 +8,5 @@ display({'text/latex': r'\text{CustomReprObject}'}, raw=True)
 
 
 def test_bash(sandbox: Sandbox):
-    execution = sandbox.notebook.exec_cell(code)
+    execution = sandbox.run_code(code)
     assert execution.results[0].formats() == ["latex"]

@@ -28,7 +28,7 @@ plt.show()
 
 
 async def test_unknown_graphs(async_sandbox: AsyncSandbox):
-    result = await async_sandbox.notebook.exec_cell(code)
+    result = await async_sandbox.run_code(code)
 
     graph = result.results[0].graph
     assert graph

@@ -18,7 +18,7 @@ async def test_datetime_scale(async_sandbox: AsyncSandbox):
     plt.show()
     """
 
-    result = await async_sandbox.notebook.exec_cell(code)
+    result = await async_sandbox.run_code(code)
 
     graph = result.results[0].graph
     assert graph
@@ -42,7 +42,7 @@ async def test_categorical_scale(async_sandbox: AsyncSandbox):
     plt.show()
     """
 
-    result = await async_sandbox.notebook.exec_cell(code)
+    result = await async_sandbox.run_code(code)
 
     graph = result.results[0].graph
     assert graph

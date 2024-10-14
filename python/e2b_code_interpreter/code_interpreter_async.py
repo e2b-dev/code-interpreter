@@ -1,19 +1,19 @@
 import logging
 import httpx
 
-from typing import Optional, List, Dict
-from httpx import AsyncHTTPTransport, AsyncClient
+from typing import Optional, Dict
+from httpx import AsyncClient
 
 from e2b import AsyncSandbox as BaseAsyncSandbox, ConnectionConfig
 
 from e2b_code_interpreter.constants import (
-    DEFAULT_KERNEL_ID,
     DEFAULT_TEMPLATE,
     JUPYTER_PORT,
+    DEFAULT_TIMEOUT,
 )
 from e2b_code_interpreter.models import (
     Execution,
-    Kernel,
+    Context,
     Result,
     aextract_exception,
     parse_output,
@@ -28,31 +28,25 @@ from e2b_code_interpreter.exceptions import (
 logger = logging.getLogger(__name__)
 
 
-class JupyterExtension:
-    """
-    Code interpreter module for executing code in a stateful context.
-    """
+class AsyncSandbox(BaseAsyncSandbox):
+    default_template = DEFAULT_TEMPLATE
 
-    _exec_timeout = 300
+    def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
+        super().__init__(sandbox_id=sandbox_id, connection_config=connection_config)
+
+    @property
+    def _jupyter_url(self) -> str:
+        return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
 
     @property
     def _client(self) -> AsyncClient:
         return AsyncClient(transport=self._transport)
 
-    def __init__(
-        self,
-        url: str,
-        transport: AsyncHTTPTransport,
-        connection_config: ConnectionConfig,
-    ):
-        self._url = url
-        self._transport = transport
-        self._connection_config = connection_config
-
-    async def exec_cell(
+    async def run_code(
         self,
         code: str,
-        kernel_id: Optional[str] = None,
+        language: Optional[str] = None,
+        context: Optional[Context] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
@@ -65,7 +59,8 @@ class JupyterExtension:
         You can reference previously defined variables, imports, and functions in the code.
 
         :param code: The code to execute
-        :param kernel_id: The context id
+        :param language: Language of the code. If not specified and context_id is not provided, the default Python context is used.
+        :param context: The context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with language.
         :param on_stdout: Callback for stdout messages
         :param on_stderr: Callback for stderr messages
         :param on_result: Callback for the `Result` object
@@ -76,16 +71,20 @@ class JupyterExtension:
         """
         logger.debug(f"Executing code {code}")
 
-        timeout = None if timeout == 0 else (timeout or self._exec_timeout)
+        if context and language:
+            raise ValueError("Only one of context_id or language can be provided")
+
+        timeout = None if timeout == 0 else (timeout or DEFAULT_TIMEOUT)
         request_timeout = request_timeout or self._connection_config.request_timeout
+        context_id = context.id if context else None
 
         try:
             async with self._client.stream(
                 "POST",
-                f"{self._url}/execute",
+                f"{self._jupyter_url}/execute",
                 json={
                     "code": code,
-                    "context_id": kernel_id,
+                    "context_id": context_id,
                     "env_vars": envs,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
@@ -112,27 +111,27 @@ class JupyterExtension:
         except httpx.TimeoutException:
             raise format_request_timeout_error()
 
-    async def create_kernel(
+    async def create_code_context(
         self,
         cwd: Optional[str] = None,
-        kernel_name: Optional[str] = None,
+        language: Optional[str] = None,
         envs: Optional[Dict[str, str]] = None,
         request_timeout: Optional[float] = None,
-    ) -> str:
+    ) -> Context:
         """
         Creates a new context to run code in.
 
         :param cwd: Set the current working directory for the context
-        :param kernel_name: Type of the context
+        :param language: Language of the context. If not specified, the default Python context is used.
         :param envs: Environment variables
         :param request_timeout: Max time to wait for the request to finish
         :return: Context id
         """
-        logger.debug(f"Creating new kernel {kernel_name}")
+        logger.debug(f"Creating new {language} context")
 
         data = {}
-        if kernel_name:
-            data["name"] = kernel_name
+        if language:
+            data["language"] = language
         if cwd:
             data["cwd"] = cwd
         if envs:
@@ -140,7 +139,7 @@ class JupyterExtension:
 
         try:
             response = await self._client.post(
-                f"{self._url}/contexts",
+                f"{self._jupyter_url}/contexts",
                 json=data,
                 timeout=request_timeout or self._connection_config.request_timeout,
             )
@@ -150,110 +149,6 @@ class JupyterExtension:
                 raise err
 
             data = response.json()
-            return data["id"]
+            return Context.from_json(data)
         except httpx.TimeoutException:
             raise format_request_timeout_error()
-
-    async def shutdown_kernel(
-        self,
-        kernel_id: Optional[str] = None,
-        request_timeout: Optional[float] = None,
-    ) -> None:
-        """
-        Shuts down a context.
-
-        :param kernel_id: Context id
-        :param request_timeout: Max time to wait for the request to finish
-        """
-        kernel_id = kernel_id or DEFAULT_KERNEL_ID
-
-        logger.debug(f"Shutting down a kernel with id {kernel_id}")
-
-        try:
-            response = await self._client.delete(
-                url=f"{self._url}/contexts/{kernel_id}",
-                timeout=request_timeout or self._connection_config.request_timeout,
-            )
-
-            err = await aextract_exception(response)
-            if err:
-                raise err
-        except httpx.TimeoutException:
-            raise format_request_timeout_error()
-
-    async def restart_kernel(
-        self,
-        kernel_id: Optional[str] = None,
-        request_timeout: Optional[float] = None,
-    ) -> None:
-        """
-        Restarts the context.
-        Restarting will clear all variables, imports, and other settings set during previous executions.
-
-        :param kernel_id: Context id
-        :param request_timeout: Max time to wait for the request to finish
-        """
-        kernel_id = kernel_id or DEFAULT_KERNEL_ID
-
-        logger.debug(f"Restarting kernel {kernel_id}")
-
-        try:
-            response = await self._client.post(
-                f"{self._url}/contexts/{kernel_id}/restart",
-                timeout=request_timeout or self._connection_config.request_timeout,
-            )
-
-            err = await aextract_exception(response)
-            if err:
-                raise err
-        except httpx.TimeoutException:
-            raise format_request_timeout_error()
-
-    async def list_kernels(
-        self,
-        request_timeout: Optional[float] = None,
-    ) -> List[Kernel]:
-        """
-        Lists all available contexts.
-
-        :param request_timeout: Max time to wait for the request to finish
-        :return: List of Kernel objects
-        """
-        logger.debug("Listing kernels")
-
-        try:
-            response = await self._client.get(
-                f"{self._url}/contexts",
-                timeout=request_timeout or self._connection_config.request_timeout,
-            )
-
-            err = await aextract_exception(response)
-            if err:
-                raise err
-
-            return [Kernel(k["id"], k["name"]) for k in response.json()]
-        except httpx.TimeoutException:
-            raise format_request_timeout_error()
-
-
-class AsyncSandbox(BaseAsyncSandbox):
-    default_template = DEFAULT_TEMPLATE
-    _jupyter_port = JUPYTER_PORT
-
-    @property
-    def notebook(self) -> JupyterExtension:
-        """
-        Code interpreter module for executing code in a stateful context.
-        """
-        return self._notebook
-
-    def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
-        super().__init__(sandbox_id=sandbox_id, connection_config=connection_config)
-
-        jupyter_url = f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(self._jupyter_port)}"
-
-        self._notebook = JupyterExtension(
-            jupyter_url,
-            self._transport,
-            self.connection_config,
-        )

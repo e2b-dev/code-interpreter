@@ -36,7 +36,7 @@ plt.show()
 
 
 async def test_box_and_whiskers(async_sandbox: AsyncSandbox):
-    result = await async_sandbox.notebook.exec_cell(code)
+    result = await async_sandbox.run_code(code)
 
     graph = result.results[0].graph
     assert graph

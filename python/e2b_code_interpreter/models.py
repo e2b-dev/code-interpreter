@@ -80,8 +80,6 @@ class Result:
     The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
     as a string, and the result can contain multiple types of data. The display calls don't have to have text representation,
     for the actual result the representation is always present for the result, the other representations are always optional.
-
-    The class also provides methods to display the data in a Jupyter notebook.
     """
 
     def __getitem__(self, item):
@@ -420,10 +418,20 @@ def parse_output(
 
 
 @dataclass
-class Kernel:
-    kernel_id: str
-    name: str
+class Context:
+    id: str
+    language: str
+    cwd: Optional[str] = None
 
-    def __init__(self, kernel_id: str, name: str, **kwargs):
-        self.kernel_id = kernel_id
-        self.name = name
+    def __init__(self, context_id: str, language: str, cwd: str, **kwargs):
+        self.id = context_id
+        self.language = language
+        self.cwd = cwd
+
+    @classmethod
+    def from_json(cls, data: Dict[str, str]):
+        return cls(
+            context_id=data.get("id"),
+            language=data.get("language"),
+            cwd=data.get("cwd"),
+        )
