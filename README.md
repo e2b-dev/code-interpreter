@@ -1,92 +1,107 @@
-## 🚨 Code Interpreter SDK merged into E2B SDK.
+<p align="center">
+  <img width="100" src="https://raw.githubusercontent.com/e2b-dev/E2B/main/readme-assets/logo-circle.png" alt="e2b logo">
+</p>
 
-The Code Interpreter SDK repository has been consolidated into the "core" [E2B SDK repository](https://github.com/e2b-dev/E2B).
+<h1 align="center">
+  Code Interpreter SDK
+</h1>
 
-### What this means for you
+<!---
+<h3 align="center">
+  SDK made to control the E2B Sandboxes - secure cloud environments for running LLM-generated code
+</h3>
+--->
+The Code Interpreter SDK is made to control the E2B Sandboxes - secure cloud environments for running LLM-generated code. The SDK lets you give your AI app a custom code interpreter.
 
-- **All Capabilities Preserved**: The E2B SDK includes all functionalities previously available in the Code Interpreter SDK.
-- **Single Source**: You can now find all relevant code and functionalities in one repository and in one place in the docs.
-- **How to switch to the merged SDK version**: TBD
+- ✔️ Works with any LLM and AI framework (see [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) for examples)
+- ✔️ Supports streaming content like charts and stdout, stderr
+- ✔️ Python & JS SDK
+- ✔️ Runs on serverless and edge functions
+- ✔️ Runs AI-generated code in secure sandboxed environments
+- ✔️ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
+
+
+##### 💻 Supported language runtimes
+- ✔️ Python
+- [(Beta)](https://e2b.dev/docs/guide/beta-code-interpreter-language-runtimes) JavaScript, R, Java
 
 
 <!---
-# Code Interpreter SDK
-E2B's [Code Interpreter SDK](https://github.com/e2b-dev/code-interpreter) allows you to add code interpreting capabilities to your AI apps.
-
-The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2b) - an open-source secure sandbox made for running untrusted AI-generated code and AI agents.
-- ✅ Works with any LLM and AI framework
-- ✅ Supports streaming content like charts and stdout, stderr
-- ✅ Python & JS SDK
-- ✅ Runs on serverless and edge functions
-- ✅ Runs AI-generated code in secure sandboxed environments
-- ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
-
-Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
-
-## 💻 Supported language runtimes
-- ✅ Python
-- [(Beta)](https://e2b.dev/docs/guide/beta-code-interpreter-language-runtimes) JavaScript, R, Java
-
-## 📖 Documentation
-- [e2b.dev/docs/code-interpreter](https://e2b.dev/docs/code-interpreter/installation)
-
-## 🚀 Quickstart
-
-### 1. Install SDK
-
-JavaScript/TypeScript
-```
-npm i @e2b/code-interpreter
-```
-
-Python
-```
-pip install e2b_code_interpreter
-```
-
-### 2. Execute code with code interpreter inside sandbox
-
-**JavaScript**
-```ts
-import { CodeInterpreter } from '@e2b/code-interpreter'
-
-const sandbox = await CodeInterpreter.create()
-await sandbox.notebook.execCell('x = 1')
-
-const execution = await sandbox.notebook.execCell('x+=1; x')
-console.log(execution.text)  // outputs 2
-
-await sandbox.close()
-```
-
-**Python**
-```py
-from e2b_code_interpreter import CodeInterpreter
-
-with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell("x = 1")
-
-    execution = sandbox.notebook.exec_cell("x+=1; x")
-    print(execution.text)  # outputs 2
-```
-
-### 3. Hello World guide
-Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to connect code interpreter LLMs.
-
-## 📖 Cookbook examples
-
-**Hello World**
-- [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js)
-- [Python](https://e2b.dev/docs/hello-world/py)
-
-**LLM Providers**
-- 🪸 [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter-python/claude_code_interpreter.ipynb)
-- 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter-python)
-- [Mixtral with code interpreter and chat UI](https://github.com/e2b-dev/e2b-cookbook/tree/main/templates/mixtral-8x7b-code-interpreter-nextjs)
-
-**AI Frameworks**
-- 🦜⛓️ [LangChain with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langchain-python)
-- 🦜🕸️ [LangGraph with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langgraph-python)
-- [Autogen with secure sandboxed code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/e2b_autogen)
+<img width="100%" src="/readme-assets/preview.png" alt="Cover image">
 
 --->
+
+<h4 align="center">
+  <a href="https://pypi.org/project/e2b/">
+    <img alt="Last 1 month downloads for the Python SDK" loading="lazy" width="200" height="20" decoding="async" data-nimg="1"
+    style="color:transparent;width:auto;height:100%" src="https://img.shields.io/pypi/dm/e2b?label=PyPI%20Downloads">
+  </a>
+  <a href="https://www.npmjs.com/package/e2b">
+    <img alt="Last 1 month downloads for the Python SDK" loading="lazy" width="200" height="20" decoding="async" data-nimg="1"
+    style="color:transparent;width:auto;height:100%" src="https://img.shields.io/npm/dm/e2b?label=NPM%20Downloads">
+  </a>
+</h4>
+
+---
+### What is E2B?
+
+[E2B](https://www.e2b.dev/) is an open-source runtime for running AI-generated code in secure cloud Sandboxes. It's tailor-made for agentic & AI use cases.
+
+<!---
+<h4 align="center">
+  <a href="https://e2b.dev/docs">Docs</a> |
+  <a href="https://e2b.dev">Website</a> |
+  <a href="https://discord.gg/U7KEcGErtQ">Discord</a> |
+  <a href="https://twitter.com/e2b_dev">Twitter</a>
+</h4>
+--->
+
+
+<div align='center'>
+<!-- <a href="https://e2b.dev/docs" target="_blank">
+<img src="https://img.shields.io/badge/docs-%2300acee.svg?color=143D52&style=for-the-badge&logo=x&logoColor=white" alt=docs style="margin-bottom: 5px;"/></a>  -->
+<a href="https://twitter.com/e2b_dev" target="_blank">
+<img src="https://img.shields.io/badge/x (twitter)-%2300acee.svg?color=000000&style=for-the-badge&logo=x&logoColor=white" alt=linkedin style="margin-bottom: 5px;"/></a> 
+<a href="https://discord.com/invite/U7KEcGErtQ" target="_blank">
+<img src="https://img.shields.io/badge/discord -%2300acee.svg?color=143D52&style=for-the-badge&logo=discord&logoColor=white" alt=discord style="margin-bottom: 5px;"/></a> 
+<a href="https://www.linkedin.com/company/e2b-dev/" target="_blank">
+<img src="https://img.shields.io/badge/linkedin-%2300acee.svg?color=000000&style=for-the-badge&logo=linkedin&logoColor=white" alt=linkedin style="margin-bottom: 5px;"/></a> 
+</div align='center'>
+
+
+### E2B Sandbox
+E2B Sandbox is a secure cloud environment that allows AI agents and apps. You can run multiple instances of Sandboxes, and have long-running sessions. Inside the Sandboxes, LLMs can use the same tools as humans do, e.g.:
+
+- Running LLM generated code
+- Cloud browsers
+- GitHub repositories and CLIs
+- Coding tools like linters, autocomplete, "go-to defintion"
+- Audio & video editing
+
+
+## Getting Started & Documentation
+
+> Please visit [documentation](https://e2b.dev/docs) to get started.
+
+To create and control a sandbox, you use our SDK:
+
+### Install SDK
+
+```bash
+pip install e2b
+```
+
+### Start sandbox
+
+```py
+from e2b import Sandbox
+
+# Create sandbox
+sandbox = Sandbox()
+
+# Let an LLM use the sandbox here
+# Visit https://e2b.dev/docs/sandbox/overview to learn more about sandboxes.
+
+# Close sandbox once done
+sandbox.close()
+```
