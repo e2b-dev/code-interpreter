@@ -18,6 +18,11 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
+# Javascript Kernel
+RUN npm install -g node-gyp
+RUN npm install -g --unsafe-perm ijavascript
+RUN ijsinstall --install=global
+
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
 

@@ -23,21 +23,21 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
 
    **Python**
    ```python
-   from e2b_code_interpreter import CodeInterpreter
-   sandbox = CodeInterpreter(template="your-custom-sandbox-name")
-   execution = sandbox.notebook.exec_cell("print('hello')")
-   sandbox.close()
+   from e2b_code_interpreter import Sandbox
+   sandbox = Sandbox(template="your-custom-sandbox-name")
+   execution = sandbox.run_code("print('hello')")
+   sandbox.kill()
 
    # Or you can use `with` which handles closing the sandbox for you
-   with CodeInterpreter(template="your-custom-sandbox-name") as sandbox:
-       execution = sandbox.notebook.exec_cell("print('hello')")
+   with Sandbox(template="your-custom-sandbox-name") as sandbox:
+       execution = sandbox.run_code("print('hello')")
    ```
    
 
    **JavaScript/TypeScript**
    ```js
-   import { CodeInterpreter } from '@e2b/code-interpreter'
-   const sandbox = await CodeInterpreter.create({ template: 'your-custom-sandbox-name' })
-   const execution = await sandbox.notebook.execCell('print("hello")')
+   import { Sandbox } from '@e2b/code-interpreter'
+   const sandbox = await Sandbox.create({ template: 'your-custom-sandbox-name' })
+   const execution = await sandbox.execCell('print("hello")')
    await sandbox.close()
    ```

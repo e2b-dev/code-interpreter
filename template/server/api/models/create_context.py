@@ -8,6 +8,6 @@ class CreateContext(BaseModel):
         default="/home/user",
         description="Current working directory",
     )
-    name: Optional[StrictStr] = Field(
-        default="python", description="Name of the kernel"
+    language: Optional[StrictStr] = Field(
+        default="python", description="Language of the context"
     )
