@@ -83,25 +83,44 @@ E2B Sandbox is a secure cloud environment that allows AI agents and apps. You ca
 
 > Please visit [documentation](https://e2b.dev/docs) to get started.
 
-To create and control a sandbox, you use our SDK:
+**Python**
 
-### Install SDK
+1. Install SDK
 
 ```bash
-pip install e2b
+pip install e2b_code_interpreter
 ```
 
-### Start sandbox
+2. Execute code with code interpreter inside sandbox
 
 ```py
-from e2b import Sandbox
+from e2b_code_interpreter import Sandbox
 
-# Create sandbox
-sandbox = Sandbox()
+with CodeInterpreter() as sandbox:
+    sandbox.run_code("x = 1")
 
-# Let an LLM use the sandbox here
-# Visit https://e2b.dev/docs/sandbox/overview to learn more about sandboxes.
+    execution = sandbox.run_code("x+=1; x")
+    print(execution.text)  # outputs 2
+```
 
-# Close sandbox once done
-sandbox.close()
+**JavaScript & TypeScript**
+
+1. Install SDK
+
+```bash
+npm i @e2b/code-interpreter
+```
+
+2. Execute code with code interpreter inside sandbox
+
+```js
+import { Sandbox } from '@e2b/code-interpreter'
+
+const sandbox = await CodeInterpreter.create()
+await sbx.runCode()('x = 1')
+
+const execution = await sbx.runCode()('x+=1; x')
+console.log(execution.text)  // outputs 2
+
+await sandbox.close()
 ```
