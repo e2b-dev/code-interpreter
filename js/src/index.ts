@@ -1,6 +1,6 @@
 export * from 'e2b'
 
-export { CodeInterpreter, JupyterExtension } from './codeInterpreter'
+export { Sandbox, JupyterExtension } from './sandbox'
 
 export type {
   Logs,
@@ -27,6 +27,6 @@ export type {
   SuperGraph,
   PointData,
 } from './graphs'
-import { CodeInterpreter } from './codeInterpreter'
+import { Sandbox } from './sandbox'
 
-export default CodeInterpreter
+export default Sandbox

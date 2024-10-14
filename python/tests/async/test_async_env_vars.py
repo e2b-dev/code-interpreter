@@ -1,14 +1,14 @@
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
 async def test_env_vars_sandbox():
-    sbx = await AsyncCodeInterpreter.create(envs={"FOO": "bar"})
+    sbx = await AsyncSandbox.create(envs={"FOO": "bar"})
     result = await sbx.notebook.exec_cell("import os; os.getenv('FOO')")
     assert result.text == "bar"
     await sbx.kill()
 
 
-async def test_env_vars_in_exec_cell(async_sandbox: AsyncCodeInterpreter):
+async def test_env_vars_in_exec_cell(async_sandbox: AsyncSandbox):
     result = await async_sandbox.notebook.exec_cell(
         "import os; os.getenv('FOO')", envs={"FOO": "bar"}
     )
@@ -16,7 +16,7 @@ async def test_env_vars_in_exec_cell(async_sandbox: AsyncCodeInterpreter):
 
 
 async def test_env_vars_override(debug: bool):
-    sbx = await AsyncCodeInterpreter.create(envs={"FOO": "bar", "SBX": "value"})
+    sbx = await AsyncSandbox.create(envs={"FOO": "bar", "SBX": "value"})
     await sbx.notebook.exec_cell(
         "import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'async_python_runtime'"
     )

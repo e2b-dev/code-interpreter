@@ -1,16 +1,16 @@
-import { CodeInterpreter } from '../src'
+import { Sandbox } from '../src'
 import { test as base } from 'vitest'
 
 const timeoutMs = 60_000
 
 interface SandboxFixture {
-  sandbox: CodeInterpreter
+  sandbox: Sandbox
 }
 
 export const sandboxTest = base.extend<SandboxFixture>({
   sandbox: [
     async ({}, use) => {
-      const sandbox = await CodeInterpreter.create({ timeoutMs })
+      const sandbox = await Sandbox.create({ timeoutMs })
       try {
         await use(sandbox)
       } finally {

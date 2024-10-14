@@ -1,13 +1,13 @@
 import pytest
 
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
-async def test_create_new_kernel(async_sandbox: AsyncCodeInterpreter):
+async def test_create_new_kernel(async_sandbox: AsyncSandbox):
     await async_sandbox.notebook.create_kernel()
 
 
-async def test_independence_of_kernels(async_sandbox: AsyncCodeInterpreter):
+async def test_independence_of_kernels(async_sandbox: AsyncSandbox):
     kernel_id = await async_sandbox.notebook.create_kernel()
     await async_sandbox.notebook.exec_cell("x = 1")
 
@@ -17,7 +17,7 @@ async def test_independence_of_kernels(async_sandbox: AsyncCodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-async def test_restart_kernel(async_sandbox: AsyncCodeInterpreter):
+async def test_restart_kernel(async_sandbox: AsyncSandbox):
     await async_sandbox.notebook.exec_cell("x = 1")
     await async_sandbox.notebook.restart_kernel()
 
@@ -27,7 +27,7 @@ async def test_restart_kernel(async_sandbox: AsyncCodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-async def test_list_kernels(async_sandbox: AsyncCodeInterpreter):
+async def test_list_kernels(async_sandbox: AsyncSandbox):
     kernels = await async_sandbox.notebook.list_kernels()
     assert len(kernels) == 1
 
@@ -38,7 +38,7 @@ async def test_list_kernels(async_sandbox: AsyncCodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-async def test_shutdown(async_sandbox: AsyncCodeInterpreter):
+async def test_shutdown(async_sandbox: AsyncSandbox):
     kernel_id = await async_sandbox.notebook.create_kernel()
     kernels = await async_sandbox.notebook.list_kernels()
     assert kernel_id in [kernel.kernel_id for kernel in kernels]

@@ -1,4 +1,4 @@
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 from e2b_code_interpreter.graphs import ScatterGraph
 
 code = """
@@ -22,7 +22,7 @@ plt.show()
 """
 
 
-async def test_scatter_graph(async_sandbox: AsyncCodeInterpreter):
+async def test_scatter_graph(async_sandbox: AsyncSandbox):
     result = await async_sandbox.notebook.exec_cell(code)
 
     graph = result.results[0].graph

@@ -1,14 +1,14 @@
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
 async def test_env_vars_sandbox():
-    sbx = CodeInterpreter(envs={"FOO": "bar"})
+    sbx = Sandbox(envs={"FOO": "bar"})
     result = sbx.notebook.exec_cell("import os; os.getenv('FOO')")
     assert result.text == "bar"
     sbx.kill()
 
 
-async def test_env_vars_in_exec_cell(sandbox: CodeInterpreter):
+async def test_env_vars_in_exec_cell(sandbox: Sandbox):
     result = sandbox.notebook.exec_cell(
         "import os; os.getenv('FOO')", envs={"FOO": "bar"}
     )
@@ -16,7 +16,7 @@ async def test_env_vars_in_exec_cell(sandbox: CodeInterpreter):
 
 
 async def test_env_vars_override(debug: bool):
-    sbx = CodeInterpreter(envs={"FOO": "bar", "SBX": "value"})
+    sbx = Sandbox(envs={"FOO": "bar", "SBX": "value"})
     sbx.notebook.exec_cell(
         "import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'python_runtime'"
     )

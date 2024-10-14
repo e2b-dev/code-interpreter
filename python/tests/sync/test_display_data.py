@@ -1,7 +1,7 @@
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
-def test_display_data(sandbox: CodeInterpreter):
+def test_display_data(sandbox: Sandbox):
     # plot random graph
     result = sandbox.notebook.exec_cell(
         """

@@ -1,7 +1,7 @@
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
-async def test_data(async_sandbox: AsyncCodeInterpreter):
+async def test_data(async_sandbox: AsyncSandbox):
     # plot random graph
     result = await async_sandbox.notebook.exec_cell(
         """

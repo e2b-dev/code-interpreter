@@ -1,4 +1,4 @@
-const { CodeInterpreter } = require('../dist')
+const { Sandbox } = require('../dist')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -11,7 +11,7 @@ async function main() {
   for (let i = 0; i < iterations; i++) {
     console.log('Iteration:', i + 1)
     let startTime = new Date()
-    const sandbox = await CodeInterpreter.create()
+    const sandbox = await Sandbox.create()
     createSandboxTime += new Date() - startTime
 
     startTime = new Date()
