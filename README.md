@@ -96,7 +96,7 @@ pip install e2b_code_interpreter
 ```py
 from e2b_code_interpreter import Sandbox
 
-with CodeInterpreter() as sandbox:
+with Sandbox() as sandbox:
     sandbox.run_code("x = 1")
 
     execution = sandbox.run_code("x+=1; x")
@@ -116,7 +116,7 @@ npm i @e2b/code-interpreter
 ```js
 import { Sandbox } from '@e2b/code-interpreter'
 
-const sandbox = await CodeInterpreter.create()
+const sandbox = await Sandbox.create()
 await sbx.runCode()('x = 1')
 
 const execution = await sbx.runCode()('x+=1; x')
