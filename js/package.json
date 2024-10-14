@@ -1,6 +1,6 @@
 {
   "name": "@e2b/code-interpreter",
-  "version": "0.0.9-beta.70",
+  "version": "0.0.9-beta.71",
   "description": "E2B Code Interpreter - Stateful code execution",
   "homepage": "https://e2b.dev",
   "license": "MIT",
