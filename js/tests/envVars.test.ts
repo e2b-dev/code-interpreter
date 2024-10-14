@@ -1,11 +1,11 @@
 import { expect } from 'vitest'
 
 import { isDebug, sandboxTest } from './setup'
-import { CodeInterpreter } from '../src'
+import { Sandbox } from '../src'
 
 // Skip this test if we are running in debug mode — the pwd and user in the testing docker container are not the same as in the actual sandbox.
 sandboxTest.skipIf(isDebug)('env vars', async () => {
-  const sandbox = await CodeInterpreter.create({
+  const sandbox = await Sandbox.create({
     envs: { TEST_ENV_VAR: 'supertest' },
   })
   const result = await sandbox.notebook.execCell(
@@ -25,7 +25,7 @@ sandboxTest('env vars on sandbox', async ({ sandbox }) => {
 })
 
 sandboxTest('env vars on sandbox override', async () => {
-  const sandbox = await CodeInterpreter.create({
+  const sandbox = await Sandbox.create({
     envs: { FOO: 'bar', SBX: 'value' },
   })
   await sandbox.notebook.execCell(

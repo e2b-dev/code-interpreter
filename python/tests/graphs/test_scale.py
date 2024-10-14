@@ -1,8 +1,8 @@
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 from e2b_code_interpreter.graphs import LineGraph
 
 
-async def test_datetime_scale(async_sandbox: AsyncCodeInterpreter):
+async def test_datetime_scale(async_sandbox: AsyncSandbox):
     code = """
     import numpy as np
     import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ async def test_datetime_scale(async_sandbox: AsyncCodeInterpreter):
     assert graph.y_scale == "linear"
 
 
-async def test_categorical_scale(async_sandbox: AsyncCodeInterpreter):
+async def test_categorical_scale(async_sandbox: AsyncSandbox):
     code = """
     import numpy as np
     import matplotlib.pyplot as plt

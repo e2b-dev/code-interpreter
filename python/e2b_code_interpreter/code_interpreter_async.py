@@ -4,7 +4,7 @@ import httpx
 from typing import Optional, List, Dict
 from httpx import AsyncHTTPTransport, AsyncClient
 
-from e2b import AsyncSandbox, ConnectionConfig
+from e2b import AsyncSandbox as BaseAsyncSandbox, ConnectionConfig
 
 from e2b_code_interpreter.constants import (
     DEFAULT_KERNEL_ID,
@@ -236,7 +236,7 @@ class JupyterExtension:
             raise format_request_timeout_error()
 
 
-class AsyncCodeInterpreter(AsyncSandbox):
+class AsyncSandbox(BaseAsyncSandbox):
     default_template = DEFAULT_TEMPLATE
     _jupyter_port = JUPYTER_PORT
 

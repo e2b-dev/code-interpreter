@@ -4,15 +4,15 @@ import os
 
 from logging import warning
 
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 timeout = 60
 
 
 @pytest.fixture()
 def sandbox(debug):
-    sandbox = CodeInterpreter(timeout=timeout)
+    sandbox = Sandbox(timeout=timeout)
 
     try:
         yield sandbox
@@ -28,7 +28,7 @@ def sandbox(debug):
 
 @pytest_asyncio.fixture
 async def async_sandbox(debug):
-    sandbox = await AsyncCodeInterpreter.create(timeout=timeout)
+    sandbox = await AsyncSandbox.create(timeout=timeout)
 
     try:
         yield sandbox

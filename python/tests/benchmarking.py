@@ -2,7 +2,7 @@ import time
 
 from dotenv import load_dotenv
 
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ second_exec_time = 0
 for i in range(iterations):
     print("Iteration:", i + 1)
     start_time = time.time()
-    sandbox = CodeInterpreter()
+    sandbox = Sandbox()
     create_sandbox_time += time.time() - start_time
 
     start_time = time.time()

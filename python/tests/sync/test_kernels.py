@@ -1,13 +1,13 @@
 import pytest
 
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
-def test_create_new_kernel(sandbox: CodeInterpreter):
+def test_create_new_kernel(sandbox: Sandbox):
     sandbox.notebook.create_kernel()
 
 
-def test_independence_of_kernels(sandbox: CodeInterpreter):
+def test_independence_of_kernels(sandbox: Sandbox):
     kernel_id = sandbox.notebook.create_kernel()
     sandbox.notebook.exec_cell("x = 1")
 
@@ -17,7 +17,7 @@ def test_independence_of_kernels(sandbox: CodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-def test_restart_kernel(sandbox: CodeInterpreter):
+def test_restart_kernel(sandbox: Sandbox):
     sandbox.notebook.exec_cell("x = 1")
     sandbox.notebook.restart_kernel()
 
@@ -27,7 +27,7 @@ def test_restart_kernel(sandbox: CodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-def test_list_kernels(sandbox: CodeInterpreter):
+def test_list_kernels(sandbox: Sandbox):
     kernels = sandbox.notebook.list_kernels()
     assert len(kernels) == 1
 
@@ -38,7 +38,7 @@ def test_list_kernels(sandbox: CodeInterpreter):
 
 
 @pytest.mark.skip_debug()
-def test_shutdown(sandbox: CodeInterpreter):
+def test_shutdown(sandbox: Sandbox):
     kernel_id = sandbox.notebook.create_kernel()
     kernels = sandbox.notebook.list_kernels()
     assert kernel_id in [kernel.kernel_id for kernel in kernels]

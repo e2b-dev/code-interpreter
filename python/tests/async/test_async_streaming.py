@@ -1,7 +1,7 @@
-from e2b_code_interpreter.code_interpreter_async import AsyncCodeInterpreter
+from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
-async def test_streaming_output(async_sandbox: AsyncCodeInterpreter):
+async def test_streaming_output(async_sandbox: AsyncSandbox):
     out = []
 
     def test(line) -> None:
@@ -14,7 +14,7 @@ async def test_streaming_output(async_sandbox: AsyncCodeInterpreter):
     assert out[0].line == "1\n"
 
 
-async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
+async def test_streaming_error(async_sandbox: AsyncSandbox):
     out = []
 
     await async_sandbox.notebook.exec_cell(
@@ -25,7 +25,7 @@ async def test_streaming_error(async_sandbox: AsyncCodeInterpreter):
     assert out[0].line == "1\n"
 
 
-async def test_streaming_result(async_sandbox: AsyncCodeInterpreter):
+async def test_streaming_result(async_sandbox: AsyncSandbox):
     code = """
     import matplotlib.pyplot as plt
     import numpy as np

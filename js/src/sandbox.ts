@@ -1,4 +1,4 @@
-import { ConnectionConfig, Sandbox, TimeoutError } from 'e2b'
+import { ConnectionConfig, Sandbox as BaseSandbox, TimeoutError } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 
@@ -292,12 +292,12 @@ export class JupyterExtension {
 /**
  * Code interpreter module for executing code in a stateful context.
  */
-export class CodeInterpreter extends Sandbox {
+export class Sandbox extends BaseSandbox {
   protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
   protected static readonly jupyterPort = 49999
 
   readonly notebook = new JupyterExtension(
-    `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(CodeInterpreter.jupyterPort)}`,
+    `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(Sandbox.jupyterPort)}`,
     this.connectionConfig,
   )
 }

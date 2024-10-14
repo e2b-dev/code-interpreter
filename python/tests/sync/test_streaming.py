@@ -1,7 +1,7 @@
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
-def test_streaming_output(sandbox: CodeInterpreter):
+def test_streaming_output(sandbox: Sandbox):
     out = []
 
     def test(line) -> None:
@@ -14,7 +14,7 @@ def test_streaming_output(sandbox: CodeInterpreter):
     assert out[0].line == "1\n"
 
 
-def test_streaming_error(sandbox: CodeInterpreter):
+def test_streaming_error(sandbox: Sandbox):
     out = []
 
     sandbox.notebook.exec_cell(
@@ -25,7 +25,7 @@ def test_streaming_error(sandbox: CodeInterpreter):
     assert out[0].line == "1\n"
 
 
-def test_streaming_result(sandbox: CodeInterpreter):
+def test_streaming_result(sandbox: Sandbox):
     code = """
     import matplotlib.pyplot as plt
     import numpy as np

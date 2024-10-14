@@ -3,7 +3,7 @@ import httpx
 
 from typing import Optional, Dict, List
 from httpx import HTTPTransport, Client
-from e2b import Sandbox, ConnectionConfig
+from e2b import Sandbox as BaseSandbox, ConnectionConfig
 
 from e2b_code_interpreter.constants import (
     DEFAULT_KERNEL_ID,
@@ -233,7 +233,7 @@ class JupyterExtension:
             raise format_request_timeout_error()
 
 
-class CodeInterpreter(Sandbox):
+class Sandbox(BaseSandbox):
     default_template = DEFAULT_TEMPLATE
     _jupyter_port = JUPYTER_PORT
 

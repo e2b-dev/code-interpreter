@@ -1,9 +1,9 @@
-from e2b_code_interpreter.code_interpreter_sync import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
-def test_reconnect(sandbox: CodeInterpreter):
+def test_reconnect(sandbox: Sandbox):
     sandbox_id = sandbox.sandbox_id
 
-    sandbox2 = CodeInterpreter.connect(sandbox_id)
+    sandbox2 = Sandbox.connect(sandbox_id)
     result = sandbox2.notebook.exec_cell("x =1; x")
     assert result.text == "1"
