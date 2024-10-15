@@ -5,6 +5,8 @@ on:
     paths:
       - 'template/**'
       - '.github/workflows/template.yml'
+    branches:
+      - main
 
 permissions:
   contents: read
