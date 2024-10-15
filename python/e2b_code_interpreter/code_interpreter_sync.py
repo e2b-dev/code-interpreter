@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, Dict
+from typing import Optional, Dict, overload
 from httpx import Client
 from e2b import Sandbox as BaseSandbox, InvalidArgumentException
 
@@ -38,6 +38,32 @@ class Sandbox(BaseSandbox):
     def _client(self) -> Client:
         return Client(transport=self._transport)
 
+    @overload
+    def run_code(
+        self,
+        code: str,
+        language: Optional[str] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Execution: ...
+
+    @overload
+    def run_code(
+        self,
+        code: str,
+        context: Optional[Context] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Execution: ...
+
     def run_code(
         self,
         code: str,
@@ -51,7 +77,7 @@ class Sandbox(BaseSandbox):
         request_timeout: Optional[float] = None,
     ) -> Execution:
         """
-        Runs the code in the specified context, if not specified, the default context is used.
+        Runs the code in the specified language/context, if not specified, the default context is used.
         You can reference previously defined variables, imports, and functions in the code.
 
         :param code: The code to execute
@@ -65,6 +91,7 @@ class Sandbox(BaseSandbox):
         :param request_timeout: Max time to wait for the request to finish
         :return: Execution object
         """
+
         logger.debug(f"Executing code {code}")
 
         if language and context:

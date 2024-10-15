@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, Dict
+from typing import Optional, Dict, overload
 from httpx import AsyncClient
 
 from e2b import (
@@ -46,6 +46,32 @@ class AsyncSandbox(BaseAsyncSandbox):
     def _client(self) -> AsyncClient:
         return AsyncClient(transport=self._transport)
 
+    @overload
+    async def run_code(
+        self,
+        code: str,
+        language: Optional[str] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Execution: ...
+
+    @overload
+    async def run_code(
+        self,
+        code: str,
+        context: Optional[Context] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+        envs: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Execution: ...
+
     async def run_code(
         self,
         code: str,
@@ -59,7 +85,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         request_timeout: Optional[float] = None,
     ) -> Execution:
         """
-        Runs the code in the specified context, if not specified, the default context is used.
+        Runs the code in the specified language/context, if not specified, the default context is used.
         You can reference previously defined variables, imports, and functions in the code.
 
         :param code: The code to execute

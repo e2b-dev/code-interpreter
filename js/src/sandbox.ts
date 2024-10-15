@@ -16,13 +16,12 @@ export class Sandbox extends BaseSandbox {
   protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
 
   /**
-   * Runs the code in the specified context, if not specified, the default context is used.
+   * Run the code for the specified language. If no language is specified, Python is used.
    * You can reference previously defined variables, imports, and functions in the code.
    *
    * @param code The code to execute
    * @param opts Options for executing the code
-   * @param opts.language Based on the value, a default context for the language is used. If not defined and no context is provided, the default Python context is used.
-   * @param opts.context Concrete context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with the language.
+   * @param opts.language Based on the value, a default context for the language is used. If not defined, the default Python context is used.
    * @param opts.onStdout Callback for handling stdout messages
    * @param opts.onStderr Callback for handling stderr messages
    * @param opts.onResult Callback for handling the final result
@@ -31,6 +30,45 @@ export class Sandbox extends BaseSandbox {
    * @param opts.requestTimeoutMs Max time to wait for the request to finish
    * @returns Execution object
    */
+async runCode(
+    code: string,
+    opts?: {
+      language?: string,
+      onStdout?: (output: OutputMessage) => (Promise<any> | any),
+      onStderr?: (output: OutputMessage) => (Promise<any> | any),
+      onResult?: (data: Result) => (Promise<any> | any),
+      envs?: Record<string, string>,
+      timeoutMs?: number,
+      requestTimeoutMs?: number,
+    },
+  ): Promise<Execution>
+    /**
+   * Runs the code in the specified context, if not specified, the default context is used.
+   * You can reference previously defined variables, imports, and functions in the code.
+   *
+   * @param code The code to execute
+   * @param opts Options for executing the code
+   * @param opts.context Concrete context to run the code in. If not specified, the default Python context is used.
+   * @param opts.onStdout Callback for handling stdout messages
+   * @param opts.onStderr Callback for handling stderr messages
+   * @param opts.onResult Callback for handling the final result
+   * @param opts.envs Environment variables to set for the execution
+   * @param opts.timeoutMs Max time to wait for the execution to finish
+   * @param opts.requestTimeoutMs Max time to wait for the request to finish
+   * @returns Execution object
+   */
+  async runCode(
+    code: string,
+    opts?: {
+      context?: Context,
+      onStdout?: (output: OutputMessage) => (Promise<any> | any),
+      onStderr?: (output: OutputMessage) => (Promise<any> | any),
+      onResult?: (data: Result) => (Promise<any> | any),
+      envs?: Record<string, string>,
+      timeoutMs?: number,
+      requestTimeoutMs?: number,
+    },
+  ): Promise<Execution>
   async runCode(
     code: string,
     opts?: {
