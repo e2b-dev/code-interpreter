@@ -87,6 +87,7 @@ class AsyncSandbox(BaseAsyncSandbox):
                 json={
                     "code": code,
                     "context_id": context_id,
+                    "language": language,
                     "env_vars": envs,
                 },
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),

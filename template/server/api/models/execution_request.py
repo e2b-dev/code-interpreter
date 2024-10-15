@@ -7,7 +7,7 @@ from .env_vars import EnvVars
 
 class ExecutionRequest(BaseModel):
     code: StrictStr = Field(description="Code to be executed")
-    context_id: Optional[StrictStr] = Field(default="default", description="Context ID")
+    context_id: Optional[StrictStr] = Field(default=None, description="Context ID")
     language: Optional[StrictStr] = Field(
         default=None, description="Language of the code"
     )
