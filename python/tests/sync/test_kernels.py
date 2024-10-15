@@ -1,50 +1,23 @@
 import pytest
+from e2b import InvalidArgumentException
 
 from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
 def test_create_new_kernel(sandbox: Sandbox):
-    sandbox.notebook.create_kernel()
+    sandbox.create_code_context()
 
 
 def test_independence_of_kernels(sandbox: Sandbox):
-    kernel_id = sandbox.notebook.create_kernel()
-    sandbox.notebook.exec_cell("x = 1")
+    context = sandbox.create_code_context()
+    sandbox.run_code("x = 1")
 
-    r = sandbox.notebook.exec_cell("x", kernel_id=kernel_id)
+    r = sandbox.run_code("x", context=context)
     assert r.error is not None
     assert r.error.value == "name 'x' is not defined"
 
 
-@pytest.mark.skip_debug()
-def test_restart_kernel(sandbox: Sandbox):
-    sandbox.notebook.exec_cell("x = 1")
-    sandbox.notebook.restart_kernel()
-
-    r = sandbox.notebook.exec_cell("x")
-    assert r.error is not None
-    assert r.error.value == "name 'x' is not defined"
-
-
-@pytest.mark.skip_debug()
-def test_list_kernels(sandbox: Sandbox):
-    kernels = sandbox.notebook.list_kernels()
-    assert len(kernels) == 1
-
-    kernel_id = sandbox.notebook.create_kernel()
-    kernels = sandbox.notebook.list_kernels()
-    assert kernel_id in [kernel.kernel_id for kernel in kernels]
-    assert len(kernels) == 2
-
-
-@pytest.mark.skip_debug()
-def test_shutdown(sandbox: Sandbox):
-    kernel_id = sandbox.notebook.create_kernel()
-    kernels = sandbox.notebook.list_kernels()
-    assert kernel_id in [kernel.kernel_id for kernel in kernels]
-    assert len(kernels) == 2
-
-    sandbox.notebook.shutdown_kernel(kernel_id)
-    kernels = sandbox.notebook.list_kernels()
-    assert kernel_id not in [kernel.kernel_id for kernel in kernels]
-    assert len(kernels) == 1
+def test_pass_context_and_language(sandbox: Sandbox):
+    context = sandbox.create_code_context(language="python")
+    with pytest.raises(InvalidArgumentException):
+        sandbox.run_code("console.log('Hello, World!')", language="js", context=context)

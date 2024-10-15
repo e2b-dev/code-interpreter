@@ -2,7 +2,7 @@ import asyncio
 
 from dotenv import load_dotenv
 
-from e2b_code_interpreter import AsyncCodeInterpreter
+from e2b_code_interpreter import AsyncSandbox
 
 load_dotenv()
 
@@ -47,16 +47,12 @@ plt.show()
 
 async def create_sbx(sbx, i: int):
     await asyncio.sleep(i * 0.01)
-    return (
-        await sbx.notebook.exec_cell(f"os.getenv('TEST')", envs={"TEST": str(i)})
-    ).text
+    return (await sbx.run_code(f"os.getenv('TEST')", envs={"TEST": str(i)})).text
 
 
 async def run():
-    sbx = await AsyncCodeInterpreter.create(
-        debug=True,
-    )
-    result = await sbx.notebook.exec_cell(code)
+    sbx = await AsyncSandbox.create(debug=True)
+    result = await sbx.run_code(code)
 
     print("".join(result.logs.stdout))
     print("".join(result.logs.stderr))

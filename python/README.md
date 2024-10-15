@@ -18,12 +18,12 @@ pip install e2b-code-interpreter
 ### Minimal example with the sharing context
 
 ```python
-from e2b_code_interpreter import CodeInterpreter
+from e2b_code_interpreter import Sandbox
 
-with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell("x = 1")
+with Sandbox() as sandbox:
+    sandbox.run_code("x = 1")
 
-    execution = sandbox.notebook.exec_cell("x+=1; x")
+    execution = sandbox.run_code("x+=1; x")
     print(execution.text)  # outputs 2
 
 ```
@@ -36,7 +36,7 @@ import io
 
 from matplotlib import image as mpimg, pyplot as plt
 
-from e2b_code_interpreter import CodeInterpreter
+from e2b_code_interpreter import Sandbox
 
 code = """
 import matplotlib.pyplot as plt
@@ -49,12 +49,12 @@ plt.plot(x, y)
 plt.show()
 """
 
-with CodeInterpreter() as sandbox:
+with Sandbox() as sandbox:
     # you can install dependencies in "jupyter notebook style"
-    sandbox.notebook.exec_cell("!pip install matplotlib")
+    sandbox.run_code("!pip install matplotlib")
 
     # plot random graph
-    execution = sandbox.notebook.exec_cell(code)
+    execution = sandbox.run_code(code)
 
 # there's your image
 image = execution.results[0].png
@@ -71,7 +71,7 @@ plt.show()
 ### Streaming code output
 
 ```python
-from e2b_code_interpreter import CodeInterpreter
+from e2b_code_interpreter import Sandbox
 
 code = """
 import time
@@ -85,6 +85,6 @@ time.sleep(3)
 print("world")
 """
 
-with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell(code, on_stdout=print, on_stderr=print, on_result=(lambda result: print(result.text)))
+with Sandbox() as sandbox:
+    sandbox.run_code(code, on_stdout=print, on_stderr=print, on_result=(lambda result: print(result.text)))
 ```

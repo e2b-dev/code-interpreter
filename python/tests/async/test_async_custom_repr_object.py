@@ -8,5 +8,5 @@ display({'text/latex': r'\text{CustomReprObject}'}, raw=True)
 
 
 async def test_bash(async_sandbox: AsyncSandbox):
-    execution = await async_sandbox.notebook.exec_cell(code)
+    execution = await async_sandbox.run_code(code)
     assert execution.results[0].formats() == ["latex"]

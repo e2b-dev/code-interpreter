@@ -3,7 +3,7 @@ import { expect } from 'vitest'
 import { sandboxTest } from './setup'
 
 sandboxTest('get data', async ({ sandbox }) => {
-  const execution = await sandbox.notebook.execCell(`
+  const execution = await sandbox.runCode(`
 import pandas as pd
 pd.DataFrame({"a": [1, 2, 3]})
 `)

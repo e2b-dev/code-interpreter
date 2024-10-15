@@ -1,6 +1,6 @@
 import dotenv from 'dotenv'
 
-import { CodeInterpreter } from './dist'
+import { Sandbox } from './dist'
 
 dotenv.config()
 
@@ -22,10 +22,10 @@ import pandas
 pandas.DataFrame({"a": [1, 2, 3]})
 `
 
-const sandbox = await CodeInterpreter.create()
+const sandbox = await Sandbox.create()
 console.log(sandbox.sandboxId)
 
-const execution = await sandbox.notebook.execCell(code, {
+const execution = await sandbox.runCode(code, {
   onStdout(msg) {
     console.log('stdout', msg)
   },

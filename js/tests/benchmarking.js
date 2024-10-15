@@ -15,14 +15,14 @@ async function main() {
     createSandboxTime += new Date() - startTime
 
     startTime = new Date()
-    await sandbox.notebook.execCell('x = 1')
+    await sandbox.runCode('x = 1')
     fistExecTime += new Date() - startTime
 
     startTime = new Date()
-    const result = await sandbox.notebook.execCell('x+=1; x')
+    const result = await sandbox.runCode('x+=1; x')
     secondExecTime += new Date() - startTime
 
-    await sandbox.close()
+    await sandbox.kill()
   }
   console.log('Average create sandbox time:', createSandboxTime / iterations)
   console.log('Average first exec time:', fistExecTime / iterations)

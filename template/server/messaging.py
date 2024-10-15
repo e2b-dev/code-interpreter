@@ -44,21 +44,21 @@ class Execution:
         self.in_background = in_background
 
 
-class JupyterKernelWebSocket:
+class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
 
     def __init__(
         self,
-        kernel_id: str,
+        context_id: str,
         session_id: str,
-        name: str,
+        language: str,
         cwd: str,
     ):
-        self.name = name
+        self.language = language
         self.cwd = cwd
-        self.kernel_id = kernel_id
-        self.url = f"ws://localhost:8888/api/kernels/{kernel_id}/channels"
+        self.context_id = context_id
+        self.url = f"ws://localhost:8888/api/kernels/{context_id}/channels"
         self.session_id = session_id
 
         self._executions: Dict[str, Execution] = {}
@@ -206,12 +206,12 @@ class JupyterKernelWebSocket:
             data["msg_type"] == "status"
             and data["content"]["execution_state"] == "restarting"
         ):
-            logger.error("Kernel is restarting")
+            logger.error("Context is restarting")
             for execution in self._executions.values():
                 await execution.queue.put(
                     Error(
-                        name="KernelRestarting",
-                        value="Kernel was restarted",
+                        name="ContextRestarting",
+                        value="Context was restarted",
                         traceback="",
                     )
                 )
@@ -315,7 +315,7 @@ class JupyterKernelWebSocket:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 
     async def close(self):
-        logger.debug(f"Closing WebSocket {self.kernel_id}")
+        logger.debug(f"Closing WebSocket {self.context_id}")
 
         if self._ws is not None:
             await self._ws.close()

@@ -1,10 +1,8 @@
 import asyncio
-import time
-from time import sleep
 
 from dotenv import load_dotenv
 
-from e2b_code_interpreter import AsyncCodeInterpreter
+from e2b_code_interpreter import Sandbox
 
 load_dotenv()
 
@@ -36,8 +34,8 @@ plt.show()
 
 
 async def run():
-    sbx = await AsyncCodeInterpreter.create(timeout=60)
-    e = await sbx.notebook.exec_cell(code)
+    sbx = Sandbox(timeout=60)
+    e = sbx.run_code(code)
     print(e.results[0].graph)
 
 

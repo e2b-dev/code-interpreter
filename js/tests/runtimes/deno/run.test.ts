@@ -8,7 +8,7 @@ import { Sandbox } from '../../../dist/index.mjs'
 Deno.test('Deno test', async () => {
   const sbx = await Sandbox.create({ timeoutMs: 5_000 })
   try {
-    const result = await sbx.notebook.execCell('print("Hello, World!")')
+    const result = await sbx.runCode('print("Hello, World!")')
     assertEquals(result.logs.stdout.join(''), 'Hello, World!\n')
   } finally {
     await sbx.kill()

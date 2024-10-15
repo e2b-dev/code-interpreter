@@ -18,8 +18,6 @@ class Result(BaseModel):
     The result can contain multiple types of data, such as text, images, plots, etc. Each type of data is represented
     as a string, and the result can contain multiple types of data. The display calls don't have to have text representation,
     for the actual result the representation is always present for the result, the other representations are always optional.
-
-    The class also provides methods to display the data in a Jupyter notebook.
     """
 
     type: OutputType = OutputType.RESULT

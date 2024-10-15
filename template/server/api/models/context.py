@@ -4,5 +4,5 @@ from pydantic import Field
 
 class Context(BaseModel):
     id: StrictStr = Field(description="Context ID")
-    name: StrictStr = Field(description="Context name")
+    language: StrictStr = Field(description="Language of the context")
     cwd: StrictStr = Field(description="Current working directory of the context")
