@@ -1,5 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import LineGraph
+from e2b_code_interpreter.charts import LineChart
 
 
 async def test_datetime_scale(async_sandbox: AsyncSandbox):
@@ -20,12 +20,12 @@ async def test_datetime_scale(async_sandbox: AsyncSandbox):
 
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.x_scale == "datetime"
-    assert graph.y_scale == "linear"
+    assert isinstance(chart, LineChart)
+    assert chart.x_scale == "datetime"
+    assert chart.y_scale == "linear"
 
 
 async def test_categorical_scale(async_sandbox: AsyncSandbox):
@@ -44,9 +44,9 @@ async def test_categorical_scale(async_sandbox: AsyncSandbox):
 
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.x_scale == "linear"
-    assert graph.y_scale == "categorical"
+    assert isinstance(chart, LineChart)
+    assert chart.x_scale == "linear"
+    assert chart.y_scale == "categorical"

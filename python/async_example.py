@@ -61,10 +61,6 @@ async def run():
 
     print(result.results[0].formats())
     print(result.results[0].elements.elements)
-    # print(result.results[0].data['graphs'][0]['data'])
-    # print(result.results[0].data['graphs'][0]['data'][0])
-    # print(result.results[0].data['graphs'][0]['data'][1])
-    # print(result.results[0].data['graphs'][0]['data'][2])
 
     await sbx.kill()
 

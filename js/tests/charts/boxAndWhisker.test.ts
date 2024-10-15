@@ -36,20 +36,20 @@ plt.tight_layout()
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
+  expect(chart).toBeDefined()
 
-  expect(graph.type).toBe('box_and_whisker')
-  expect(graph.title).toBe('Exam Scores Distribution')
+  expect(chart.type).toBe('box_and_whisker')
+  expect(chart.title).toBe('Exam Scores Distribution')
 
-  expect(graph.x_label).toBe('Class')
-  expect(graph.y_label).toBe('Score')
+  expect(chart.x_label).toBe('Class')
+  expect(chart.y_label).toBe('Score')
 
-  expect(graph.x_unit).toBeNull()
-  expect(graph.y_unit).toBeNull()
+  expect(chart.x_unit).toBeNull()
+  expect(chart.y_unit).toBeNull()
 
-  const bars = graph.elements
+  const bars = chart.elements
   expect(bars.length).toBe(3)
 
   bars.forEach((bar: any) => {

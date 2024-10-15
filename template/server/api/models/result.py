@@ -33,7 +33,7 @@ class Result(BaseModel):
     json: Optional[dict] = None
     javascript: Optional[str] = None
     data: Optional[dict] = None
-    graph: Optional[dict] = None
+    chart: Optional[dict] = None
     extra: Optional[dict] = None
     "Extra data that can be included. Not part of the standard types."
 
@@ -58,7 +58,7 @@ class Result(BaseModel):
         self.json = data.pop("application/json", None)
         self.javascript = data.pop("application/javascript", None)
         self.data = data.pop("e2b/data", None)
-        self.graph = data.pop("e2b/graph", None)
+        self.chart = data.pop("e2b/chart", None)
         self.extra = data
 
     def formats(self) -> Iterable[str]:
@@ -76,7 +76,7 @@ class Result(BaseModel):
             "json",
             "javascript",
             "data",
-            "graph",
+            "chart",
         ]:
             if getattr(self, key):
                 formats.append(key)

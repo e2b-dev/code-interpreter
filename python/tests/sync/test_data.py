@@ -2,7 +2,7 @@ from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
 def test_data(sandbox: Sandbox):
-    # plot random graph
+    # plot random chart
     result = sandbox.run_code(
         """
         import pandas as pd

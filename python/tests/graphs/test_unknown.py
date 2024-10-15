@@ -1,5 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import GraphType, Graph
+from e2b_code_interpreter.charts import ChartType, Chart
 
 code = """
 import matplotlib.pyplot as plt
@@ -27,14 +27,14 @@ plt.show()
 """
 
 
-async def test_unknown_graphs(async_sandbox: AsyncSandbox):
+async def test_unknown_charts(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, Graph)
-    assert graph.type == GraphType.UNKNOWN
-    assert graph.title == "Two Concentric Circles"
+    assert isinstance(chart, Chart)
+    assert chart.type == ChartType.UNKNOWN
+    assert chart.title == "Two Concentric Circles"
 
-    assert len(graph.elements) == 0
+    assert len(chart.elements) == 0

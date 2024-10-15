@@ -1,5 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import BoxAndWhiskerGraph, GraphType
+from e2b_code_interpreter.charts import BoxAndWhiskerChart, ChartType
 
 code = """
 import matplotlib.pyplot as plt
@@ -38,20 +38,20 @@ plt.show()
 async def test_box_and_whiskers(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, BoxAndWhiskerGraph)
-    assert graph.type == GraphType.BOX_AND_WHISKER
-    assert graph.title == "Exam Scores Distribution"
+    assert isinstance(chart, BoxAndWhiskerChart)
+    assert chart.type == ChartType.BOX_AND_WHISKER
+    assert chart.title == "Exam Scores Distribution"
 
-    assert graph.x_label == "Class"
-    assert graph.y_label == "Score"
+    assert chart.x_label == "Class"
+    assert chart.y_label == "Score"
 
-    assert graph.x_unit is None
-    assert graph.y_unit is None
+    assert chart.x_unit is None
+    assert chart.y_unit is None
 
-    bars = graph.elements
+    bars = chart.elements
     assert len(bars) == 3
 
     assert all(isinstance(bar.min, float) for bar in bars)

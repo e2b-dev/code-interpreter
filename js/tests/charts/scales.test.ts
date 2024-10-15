@@ -19,12 +19,12 @@ sandboxTest('datetime scale', async ({ sandbox }) => {
 
   const result = await sandbox.runCode(code)
 
-  const graph = result.results[0].graph
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('line')
+  const chart = result.results[0].chart
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('line')
 
-  expect(graph.x_scale).toBe('datetime')
-  expect(graph.y_scale).toBe('linear')
+  expect(chart.x_scale).toBe('datetime')
+  expect(chart.y_scale).toBe('linear')
 })
 
 sandboxTest('categorical scale', async ({ sandbox }) => {
@@ -43,10 +43,10 @@ sandboxTest('categorical scale', async ({ sandbox }) => {
 
   const result = await sandbox.runCode(code)
 
-  const graph = result.results[0].graph
-  expect(graph).toBeTruthy()
+  const chart = result.results[0].chart
+  expect(chart).toBeTruthy()
 
-  expect(graph.type).toBe('line')
-  expect(graph.x_scale).toBe('linear')
-  expect(graph.y_scale).toBe('categorical')
+  expect(chart.type).toBe('line')
+  expect(chart.x_scale).toBe('linear')
+  expect(chart.y_scale).toBe('categorical')
 })

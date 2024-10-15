@@ -1,5 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import GraphType, BarGraph
+from e2b_code_interpreter.charts import ChartType, BarChart
 
 code = """
 import matplotlib.pyplot as plt
@@ -8,36 +8,36 @@ import matplotlib.pyplot as plt
 authors = ['Author A', 'Author B', 'Author C', 'Author D']
 sales = [100, 200, 300, 400]
 
-# Create and customize the bar graph
+# Create and customize the bar chart
 plt.figure(figsize=(10, 6))
 plt.bar(authors, sales, label='Books Sold', color='blue')
 plt.xlabel('Authors')
 plt.ylabel('Number of Books Sold')
 plt.title('Book Sales by Authors')
 
-# Display the graph
+# Display the chart
 plt.tight_layout()
 plt.show()
 """
 
 
-async def test_graph_bar(async_sandbox: AsyncSandbox):
+async def test_chart_bar(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, BarGraph)
-    assert graph.type == GraphType.BAR
-    assert graph.title == "Book Sales by Authors"
+    assert isinstance(chart, BarChart)
+    assert chart.type == ChartType.BAR
+    assert chart.title == "Book Sales by Authors"
 
-    assert graph.x_label == "Authors"
-    assert graph.y_label == "Number of Books Sold"
+    assert chart.x_label == "Authors"
+    assert chart.y_label == "Number of Books Sold"
 
-    assert graph.x_unit is None
-    assert graph.y_unit is None
+    assert chart.x_unit is None
+    assert chart.y_unit is None
 
-    bars = graph.elements
+    bars = chart.elements
     assert len(bars) == 4
 
     assert [bar.value for bar in bars] == [100, 200, 300, 400]

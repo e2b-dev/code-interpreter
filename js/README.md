@@ -5,7 +5,7 @@ The repository contains a template and modules for the code interpreter sandbox.
 ## Key Features
 
 - **Stateful Execution**: Unlike traditional sandboxes that treat each code execution independently, this package maintains context across executions.
-- **Displaying Graph & Data**: Implements parts of the [Jupyter Kernel messaging protocol](https://jupyter-client.readthedocs.io/en/latest/messaging.html), which support for interactive features like plotting charts, rendering DataFrames, etc.
+- **Displaying Charts & Data**: Implements parts of the [Jupyter Kernel messaging protocol](https://jupyter-client.readthedocs.io/en/latest/messaging.html), which support for interactive features like plotting charts, rendering DataFrames, etc.
 
 ## Installation
 

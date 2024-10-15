@@ -36,7 +36,7 @@ plt.show()
 async def run():
     sbx = Sandbox(timeout=60)
     e = sbx.run_code(code)
-    print(e.results[0].graph)
+    print(e.results[0].chart)
 
 
 asyncio.run(run())

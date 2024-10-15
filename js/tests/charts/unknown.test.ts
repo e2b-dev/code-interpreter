@@ -29,11 +29,11 @@ plt.title('Two Concentric Circles')
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('unknown')
-  expect(graph.title).toBe('Two Concentric Circles')
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('unknown')
+  expect(chart.title).toBe('Two Concentric Circles')
 
-  expect(graph.elements.length).toBe(0)
+  expect(chart.elements.length).toBe(0)
 })

@@ -28,16 +28,16 @@ plt.title('Will I wake up early tomorrow?')
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('pie')
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('pie')
 
-  expect(graph.title).toBe('Will I wake up early tomorrow?')
+  expect(chart.title).toBe('Will I wake up early tomorrow?')
 
-  expect(graph.elements.length).toBe(2)
+  expect(chart.elements.length).toBe(2)
 
-  const [firstData, secondData] = graph.elements
+  const [firstData, secondData] = chart.elements
 
   expect(firstData.label).toBe('No')
   expect(firstData.angle).toBe(324) // 90% of 360 degrees

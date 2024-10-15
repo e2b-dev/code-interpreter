@@ -22,7 +22,7 @@ plt.yscale('log')
 # Add labels and title
 plt.xlabel('X-axis')
 plt.ylabel('Y-axis (log scale)')
-plt.title('Graph with Log Scale on Y-axis')
+plt.title('Chart with Log Scale on Y-axis')
 
 plt.legend()
 plt.grid(True)
@@ -30,28 +30,28 @@ plt.show()
 `
 
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('line')
+  const chart = result.results[0].chart
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('line')
 
-  expect(graph.title).toBe('Graph with Log Scale on Y-axis')
+  expect(chart.title).toBe('Chart with Log Scale on Y-axis')
 
-  expect(graph.x_label).toBe('X-axis')
-  expect(graph.y_label).toBe('Y-axis (log scale)')
+  expect(chart.x_label).toBe('X-axis')
+  expect(chart.y_label).toBe('Y-axis (log scale)')
 
-  expect(graph.x_unit).toBeNull()
-  expect(graph.y_unit).toBe('log scale')
+  expect(chart.x_unit).toBeNull()
+  expect(chart.y_unit).toBe('log scale')
 
-  expect(graph.x_scale).toBe('linear')
-  expect(graph.y_scale).toBe('log')
+  expect(chart.x_scale).toBe('linear')
+  expect(chart.y_scale).toBe('log')
 
-  expect(graph.x_ticks.every((x) => typeof x === 'number')).toBe(true)
-  expect(graph.y_ticks.every((y) => typeof y === 'number')).toBe(true)
+  expect(chart.x_ticks.every((x) => typeof x === 'number')).toBe(true)
+  expect(chart.y_ticks.every((y) => typeof y === 'number')).toBe(true)
 
-  expect(graph.x_tick_labels.every((x) => typeof x === 'string')).toBe(true)
-  expect(graph.y_tick_labels.every((y) => typeof y === 'string')).toBe(true)
+  expect(chart.x_tick_labels.every((x) => typeof x === 'string')).toBe(true)
+  expect(chart.y_tick_labels.every((y) => typeof y === 'string')).toBe(true)
 
-  const lines = graph.elements
+  const lines = chart.elements
   expect(lines.length).toBe(1)
 
   const line = lines[0]

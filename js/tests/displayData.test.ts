@@ -3,7 +3,7 @@ import { expect } from 'vitest'
 import { sandboxTest } from './setup'
 
 sandboxTest('display data', async ({ sandbox }) => {
-  // plot random graph
+  // plot random chart
   const result = await sandbox.runCode(`
         import matplotlib.pyplot as plt
         import numpy as np

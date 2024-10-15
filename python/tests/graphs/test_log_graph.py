@@ -1,7 +1,7 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import LineGraph
+from e2b_code_interpreter.charts import LineChart
 
-# Log graph
+# Log chart
 code = """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +21,7 @@ plt.yscale('log')
 # Add labels and title
 plt.xlabel('X-axis')
 plt.ylabel('Y-axis (log scale)')
-plt.title('Graph with Log Scale on Y-axis')
+plt.title('Chart with Log Scale on Y-axis')
 
 plt.legend()
 plt.grid(True)
@@ -29,31 +29,31 @@ plt.show()
 """
 
 
-async def test_log_graph(async_sandbox: AsyncSandbox):
+async def test_log_chart(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.title == "Graph with Log Scale on Y-axis"
+    assert isinstance(chart, LineChart)
+    assert chart.title == "Chart with Log Scale on Y-axis"
 
-    assert graph.x_label == "X-axis"
-    assert graph.y_label == "Y-axis (log scale)"
+    assert chart.x_label == "X-axis"
+    assert chart.y_label == "Y-axis (log scale)"
 
-    assert graph.x_unit == None
-    assert graph.y_unit == "log scale"
+    assert chart.x_unit == None
+    assert chart.y_unit == "log scale"
 
-    assert graph.x_scale == "linear"
-    assert graph.y_scale == "log"
+    assert chart.x_scale == "linear"
+    assert chart.y_scale == "log"
 
-    assert all(isinstance(x, float) for x in graph.x_ticks)
-    assert all(isinstance(y, float) for y in graph.y_ticks)
+    assert all(isinstance(x, float) for x in chart.x_ticks)
+    assert all(isinstance(y, float) for y in chart.y_ticks)
 
-    assert all(isinstance(x, str) for x in graph.x_tick_labels)
-    assert all(isinstance(y, str) for y in graph.y_tick_labels)
+    assert all(isinstance(x, str) for x in chart.x_tick_labels)
+    assert all(isinstance(y, str) for y in chart.y_tick_labels)
 
-    lines = graph.elements
+    lines = chart.elements
     assert len(lines) == 1
 
     line = lines[0]

@@ -11,31 +11,31 @@ import matplotlib.pyplot as plt
 authors = ['Author A', 'Author B', 'Author C', 'Author D']
 sales = [100, 200, 300, 400]
 
-# Create and customize the bar graph
+# Create and customize the bar chart
 plt.figure(figsize=(10, 6))
 plt.bar(authors, sales, label='Books Sold', color='blue')
 plt.xlabel('Authors')
 plt.ylabel('Number of Books Sold')
 plt.title('Book Sales by Authors')
 
-# Display the graph
+# Display the chart
 plt.tight_layout()
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('bar')
-  expect(graph.title).toBe('Book Sales by Authors')
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('bar')
+  expect(chart.title).toBe('Book Sales by Authors')
 
-  expect(graph.x_label).toBe('Authors')
-  expect(graph.y_label).toBe('Number of Books Sold')
+  expect(chart.x_label).toBe('Authors')
+  expect(chart.y_label).toBe('Number of Books Sold')
 
-  expect(graph.x_unit).toBeNull()
-  expect(graph.y_unit).toBeNull()
+  expect(chart.x_unit).toBeNull()
+  expect(chart.y_unit).toBeNull()
 
-  const bars = graph.elements
+  const bars = chart.elements
   expect(bars.length).toBe(4)
 
   expect(bars.map((bar) => bar.value)).toEqual([100, 200, 300, 400])

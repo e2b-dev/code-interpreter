@@ -1,13 +1,13 @@
 /**
- * Graph types
+ * Chart types
  */
-export enum GraphType {
+export enum ChartType {
   LINE = 'line',
   SCATTER = 'scatter',
   BAR = 'bar',
   PIE = 'pie',
   BOX_AND_WHISKER = 'box_and_whisker',
-  SUPERGRAPH = 'supergraph',
+  SUPERCHART = 'superchart',
   UNKNOWN = 'unknown',
 }
 
@@ -27,13 +27,13 @@ export enum ScaleType {
   ASINH = "asinh",
 }
 
-export type Graph = {
-  type: GraphType
+export type Chart = {
+  type: ChartType
   title: string
   elements: any[]
 }
 
-type Graph2D = Graph & {
+type Chart2D = Chart & {
   x_label?: string
   y_label?: string
   x_unit?: string
@@ -45,7 +45,7 @@ export type PointData = {
   points: [number | string, number | string][]
 }
 
-type PointGraph = Graph2D & {
+type PointChart = Chart2D & {
   x_ticks: (number | string)[]
   x_scale: ScaleType
   x_tick_labels: string[]
@@ -55,12 +55,12 @@ type PointGraph = Graph2D & {
   elements: PointData[]
 }
 
-export type LineGraph = PointGraph & {
-  type: GraphType.LINE
+export type LineChart = PointChart & {
+  type: ChartType.LINE
 }
 
-export type ScatterGraph = PointGraph & {
-  type: GraphType.SCATTER
+export type ScatterChart = PointChart & {
+  type: ChartType.SCATTER
 }
 
 export type BarData = {
@@ -69,8 +69,8 @@ export type BarData = {
   group: string
 }
 
-export type BarGraph = Graph2D & {
-  type: GraphType.BAR
+export type BarChart = Chart2D & {
+  type: ChartType.BAR
   elements: BarData[]
 }
 
@@ -80,8 +80,8 @@ export type PieData = {
   radius: number
 }
 
-export type PieGraph = Graph & {
-  type: GraphType.PIE
+export type PieChart = Chart & {
+  type: ChartType.PIE
   elements: PieData[]
 }
 
@@ -94,43 +94,43 @@ export type BoxAndWhiskerData = {
   max: number
 }
 
-export type BoxAndWhiskerGraph = Graph2D & {
-  type: GraphType.BOX_AND_WHISKER
+export type BoxAndWhiskerChart = Chart2D & {
+  type: ChartType.BOX_AND_WHISKER
   elements: BoxAndWhiskerData[]
 }
 
-export type SuperGraph = Graph & {
-  type: GraphType.SUPERGRAPH
-  elements: Graph[]
+export type SuperChart = Chart & {
+  type: ChartType.SUPERCHART
+  elements: Chart[]
 }
 
-export type GraphTypes =
-  | LineGraph
-  | ScatterGraph
-  | BarGraph
-  | PieGraph
-  | BoxAndWhiskerGraph
-  | SuperGraph
-export function deserializeGraph(data: any): Graph {
+export type ChartTypes =
+  | LineChart
+  | ScatterChart
+  | BarChart
+  | PieChart
+  | BoxAndWhiskerChart
+  | SuperChart
+export function deserializeChart(data: any): Chart {
   switch (data.type) {
-    case GraphType.LINE:
-      return { ...data } as LineGraph
-    case GraphType.SCATTER:
-      return { ...data } as ScatterGraph
-    case GraphType.BAR:
-      return { ...data } as BarGraph
-    case GraphType.PIE:
-      return { ...data } as PieGraph
-    case GraphType.BOX_AND_WHISKER:
-      return { ...data } as BoxAndWhiskerGraph
-    case GraphType.SUPERGRAPH:
-      const graphs = data.data.map((g: any) => deserializeGraph(g))
+    case ChartType.LINE:
+      return { ...data } as LineChart
+    case ChartType.SCATTER:
+      return { ...data } as ScatterChart
+    case ChartType.BAR:
+      return { ...data } as BarChart
+    case ChartType.PIE:
+      return { ...data } as PieChart
+    case ChartType.BOX_AND_WHISKER:
+      return { ...data } as BoxAndWhiskerChart
+    case ChartType.SUPERCHART:
+      const charts = data.data.map((g: any) => deserializeChart(g))
       delete data.data
       return {
         ...data,
-        data: graphs,
-      } as SuperGraph
+        data: charts,
+      } as SuperChart
     default:
-      return { ...data, type: GraphType.UNKNOWN } as Graph
+      return { ...data, type: ChartType.UNKNOWN } as Chart
   }
 }

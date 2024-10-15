@@ -23,32 +23,32 @@ plt.scatter(x2, y2, c='red', label='Dataset 2')
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('scatter')
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('scatter')
 
-  expect(graph.title).toBeNull()
-  expect(graph.x_label).toBe('A')
-  expect(graph.y_label).toBe('B')
+  expect(chart.title).toBeNull()
+  expect(chart.x_label).toBe('A')
+  expect(chart.y_label).toBe('B')
 
-  expect(graph.x_ticks.every((tick: number) => typeof tick === 'number')).toBe(
+  expect(chart.x_ticks.every((tick: number) => typeof tick === 'number')).toBe(
     true
   )
-  expect(graph.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
+  expect(chart.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
     true
   )
 
   expect(
-    graph.x_tick_labels.every((label: string) => typeof label === 'string')
+    chart.x_tick_labels.every((label: string) => typeof label === 'string')
   ).toBe(true)
   expect(
-    graph.y_tick_labels.every((label: string) => typeof label === 'string')
+    chart.y_tick_labels.every((label: string) => typeof label === 'string')
   ).toBe(true)
 
-  expect(graph.elements.length).toBe(2)
+  expect(chart.elements.length).toBe(2)
 
-  const [firstData, secondData] = graph.elements
+  const [firstData, secondData] = chart.elements
 
   expect(firstData.label).toBe('Dataset 1')
   expect(firstData.points.length).toBe(5)

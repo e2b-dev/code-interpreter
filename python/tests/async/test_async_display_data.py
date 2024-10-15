@@ -2,7 +2,7 @@ from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
 async def test_display_data(async_sandbox: AsyncSandbox):
-    # plot random graph
+    # plot random chart
     result = await async_sandbox.run_code(
         """
         import matplotlib.pyplot as plt

@@ -1,5 +1,5 @@
 import { NotFoundError, SandboxError, TimeoutError } from 'e2b'
-import { GraphTypes } from './graphs'
+import { ChartTypes } from './charts'
 
 export async function extractError(res: Response) {
   if (res.ok) {
@@ -61,7 +61,7 @@ export type MIMEType = string
 
 type E2BData = {
   data: Record<string, unknown>
-  graph: GraphTypes
+  chart: ChartTypes
 }
 
 /**
@@ -126,9 +126,9 @@ export class Result {
    */
   readonly data?: Record<string, unknown>
   /**
-   * Contains the graph data.
+   * Contains the chart data.
    */
-  readonly graph?: GraphTypes
+  readonly chart?: ChartTypes
   /**
    * Extra data that can be included. Not part of the standard types.
    */
@@ -155,7 +155,7 @@ export class Result {
     this.raw = data
 
     this.data = data['data']
-    this.graph = data['graph']
+    this.chart = data['chart']
 
     this.extra = {}
 

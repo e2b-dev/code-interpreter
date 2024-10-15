@@ -1,5 +1,5 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import PieGraph
+from e2b_code_interpreter.charts import PieChart
 
 code = """
 import matplotlib.pyplot as plt
@@ -27,24 +27,24 @@ plt.show()
 """
 
 
-async def test_pie_graph(async_sandbox: AsyncSandbox):
+async def test_pie_chart(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, PieGraph)
+    assert isinstance(chart, PieChart)
 
-    assert graph.title == "Will I wake up early tomorrow?"
+    assert chart.title == "Will I wake up early tomorrow?"
 
-    assert len(graph.elements) == 2
+    assert len(chart.elements) == 2
 
-    first_data = graph.elements[0]
+    first_data = chart.elements[0]
     assert first_data.label == "No"
     assert first_data.angle == 324
     assert first_data.radius == 1
 
-    second_data = graph.elements[1]
+    second_data = chart.elements[1]
     assert second_data.label == "No, in blue"
     assert second_data.angle == 36
     assert second_data.radius == 1

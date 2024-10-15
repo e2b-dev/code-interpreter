@@ -17,7 +17,7 @@ from typing import (
 
 from httpx import Response
 
-from .graphs import Graph, deserialize_graph
+from .charts import Chart, _deserialize_chart
 
 T = TypeVar("T")
 OutputHandler = Union[
@@ -96,7 +96,7 @@ class Result:
     json: Optional[dict] = None
     javascript: Optional[str] = None
     data: Optional[dict] = None
-    graph: Optional[Graph] = None
+    chart: Optional[Chart] = None
     is_main_result: bool = False
     """Whether this data is the result of the cell. Data can be produced by display calls of which can be multiple in a cell."""
     extra: Optional[dict] = None
@@ -115,7 +115,7 @@ class Result:
         json: Optional[dict] = None,
         javascript: Optional[str] = None,
         data: Optional[dict] = None,
-        graph: Optional[dict] = None,
+        chart: Optional[dict] = None,
         is_main_result: bool = False,
         extra: Optional[dict] = None,
         **kwargs,  # Allows for future expansion
@@ -131,12 +131,12 @@ class Result:
         self.json = json
         self.javascript = javascript
         self.data = data
-        if graph:
+        if chart:
             try:
-                self.graph = deserialize_graph(graph)
+                self.chart = _deserialize_chart(chart)
             except Exception as e:
                 logger.error(
-                    f"Error deserializing graph, check if you are using the latest version of the library: {e}"
+                    f"Error deserializing chart, check if you are using the latest version of the library: {e}"
                 )
         self.is_main_result = is_main_result
         self.extra = extra
@@ -170,8 +170,8 @@ class Result:
             formats.append("javascript")
         if self.data:
             formats.append("data")
-        if self.graph:
-            formats.append("graph")
+        if self.chart:
+            formats.append("chart")
 
         if self.extra:
             for key in self.extra:

@@ -35,18 +35,18 @@ def _is_grid_line(line: Line2D) -> bool:
     return False
 
 
-class GraphType(str, enum.Enum):
+class ChartType(str, enum.Enum):
     LINE = "line"
     SCATTER = "scatter"
     BAR = "bar"
     PIE = "pie"
     BOX_AND_WHISKER = "box_and_whisker"
-    SUPERGRAPH = "supergraph"
+    SUPERCHART = "superchart"
     UNKNOWN = "unknown"
 
 
-class Graph(BaseModel):
-    type: GraphType
+class Chart(BaseModel):
+    type: ChartType
     title: Optional[str] = None
 
     elements: List[Any] = Field(default_factory=list)
@@ -58,7 +58,7 @@ class Graph(BaseModel):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for Graph
+        Function to extract information for Chart
         """
         title = ax.get_title()
         if title == "":
@@ -67,7 +67,7 @@ class Graph(BaseModel):
         self.title = title
 
 
-class Graph2D(Graph):
+class Chart2D(Chart):
     x_label: Optional[str] = None
     y_label: Optional[str] = None
     x_unit: Optional[str] = None
@@ -75,7 +75,7 @@ class Graph2D(Graph):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for Graph2D
+        Function to extract information for Chart2D
         """
         super()._extract_info(ax)
         x_label = ax.get_xlabel()
@@ -129,7 +129,7 @@ class PointData(BaseModel):
         return parsed_value
 
 
-class PointGraph(Graph2D):
+class PointChart(Chart2D):
     x_ticks: List[Union[str, float]] = Field(default_factory=list)
     x_tick_labels: List[str] = Field(default_factory=list)
     x_scale: str = Field(default="linear")
@@ -142,7 +142,7 @@ class PointGraph(Graph2D):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for PointGraph
+        Function to extract information for PointChart
         """
         super()._extract_info(ax)
 
@@ -194,8 +194,8 @@ class PointGraph(Graph2D):
                 return list(ticks)
 
 
-class LineGraph(PointGraph):
-    type: Literal[GraphType.LINE] = GraphType.LINE
+class LineChart(PointChart):
+    type: Literal[ChartType.LINE] = ChartType.LINE
 
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
@@ -213,8 +213,8 @@ class LineGraph(PointGraph):
             self.elements.append(line_data)
 
 
-class ScatterGraph(PointGraph):
-    type: Literal[GraphType.SCATTER] = GraphType.SCATTER
+class ScatterChart(PointChart):
+    type: Literal[ChartType.SCATTER] = ChartType.SCATTER
 
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
@@ -231,8 +231,8 @@ class BarData(BaseModel):
     value: float
 
 
-class BarGraph(Graph2D):
-    type: Literal[GraphType.BAR] = GraphType.BAR
+class BarChart(Chart2D):
+    type: Literal[ChartType.BAR] = ChartType.BAR
 
     elements: List[BarData] = Field(default_factory=list)
 
@@ -266,8 +266,8 @@ class PieData(BaseModel):
     radius: float
 
 
-class PieGraph(Graph):
-    type: Literal[GraphType.PIE] = GraphType.PIE
+class PieChart(Chart):
+    type: Literal[ChartType.PIE] = ChartType.PIE
 
     elements: List[PieData] = Field(default_factory=list)
 
@@ -293,8 +293,8 @@ class BoxAndWhiskerData(BaseModel):
     max: float
 
 
-class BoxAndWhiskerGraph(Graph2D):
-    type: Literal[GraphType.BOX_AND_WHISKER] = GraphType.BOX_AND_WHISKER
+class BoxAndWhiskerChart(Chart2D):
+    type: Literal[ChartType.BOX_AND_WHISKER] = ChartType.BOX_AND_WHISKER
 
     elements: List[BoxAndWhiskerData] = Field(default_factory=list)
 
@@ -370,28 +370,28 @@ class BoxAndWhiskerGraph(Graph2D):
         ]
 
 
-class SuperGraph(Graph):
-    type: Literal[GraphType.SUPERGRAPH] = GraphType.SUPERGRAPH
+class SuperChart(Chart):
+    type: Literal[ChartType.SUPERCHART] = ChartType.SUPERCHART
     elements: List[
-        LineGraph | ScatterGraph | BarGraph | PieGraph | BoxAndWhiskerGraph
+        LineChart | ScatterChart | BarChart | PieChart | BoxAndWhiskerChart
     ] = Field(default_factory=list)
 
     def __init__(self, figure: Figure):
         title = figure.get_suptitle()
         super().__init__(title=title)
 
-        self.elements = [get_graph_from_ax(ax) for ax in figure.axes]
+        self.elements = [get_chart_from_ax(ax) for ax in figure.axes]
 
 
-def _get_type_of_graph(ax: Axes) -> GraphType:
+def _get_type_of_chart(ax: Axes) -> ChartType:
     objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
 
     # Check for Line plots
     if all(isinstance(line, Line2D) for line in objects):
-        return GraphType.LINE
+        return ChartType.LINE
 
     if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
-        return GraphType.BOX_AND_WHISKER
+        return ChartType.BOX_AND_WHISKER
 
     filtered = []
     for obj in objects:
@@ -403,41 +403,41 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
 
     # Check for Scatter plots
     if all(isinstance(path, PathCollection) for path in objects):
-        return GraphType.SCATTER
+        return ChartType.SCATTER
 
     # Check for Pie plots
     if all(isinstance(artist, Wedge) for artist in objects):
-        return GraphType.PIE
+        return ChartType.PIE
 
     # Check for Bar plots
     if all(isinstance(rect, Rectangle) for rect in objects):
-        return GraphType.BAR
+        return ChartType.BAR
 
-    return GraphType.UNKNOWN
+    return ChartType.UNKNOWN
 
 
-def get_graph_from_ax(
+def get_chart_from_ax(
     ax: Axes,
-) -> LineGraph | ScatterGraph | BarGraph | PieGraph | BoxAndWhiskerGraph | Graph:
-    graph_type = _get_type_of_graph(ax)
+) -> LineChart | ScatterChart | BarChart | PieChart | BoxAndWhiskerChart | Chart:
+    chart_type = _get_type_of_chart(ax)
 
-    if graph_type == GraphType.LINE:
-        graph = LineGraph(ax=ax)
-    elif graph_type == GraphType.SCATTER:
-        graph = ScatterGraph(ax=ax)
-    elif graph_type == GraphType.BAR:
-        graph = BarGraph(ax=ax)
-    elif graph_type == GraphType.PIE:
-        graph = PieGraph(ax=ax)
-    elif graph_type == GraphType.BOX_AND_WHISKER:
-        graph = BoxAndWhiskerGraph(ax=ax)
+    if chart_type == ChartType.LINE:
+        chart = LineChart(ax=ax)
+    elif chart_type == ChartType.SCATTER:
+        chart = ScatterChart(ax=ax)
+    elif chart_type == ChartType.BAR:
+        chart = BarChart(ax=ax)
+    elif chart_type == ChartType.PIE:
+        chart = PieChart(ax=ax)
+    elif chart_type == ChartType.BOX_AND_WHISKER:
+        chart = BoxAndWhiskerChart(ax=ax)
     else:
-        graph = Graph(ax=ax, type=graph_type)
+        chart = Chart(ax=ax, type=chart_type)
 
-    return graph
+    return chart
 
 
-def _figure_repr_e2b_graph_(self: Figure):
+def _figure_repr_e2b_chart_(self: Figure):
     """
     This method is used to extract data from the figure object to a dictionary
     """
@@ -448,11 +448,11 @@ def _figure_repr_e2b_graph_(self: Figure):
         if not axes:
             return {}
         elif len(axes) > 1:
-            graph = SuperGraph(figure=self)
+            chart = SuperChart(figure=self)
         else:
             ax = axes[0]
-            graph = get_graph_from_ax(ax)
-        return graph.model_dump()
+            chart = get_chart_from_ax(ax)
+        return chart.model_dump()
     except:
         return {}
 
@@ -470,10 +470,10 @@ class E2BDataFormatter(BaseFormatter):
     type_printers = {pandas.DataFrame: _dataframe_repr_e2b_data_}
 
 
-class E2BGraphFormatter(BaseFormatter):
-    format_type = Unicode("e2b/graph")
+class E2BChartFormatter(BaseFormatter):
+    format_type = Unicode("e2b/chart")
 
-    print_method = ObjectName("_repr_e2b_data_")
+    print_method = ObjectName("_repr_e2b_chart_")
     _return_type = (dict, str)
 
     def __call__(self, obj):
@@ -482,7 +482,7 @@ class E2BGraphFormatter(BaseFormatter):
         from matplotlib.pyplot import Figure
 
         if isinstance(obj, Figure):
-            return _figure_repr_e2b_graph_(obj)
+            return _figure_repr_e2b_chart_(obj)
         return super().__call__(obj)
 
 
@@ -490,6 +490,6 @@ ip = IPython.get_ipython()
 ip.display_formatter.formatters["e2b/data"] = E2BDataFormatter(
     parent=ip.display_formatter
 )
-ip.display_formatter.formatters["e2b/graph"] = E2BGraphFormatter(
+ip.display_formatter.formatters["e2b/chart"] = E2BChartFormatter(
     parent=ip.display_formatter
 )

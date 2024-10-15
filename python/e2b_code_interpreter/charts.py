@@ -2,9 +2,9 @@ import enum
 from typing import List, Tuple, Any, Optional, Union
 
 
-class GraphType(str, enum.Enum):
+class ChartType(str, enum.Enum):
     """
-    Graph types
+    Chart types
     """
 
     LINE = "line"
@@ -12,7 +12,7 @@ class GraphType(str, enum.Enum):
     BAR = "bar"
     PIE = "pie"
     BOX_AND_WHISKER = "box_and_whisker"
-    SUPERGRAPH = "supergraph"
+    SUPERCHART = "superchart"
     UNKNOWN = "unknown"
 
 
@@ -33,23 +33,23 @@ class ScaleType(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
-class Graph:
+class Chart:
     """
-    Extracted data from a graph. It's useful for building an interactive graphs or custom visualizations.
+    Extracted data from a chart. It's useful for building an interactive charts or custom visualizations.
     """
 
-    type: GraphType
+    type: ChartType
     title: str
 
     elements: List[Any]
 
     def __init__(self, **kwargs):
-        self.type = GraphType(kwargs["type"] or GraphType.UNKNOWN)
+        self.type = ChartType(kwargs["type"] or ChartType.UNKNOWN)
         self.title = kwargs["title"]
         self.elements = kwargs["elements"]
 
 
-class Graph2D(Graph):
+class Chart2D(Chart):
     x_label: Optional[str]
     y_label: Optional[str]
     x_unit: Optional[str]
@@ -72,7 +72,7 @@ class PointData:
         self.points = [(x, y) for x, y in kwargs["points"]]
 
 
-class PointGraph(Graph2D):
+class PointChart(Chart2D):
     x_ticks: List[Union[str, float]]
     x_tick_labels: List[str]
     x_scale: ScaleType
@@ -108,12 +108,12 @@ class PointGraph(Graph2D):
         self.elements = [PointData(**d) for d in kwargs["elements"]]
 
 
-class LineGraph(PointGraph):
-    type = GraphType.LINE
+class LineChart(PointChart):
+    type = ChartType.LINE
 
 
-class ScatterGraph(PointGraph):
-    type = GraphType.SCATTER
+class ScatterChart(PointChart):
+    type = ChartType.SCATTER
 
 
 class BarData:
@@ -127,8 +127,8 @@ class BarData:
         self.group = kwargs["group"]
 
 
-class BarGraph(Graph2D):
-    type = GraphType.BAR
+class BarChart(Chart2D):
+    type = ChartType.BAR
 
     elements: List[BarData]
 
@@ -148,8 +148,8 @@ class PieData:
         self.radius = kwargs["radius"]
 
 
-class PieGraph(Graph):
-    type = GraphType.PIE
+class PieChart(Chart):
+    type = ChartType.PIE
 
     elements: List[PieData]
 
@@ -175,8 +175,8 @@ class BoxAndWhiskerData:
         self.max = kwargs["max"]
 
 
-class BoxAndWhiskerGraph(Graph2D):
-    type = GraphType.BOX_AND_WHISKER
+class BoxAndWhiskerChart(Chart2D):
+    type = ChartType.BOX_AND_WHISKER
 
     elements: List[BoxAndWhiskerData]
 
@@ -185,40 +185,40 @@ class BoxAndWhiskerGraph(Graph2D):
         self.elements = [BoxAndWhiskerData(**d) for d in kwargs["elements"]]
 
 
-class SuperGraph(Graph):
-    type = GraphType.SUPERGRAPH
+class SuperChart(Chart):
+    type = ChartType.SUPERCHART
 
     elements: List[
-        Union[LineGraph, ScatterGraph, BarGraph, PieGraph, BoxAndWhiskerGraph]
+        Union[LineChart, ScatterChart, BarChart, PieChart, BoxAndWhiskerChart]
     ]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.elements = [deserialize_graph(g) for g in kwargs["elements"]]
+        self.elements = [_deserialize_chart(g) for g in kwargs["elements"]]
 
 
-GraphTypes = Union[
-    LineGraph, ScatterGraph, BarGraph, PieGraph, BoxAndWhiskerGraph, SuperGraph
+ChartTypes = Union[
+    LineChart, ScatterChart, BarChart, PieChart, BoxAndWhiskerChart, SuperChart
 ]
 
 
-def deserialize_graph(data: Optional[dict]) -> Optional[GraphTypes]:
+def _deserialize_chart(data: Optional[dict]) -> Optional[ChartTypes]:
     if not data:
         return None
 
-    if data["type"] == GraphType.LINE:
-        graph = LineGraph(**data)
-    elif data["type"] == GraphType.SCATTER:
-        graph = ScatterGraph(**data)
-    elif data["type"] == GraphType.BAR:
-        graph = BarGraph(**data)
-    elif data["type"] == GraphType.PIE:
-        graph = PieGraph(**data)
-    elif data["type"] == GraphType.BOX_AND_WHISKER:
-        graph = BoxAndWhiskerGraph(**data)
-    elif data["type"] == GraphType.SUPERGRAPH:
-        graph = SuperGraph(**data)
+    if data["type"] == ChartType.LINE:
+        chart = LineChart(**data)
+    elif data["type"] == ChartType.SCATTER:
+        chart = ScatterChart(**data)
+    elif data["type"] == ChartType.BAR:
+        chart = BarChart(**data)
+    elif data["type"] == ChartType.PIE:
+        chart = PieChart(**data)
+    elif data["type"] == ChartType.BOX_AND_WHISKER:
+        chart = BoxAndWhiskerChart(**data)
+    elif data["type"] == ChartType.SUPERCHART:
+        chart = SuperChart(**data)
     else:
-        graph = Graph(**data)
+        chart = Chart(**data)
 
-    return graph
+    return chart

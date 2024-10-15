@@ -13,20 +13,20 @@ export type {
 } from './messaging'
 export type {
   ScaleType,
-  GraphType,
-  GraphTypes,
-  Graph,
-  BarGraph,
+  ChartType,
+  ChartTypes,
+  Chart,
+  BarChart,
   BarData,
-  LineGraph,
-  ScatterGraph,
-  BoxAndWhiskerGraph,
+  LineChart,
+  ScatterChart,
+  BoxAndWhiskerChart,
   BoxAndWhiskerData,
-  PieGraph,
+  PieChart,
   PieData,
-  SuperGraph,
+  SuperChart,
   PointData,
-} from './graphs'
+} from './charts'
 import { Sandbox } from './sandbox'
 
 export default Sandbox

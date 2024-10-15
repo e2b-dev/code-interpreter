@@ -1,7 +1,7 @@
 import datetime
 
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-from e2b_code_interpreter.graphs import LineGraph
+from e2b_code_interpreter.charts import LineChart
 
 code = """
 import numpy as np
@@ -31,33 +31,33 @@ plt.show()
 """
 
 
-async def test_line_graph(async_sandbox: AsyncSandbox):
+async def test_line_chart(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(code)
 
-    graph = result.results[0].graph
-    assert graph
+    chart = result.results[0].chart
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.title == "Plot of sin(x) and cos(x)"
+    assert isinstance(chart, LineChart)
+    assert chart.title == "Plot of sin(x) and cos(x)"
 
-    assert graph.x_label == "Time (s)"
-    assert graph.y_label == "Amplitude (Hz)"
+    assert chart.x_label == "Time (s)"
+    assert chart.y_label == "Amplitude (Hz)"
 
-    assert graph.x_unit == "s"
-    assert graph.y_unit == "Hz"
+    assert chart.x_unit == "s"
+    assert chart.y_unit == "Hz"
 
-    assert graph.x_scale == "datetime"
-    assert graph.y_scale == "linear"
+    assert chart.x_scale == "datetime"
+    assert chart.y_scale == "linear"
 
-    assert all(isinstance(x, str) for x in graph.x_ticks)
-    parsed_date = datetime.datetime.fromisoformat(graph.x_ticks[0])
+    assert all(isinstance(x, str) for x in chart.x_ticks)
+    parsed_date = datetime.datetime.fromisoformat(chart.x_ticks[0])
     assert isinstance(parsed_date, datetime.datetime)
-    assert all(isinstance(y, float) for y in graph.y_ticks)
+    assert all(isinstance(y, float) for y in chart.y_ticks)
 
-    assert all(isinstance(x, str) for x in graph.y_tick_labels)
-    assert all(isinstance(y, str) for y in graph.y_tick_labels)
+    assert all(isinstance(x, str) for x in chart.y_tick_labels)
+    assert all(isinstance(y, str) for y in chart.y_tick_labels)
 
-    lines = graph.elements
+    lines = chart.elements
     assert len(lines) == 2
 
     first_line = lines[0]

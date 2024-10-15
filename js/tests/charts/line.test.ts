@@ -30,37 +30,37 @@ plt.title('Plot of sin(x) and cos(x)')
 plt.show()
 `
   const result = await sandbox.runCode(code)
-  const graph = result.results[0].graph
+  const chart = result.results[0].chart
 
-  expect(graph).toBeDefined()
-  expect(graph.type).toBe('line')
+  expect(chart).toBeDefined()
+  expect(chart.type).toBe('line')
 
-  expect(graph.title).toBe('Plot of sin(x) and cos(x)')
-  expect(graph.x_label).toBe('Time (s)')
-  expect(graph.y_label).toBe('Amplitude (Hz)')
+  expect(chart.title).toBe('Plot of sin(x) and cos(x)')
+  expect(chart.x_label).toBe('Time (s)')
+  expect(chart.y_label).toBe('Amplitude (Hz)')
 
-  expect(graph.x_scale).toBe('datetime')
-  expect(graph.y_scale).toBe('linear')
+  expect(chart.x_scale).toBe('datetime')
+  expect(chart.y_scale).toBe('linear')
 
-  expect(graph.x_unit).toBe('s')
-  expect(graph.y_unit).toBe('Hz')
+  expect(chart.x_unit).toBe('s')
+  expect(chart.y_unit).toBe('Hz')
 
-  expect(graph.x_ticks.every((tick: number) => typeof tick === 'string')).toBe(
+  expect(chart.x_ticks.every((tick: number) => typeof tick === 'string')).toBe(
     true,
   )
-  expect(new Date(graph.x_ticks[0])).toBeInstanceOf(Date)
-  expect(graph.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
+  expect(new Date(chart.x_ticks[0])).toBeInstanceOf(Date)
+  expect(chart.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
     true,
   )
 
   expect(
-    graph.y_tick_labels.every((label: string) => typeof label === 'string'),
+    chart.y_tick_labels.every((label: string) => typeof label === 'string'),
   ).toBe(true)
   expect(
-    graph.x_tick_labels.every((label: string) => typeof label === 'string'),
+    chart.x_tick_labels.every((label: string) => typeof label === 'string'),
   ).toBe(true)
 
-  const lines = graph.elements
+  const lines = chart.elements
   expect(lines.length).toBe(2)
 
   const [firstLine, secondLine] = lines
