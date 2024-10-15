@@ -1,4 +1,4 @@
-import { Sandbox as BaseSandbox } from 'e2b'
+import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
 import { formatExecutionTimeoutError, formatRequestTimeoutError, readLines } from "./utils";
@@ -45,7 +45,7 @@ export class Sandbox extends BaseSandbox {
     },
   ): Promise<Execution> {
     if (opts?.context && opts?.language) {
-      throw new Error("You can provide context or language, but not both at the same time.")
+      throw new InvalidArgumentError("You can provide context or language, but not both at the same time.")
     }
 
     const controller = new AbortController()

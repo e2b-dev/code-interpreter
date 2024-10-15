@@ -4,7 +4,11 @@ import httpx
 from typing import Optional, Dict
 from httpx import AsyncClient
 
-from e2b import AsyncSandbox as BaseAsyncSandbox, ConnectionConfig
+from e2b import (
+    AsyncSandbox as BaseAsyncSandbox,
+    ConnectionConfig,
+    InvalidArgumentException,
+)
 
 from e2b_code_interpreter.constants import (
     DEFAULT_TEMPLATE,
@@ -72,7 +76,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         logger.debug(f"Executing code {code}")
 
         if context and language:
-            raise ValueError(
+            raise InvalidArgumentException(
                 "You can provide context or language, but not both at the same time."
             )
 

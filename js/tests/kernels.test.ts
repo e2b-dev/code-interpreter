@@ -13,3 +13,8 @@ sandboxTest('independence of kernels', async ({ sandbox }) => {
 
   expect(output.error!.value).toEqual("name 'x' is not defined")
 })
+
+sandboxTest('pass context and language', async ({ sandbox }) => {
+  const context = await sandbox.createCodeContext()
+  await expect(sandbox.runCode({context, language: 'python'})).rejects.toThrowError()
+})

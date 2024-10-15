@@ -3,7 +3,7 @@ import httpx
 
 from typing import Optional, Dict
 from httpx import Client
-from e2b import Sandbox as BaseSandbox
+from e2b import Sandbox as BaseSandbox, InvalidArgumentException
 
 from e2b_code_interpreter.constants import (
     DEFAULT_TEMPLATE,
@@ -68,7 +68,7 @@ class Sandbox(BaseSandbox):
         logger.debug(f"Executing code {code}")
 
         if language and context:
-            raise ValueError(
+            raise InvalidArgumentException(
                 "You can provide context or language, but not both at the same time."
             )
 
