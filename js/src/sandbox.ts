@@ -13,7 +13,7 @@ export type Context = {
  * Code interpreter module for executing code in a stateful context.
  */
 export class Sandbox extends BaseSandbox {
-  protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
+  protected static override readonly defaultTemplate: string = 'code-interpreter-v1'
 
   /**
    * Run the code for the specified language. If no language is specified, Python is used.
