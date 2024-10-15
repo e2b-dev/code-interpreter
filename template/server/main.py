@@ -11,6 +11,7 @@ from fastapi.responses import PlainTextResponse
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
+from consts import JUPYTER_BASE_URL
 from contexts import create_context, normalize_language
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
