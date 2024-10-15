@@ -21,8 +21,8 @@ export class Sandbox extends BaseSandbox {
    *
    * @param code The code to execute
    * @param opts Options for executing the code
-   * @param opts.language Language of the code. If not specified and context is not provided, the default Python context is used.
-   * @param opts.context The context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with language.
+   * @param opts.language Based on the value, a default context for the language is used. If not defined and no context is provided, the default Python context is used.
+   * @param opts.context Concrete context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with the language.
    * @param opts.onStdout Callback for handling stdout messages
    * @param opts.onStderr Callback for handling stderr messages
    * @param opts.onResult Callback for handling the final result

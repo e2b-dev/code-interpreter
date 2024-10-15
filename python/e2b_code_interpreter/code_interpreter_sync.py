@@ -55,8 +55,8 @@ class Sandbox(BaseSandbox):
         You can reference previously defined variables, imports, and functions in the code.
 
         :param code: The code to execute
-        :param language: Language of the code. If not specified and context is not provided, the default Python context is used.
-        :param context: The context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with language.
+        :param language Based on the value, a default context for the language is used. If not defined and no context is provided, the default Python context is used.
+        :param context Concrete context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with the language.
         :param on_stdout: Callback for stdout messages
         :param on_stderr: Callback for stderr messages
         :param on_result: Callback for the `Result` object
