@@ -52,6 +52,8 @@ jobs:
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          version: 1.1.21
 
       - name: Run Bun tests
         run: pnpm test:bun
@@ -67,4 +69,3 @@ jobs:
         run: pnpm test:deno
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-  
