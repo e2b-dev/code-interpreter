@@ -83,12 +83,12 @@ pip install e2b
 
 **JavaScript**
 ```ts
-import { CodeInterpreter } from '@e2b/code-interpreter'
+import { Sandbox } from '@e2b/code-interpreter'
 
-const sandbox = await CodeInterpreter.create()
-await sandbox.notebook.execCell('x = 1')
+const sandbox = await Sandbox.create()
+await sbx.runCode()('x = 1')
 
-const execution = await sandbox.notebook.execCell('x+=1; x')
+const execution = await sbx.runCode()('x+=1; x')
 console.log(execution.text)  // outputs 2
 
 await sandbox.close()
@@ -96,21 +96,21 @@ await sandbox.close()
 
 **Python**
 ```py
-from e2b_code_interpreter import CodeInterpreter
+from e2b_code_interpreter import Sandbox
 
-with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell("x = 1")
+with Sandbox() as sandbox:
+    sandbox.run_code()("x = 1")
 
-    execution = sandbox.notebook.exec_cell("x+=1; x")
+    execution = sandbox.run_code()("x+=1; x")
     print(execution.text)  # outputs 2
 ```
 
 ### 3. More resources
-> Check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to use our SDK.
+- Check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to use our SDK.
 
-> See [E2B documentation](https://e2b.dev/docs) to get started.
+- See [E2B documentation](https://e2b.dev/docs) to get started.
 
-> Visit our [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) to get inspired by examples with different LLMs and AI frameworks.
+- Visit our [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) to get inspired by examples with different LLMs and AI frameworks.
 
 
 ## Repository Structure
