@@ -76,7 +76,7 @@ npm i @e2b/code-interpreter
 
 Python
 ```
-pip install e2b_code_interpreter
+pip install e2b
 ```
 
 ### 2. Execute code with code interpreter inside Sandbox
@@ -134,60 +134,3 @@ ___
 <a href="https://www.linkedin.com/company/e2b-dev/" target="_blank">
 <img src="https://img.shields.io/badge/linkedin-%2300acee.svg?color=000000&style=for-the-badge&logo=linkedin&logoColor=white" alt=linkedin style="margin-bottom: 5px;"/></a> 
 </div align='center'>
-
-
-### E2B Sandbox
-E2B Sandbox is a secure cloud environment that allows AI agents and apps. You can run multiple instances of Sandboxes, and have long-running sessions. Inside the Sandboxes, LLMs can use the same tools as humans do, e.g.:
-
-- Running LLM generated code
-- Cloud browsers
-- GitHub repositories and CLIs
-- Coding tools like linters, autocomplete, "go-to defintion"
-- Audio & video editing
-
-
-## Getting Started & Documentation
-
-> Please visit [documentation](https://e2b.dev/docs) to get started.
-
-**Python**
-
-1. Install SDK
-
-```bash
-pip install e2b_code_interpreter
-```
-
-2. Execute code with code interpreter inside sandbox
-
-```py
-from e2b_code_interpreter import Sandbox
-
-with Sandbox() as sandbox:
-    sandbox.run_code("x = 1")
-
-    execution = sandbox.run_code("x+=1; x")
-    print(execution.text)  # outputs 2
-```
-
-**JavaScript & TypeScript**
-
-1. Install SDK
-
-```bash
-npm i @e2b/code-interpreter
-```
-
-2. Execute code with code interpreter inside sandbox
-
-```js
-import { Sandbox } from '@e2b/code-interpreter'
-
-const sandbox = await Sandbox.create()
-await sbx.runCode()('x = 1')
-
-const execution = await sbx.runCode()('x+=1; x')
-console.log(execution.text)  // outputs 2
-
-await sandbox.close()
-```
