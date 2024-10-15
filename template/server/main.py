@@ -5,7 +5,8 @@ import httpx
 from typing import Dict, Union, Literal, List
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
 from api.models.context import Context
 from api.models.create_context import CreateContext
@@ -73,9 +74,9 @@ async def post_execute(request: ExecutionRequest):
     logger.info(f"Executing code: {request.code}")
 
     if request.context_id and request.language:
-        raise HTTPException(
+        return PlainTextResponse(
+            "Only one of context_id or language can be provided",
             status_code=400,
-            detail="Only one of context_id or language can be provided",
         )
 
     context_id = None
@@ -96,9 +97,9 @@ async def post_execute(request: ExecutionRequest):
         ws = websockets["default"]
 
     if not ws:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Context {request.context_id} not found",
             status_code=404,
-            detail=f"Context {request.context_id} not found",
         )
 
     return StreamingListJsonResponse(
@@ -138,9 +139,9 @@ async def restart_context(context_id: str) -> None:
 
     ws = websockets.get(context_id, None)
     if not ws:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Context {context_id} not found",
             status_code=404,
-            detail=f"Context {context_id} not found",
         )
 
     session_id = ws.session_id
@@ -151,9 +152,9 @@ async def restart_context(context_id: str) -> None:
         f"{JUPYTER_BASE_URL}/api/kernels/{ws.context_id}/restart"
     )
     if not response.is_success:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Failed to restart context {context_id}",
             status_code=500,
-            detail=f"Failed to restart context {context_id}",
         )
 
     ws = ContextWebSocket(
@@ -174,9 +175,9 @@ async def remove_context(context_id: str) -> None:
 
     ws = websockets.get(context_id, None)
     if not ws:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Context {context_id} not found",
             status_code=404,
-            detail=f"Context {context_id} not found",
         )
 
     try:
@@ -186,9 +187,9 @@ async def remove_context(context_id: str) -> None:
 
     response = await client.delete(f"{JUPYTER_BASE_URL}/api/kernels/{ws.context_id}")
     if not response.is_success:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Failed to remove context {context_id}",
             status_code=500,
-            detail=f"Failed to remove context {context_id}",
         )
 
     del websockets[context_id]

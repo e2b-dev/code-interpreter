@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 
 from api.models.context import Context
-from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
 
 from consts import JUPYTER_BASE_URL
 from errors import ExecutionError
@@ -36,9 +36,9 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     response = await client.post(f"{JUPYTER_BASE_URL}/api/sessions", json=data)
 
     if not response.is_success:
-        raise HTTPException(
+        return PlainTextResponse(
+            f"Failed to create context: {response.text}",
             status_code=500,
-            detail=f"Failed to create context: {response.text}",
         )
 
     session_data = response.json()
@@ -55,9 +55,9 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     try:
         await ws.change_current_directory(cwd)
     except ExecutionError as e:
-        raise HTTPException(
+        return PlainTextResponse(
+            "Failed to set working directory",
             status_code=500,
-            detail="Failed to set working directory",
-        ) from e
+        )
 
     return Context(language=language, id=context_id, cwd=cwd)
