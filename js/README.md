@@ -21,12 +21,12 @@ npm install @e2b/code-interpreter
 import { Sandbox } from '@e2b/code-interpreter'
 
 const sandbox = await Sandbox.create()
-await sandbox.runCode('x = 1')
+await sbx.runCode()('x = 1')
 
-const execution = await sandbox.runCode('x+=1; x')
-console.log(execution.text) // outputs 2
+const execution = await sbx.runCode()('x+=1; x')
+console.log(execution.text)  // outputs 2
 
-await sandbox.kill()
+await sandbox.close()
 ```
 
 ### Get charts and any display-able data

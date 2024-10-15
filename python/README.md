@@ -21,11 +21,10 @@ pip install e2b-code-interpreter
 from e2b_code_interpreter import Sandbox
 
 with Sandbox() as sandbox:
-    sandbox.run_code("x = 1")
+    sandbox.run_code()("x = 1")
 
-    execution = sandbox.run_code("x+=1; x")
+    execution = sandbox.run_code()("x+=1; x")
     print(execution.text)  # outputs 2
-
 ```
 
 ### Get charts and any display-able data
