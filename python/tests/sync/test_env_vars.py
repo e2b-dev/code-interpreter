@@ -11,7 +11,7 @@ async def test_env_vars_sandbox():
     sbx.kill()
 
 
-async def test_env_vars_in_exec_cell(sandbox: Sandbox):
+async def test_env_vars_in_run_code(sandbox: Sandbox):
     result = sandbox.run_code("import os; os.getenv('FOO')", envs={"FOO": "bar"})
     assert result.text == "bar"
 

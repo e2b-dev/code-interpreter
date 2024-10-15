@@ -11,7 +11,7 @@ async def test_env_vars_sandbox():
     await sbx.kill()
 
 
-async def test_env_vars_in_exec_cell(async_sandbox: AsyncSandbox):
+async def test_env_vars_in_run_code(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code(
         "import os; os.getenv('FOO')", envs={"FOO": "bar"}
     )
