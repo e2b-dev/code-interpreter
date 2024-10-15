@@ -1,7 +1,7 @@
 export * from 'e2b'
 
-export { Sandbox, JupyterExtension } from './sandbox'
-
+export { Sandbox } from './sandbox'
+export type { Context } from './sandbox'
 export type {
   Logs,
   ExecutionError,

@@ -8,7 +8,7 @@ sandboxTest.skipIf(isDebug)('env vars', async () => {
   const sandbox = await Sandbox.create({
     envs: { TEST_ENV_VAR: 'supertest' },
   })
-  const result = await sandbox.notebook.execCell(
+  const result = await sandbox.runCode(
     `import os; x = os.getenv('TEST_ENV_VAR'); x`
   )
 
@@ -16,7 +16,7 @@ sandboxTest.skipIf(isDebug)('env vars', async () => {
 })
 
 sandboxTest('env vars on sandbox', async ({ sandbox }) => {
-  const result = await sandbox.notebook.execCell(
+  const result = await sandbox.runCode(
     "import os; os.getenv('FOO')",
     { envs: { FOO: 'bar' } }
   )
@@ -28,28 +28,28 @@ sandboxTest('env vars on sandbox override', async () => {
   const sandbox = await Sandbox.create({
     envs: { FOO: 'bar', SBX: 'value' },
   })
-  await sandbox.notebook.execCell(
+  await sandbox.runCode(
     "import os; os.environ['FOO'] = 'bar'; os.environ['RUNTIME_ENV'] = 'js_runtime'"
   )
-  const result = await sandbox.notebook.execCell(
+  const result = await sandbox.runCode(
     "import os; os.getenv('FOO')",
     { envs: { FOO: 'baz' } }
   )
 
   expect(result.results[0].text.trim()).toEqual('baz')
 
-  const result2 = await sandbox.notebook.execCell(
+  const result2 = await sandbox.runCode(
     "import os; os.getenv('RUNTIME_ENV')"
   )
   expect(result2.results[0].text.trim()).toEqual('js_runtime')
 
   if (!isDebug) {
-    const result3 = await sandbox.notebook.execCell(
+    const result3 = await sandbox.runCode(
       "import os; os.getenv('SBX')"
     )
     expect(result3.results[0].text.trim()).toEqual('value')
   }
 
-  const result4 = await sandbox.notebook.execCell("import os; os.getenv('FOO')")
+  const result4 = await sandbox.runCode("import os; os.getenv('FOO')")
   expect(result4.results[0].text.trim()).toEqual('bar')
 })

@@ -35,7 +35,7 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 `
-  const result = await sandbox.notebook.execCell(code)
+  const result = await sandbox.runCode(code)
   const graph = result.results[0].graph
 
   expect(graph).toBeDefined()

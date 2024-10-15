@@ -421,7 +421,7 @@ def parse_output(
 class Context:
     id: str
     language: str
-    cwd: Optional[str] = None
+    cwd: str
 
     def __init__(self, context_id: str, language: str, cwd: str, **kwargs):
         self.id = context_id

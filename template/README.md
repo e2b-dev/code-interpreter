@@ -35,9 +35,11 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
    
 
    **JavaScript/TypeScript**
+
    ```js
-   import { Sandbox } from '@e2b/code-interpreter'
-   const sandbox = await Sandbox.create({ template: 'your-custom-sandbox-name' })
-   const execution = await sandbox.execCell('print("hello")')
-   await sandbox.close()
+   import {Sandbox} from '@e2b/code-interpreter'
+
+const sandbox = await Sandbox.create({template: 'your-custom-sandbox-name'})
+const execution = await sandbox.runCode('print("hello")')
+await sandbox.kill()
    ```

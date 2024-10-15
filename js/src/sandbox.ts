@@ -1,65 +1,19 @@
-import { ConnectionConfig, Sandbox as BaseSandbox, TimeoutError } from 'e2b'
+import { Sandbox as BaseSandbox } from 'e2b'
 
 import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
-
-function formatRequestTimeoutError(error: unknown) {
-  if (error instanceof Error && error.name === 'AbortError') {
-    return new TimeoutError('Request timed out — the \'requestTimeoutMs\' option can be used to increase this timeout')
-  }
-
-  return error
-}
-
-function formatExecutionTimeoutError(error: unknown) {
-  if (error instanceof Error && error.name === 'AbortError') {
-    return new TimeoutError('Execution timed out — the \'timeoutMs\' option can be used to increase this timeout')
-  }
-
-  return error
-}
-
-async function* readLines(stream: ReadableStream<Uint8Array>) {
-  const reader = stream.getReader();
-  let buffer = ''
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (value !== undefined) {
-        buffer += new TextDecoder().decode(value)
-      }
-
-      if (done) {
-        if (buffer.length > 0) {
-          yield buffer
-        }
-        break
-      }
-
-      let newlineIdx = -1
-
-      do {
-        newlineIdx = buffer.indexOf('\n')
-        if (newlineIdx !== -1) {
-          yield buffer.slice(0, newlineIdx)
-          buffer = buffer.slice(newlineIdx + 1)
-        }
-      } while (newlineIdx !== -1)
-    }
-  } finally {
-    reader.releaseLock()
-  }
+import { formatExecutionTimeoutError, formatRequestTimeoutError, readLines } from "./utils";
+import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
+export type Context = {
+  id: string
+  language: string
+  cwd: string
 }
 
 /**
  * Code interpreter module for executing code in a stateful context.
  */
-export class JupyterExtension {
-  private static readonly execTimeoutMs = 300_000
-  private static readonly defaultKernelID = 'default'
-
-  constructor(private readonly url: string, private readonly connectionConfig: ConnectionConfig) { }
+export class Sandbox extends BaseSandbox {
+  protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
 
   /**
    * Runs the code in the specified context, if not specified, the default context is used.
@@ -67,7 +21,8 @@ export class JupyterExtension {
    *
    * @param code The code to execute
    * @param opts Options for executing the code
-   * @param opts.kernelID The context ID to run the code in
+   * @param opts.language Language of the code. If not specified and context is not provided, the default Python context is used.
+   * @param opts.context The context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with language.
    * @param opts.onStdout Callback for handling stdout messages
    * @param opts.onStderr Callback for handling stderr messages
    * @param opts.onResult Callback for handling the final result
@@ -76,10 +31,11 @@ export class JupyterExtension {
    * @param opts.requestTimeoutMs Max time to wait for the request to finish
    * @returns Execution object
    */
-  async execCell(
+  async runCode(
     code: string,
     opts?: {
-      kernelID?: string,
+      language?: string,
+      context?: Context,
       onStdout?: (output: OutputMessage) => (Promise<any> | any),
       onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
@@ -88,6 +44,10 @@ export class JupyterExtension {
       requestTimeoutMs?: number,
     },
   ): Promise<Execution> {
+    if (opts?.context && opts?.language) {
+      throw new Error("You can provide context or language, but not both at the same time.")
+    }
+
     const controller = new AbortController()
 
     const requestTimeout = opts?.requestTimeoutMs ?? this.connectionConfig.requestTimeoutMs
@@ -98,14 +58,15 @@ export class JupyterExtension {
       : undefined
 
     try {
-      const res = await fetch(`${this.url}/execute`, {
+      const res = await fetch(`${this.jupyterUrl}/execute`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           code,
-          context_id: opts?.kernelID,
+          context_id: opts?.context?.id,
+          language: opts?.language,
           env_vars: opts?.envs,
         }),
         signal: controller.signal,
@@ -123,7 +84,7 @@ export class JupyterExtension {
 
       clearTimeout(reqTimer)
 
-      const bodyTimeout = opts?.timeoutMs ?? JupyterExtension.execTimeoutMs
+      const bodyTimeout = opts?.timeoutMs ?? DEFAULT_TIMEOUT_MS
 
       const bodyTimer = bodyTimeout
         ? setTimeout(() => {
@@ -154,28 +115,28 @@ export class JupyterExtension {
    * Creates a new context to run code in.
    *
    * @param cwd The working directory for the context
-   * @param kernelName The name of the context
+   * @param language The name of the context
    * @param requestTimeoutMs Max time to wait for the request to finish
    * @returns The context ID
    */
-  async createKernel({
+  async createCodeContext({
     cwd,
-    kernelName,
+    language,
     requestTimeoutMs,
   }: {
     cwd?: string,
-    kernelName?: string,
+    language?: string,
     requestTimeoutMs?: number,
-  } = {}): Promise<string> {
+  } = {}): Promise<Context> {
     try {
 
-      const res = await fetch(`${this.url}/contexts`, {
+      const res = await fetch(`${this.jupyterUrl}/contexts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: kernelName,
+          language: language,
           cwd,
         }),
         keepalive: true,
@@ -187,117 +148,13 @@ export class JupyterExtension {
         throw error
       }
 
-      const data = await res.json()
-      return data.id
+      return await res.json()
     } catch (error) {
       throw formatRequestTimeoutError(error)
     }
   }
 
-  /**
-   * Restarts the context.
-   * Restarting will clear all variables, imports, and other settings set during previous executions.
-   *
-   * @param kernelID The context ID to restart
-   * @param requestTimeoutMs Max time to wait for the request to finish
-   */
-  async restartKernel({
-    kernelID,
-    requestTimeoutMs,
-  }: {
-    kernelID?: string,
-    requestTimeoutMs?: number,
-  } = {}): Promise<void> {
-    try {
-      kernelID = kernelID || JupyterExtension.defaultKernelID
-      const res = await fetch(`${this.url}/contexts/${kernelID}/restart`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        keepalive: true,
-        signal: this.connectionConfig.getSignal(requestTimeoutMs),
-      })
-
-      const error = await extractError(res)
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      throw formatRequestTimeoutError(error)
-    }
+  protected get jupyterUrl(): string {
+    return  `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(JUPYTER_PORT)}`
   }
-
-  /**
-   * Shuts down the context.
-   *
-   * @param kernelID The context ID to shut down
-   * @param requestTimeoutMs Max time to wait for the request to finish
-   */
-  async shutdownKernel({
-    kernelID,
-    requestTimeoutMs,
-  }: {
-    kernelID?: string,
-    requestTimeoutMs?: number,
-  } = {}): Promise<void> {
-    try {
-
-      kernelID = kernelID || JupyterExtension.defaultKernelID
-
-      const res = await fetch(`${this.url}/contexts/${kernelID}`, {
-        method: 'DELETE',
-        keepalive: true,
-        signal: this.connectionConfig.getSignal(requestTimeoutMs),
-      })
-
-      const error = await extractError(res)
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      throw formatRequestTimeoutError(error)
-    }
-  }
-
-  /**
-   * Lists all available contexts.
-   *
-   * @param requestTimeoutMs Max time to wait for the request to finish
-   * @returns List of context IDs and names
-   */
-  async listKernels({
-    requestTimeoutMs,
-  }: {
-    requestTimeoutMs?: number,
-  } = {}): Promise<{ kernelID: string, name: string }[]> {
-    try {
-      const res = await fetch(`${this.url}/contexts`, {
-        keepalive: true,
-        signal: this.connectionConfig.getSignal(requestTimeoutMs),
-      })
-
-      const error = await extractError(res)
-      if (error) {
-        throw error
-      }
-
-      return (await res.json()).map((kernel: any) => ({ kernelID: kernel.id, name: kernel.name }))
-    } catch (error) {
-      throw formatRequestTimeoutError(error)
-    }
-  }
-}
-
-/**
- * Code interpreter module for executing code in a stateful context.
- */
-export class Sandbox extends BaseSandbox {
-  protected static override readonly defaultTemplate: string = 'code-interpreter-beta'
-  protected static readonly jupyterPort = 49999
-
-  readonly notebook = new JupyterExtension(
-    `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(Sandbox.jupyterPort)}`,
-    this.connectionConfig,
-  )
 }

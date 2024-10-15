@@ -22,7 +22,7 @@ plt.scatter(x2, y2, c='red', label='Dataset 2')
 
 plt.show()
 `
-  const result = await sandbox.notebook.execCell(code)
+  const result = await sandbox.runCode(code)
   const graph = result.results[0].graph
 
   expect(graph).toBeDefined()

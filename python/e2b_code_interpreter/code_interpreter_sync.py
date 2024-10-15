@@ -55,7 +55,7 @@ class Sandbox(BaseSandbox):
         You can reference previously defined variables, imports, and functions in the code.
 
         :param code: The code to execute
-        :param language: Language of the code. If not specified and context_id is not provided, the default Python context is used.
+        :param language: Language of the code. If not specified and context is not provided, the default Python context is used.
         :param context: The context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with language.
         :param on_stdout: Callback for stdout messages
         :param on_stderr: Callback for stderr messages
@@ -68,7 +68,9 @@ class Sandbox(BaseSandbox):
         logger.debug(f"Executing code {code}")
 
         if language and context:
-            raise ValueError("Only one of context_id or language can be provided")
+            raise ValueError(
+                "You can provide context or language, but not both at the same time."
+            )
 
         timeout = None if timeout == 0 else (timeout or DEFAULT_TIMEOUT)
         request_timeout = request_timeout or self._connection_config.request_timeout
