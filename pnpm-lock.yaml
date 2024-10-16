@@ -21,8 +21,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: 0.16.2-beta.40
-        version: 0.16.2-beta.40
+        specifier: ^1.0.0
+        version: 1.0.0
     devDependencies:
       '@types/node':
         specifier: ^18.18.6
@@ -1111,8 +1111,8 @@ packages:
     resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
     engines: {node: '>=12'}
 
-  e2b@0.16.2-beta.40:
-    resolution: {integrity: sha512-tWZiNUxuadG5S8nl/Yya29ZBojISzGxt9E+W6bhbJA/zB5iHI78u/bRRVueHL9FiCNVi1gviR+9O/IRpnmfSpA==}
+  e2b@1.0.0:
+    resolution: {integrity: sha512-HCxcLWrLbV+Si87QDRGPLbhS1o+Cm6voUW4mSbApAHnm4bZegIWhd3x80O4cwmYaMNWfhbJUmqasCN++iOgiew==}
     engines: {node: '>=18'}
 
   eastasianwidth@0.2.0:
@@ -4045,7 +4045,7 @@ snapshots:
 
   dotenv@16.4.5: {}
 
-  e2b@0.16.2-beta.40:
+  e2b@1.0.0:
     dependencies:
       '@bufbuild/protobuf': 1.10.0
       '@connectrpc/connect': 1.4.0(@bufbuild/protobuf@1.10.0)
