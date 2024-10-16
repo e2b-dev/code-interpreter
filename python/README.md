@@ -19,12 +19,6 @@
 
 ### 1. Install SDK
 
-JavaScript / TypeScript
-```
-npm i @e2b/code-interpreter
-```
-
-Python
 ```
 pip install e2b-code-interpreter
 ```
@@ -39,7 +33,6 @@ E2B_API_KEY=e2b_***
 
 ### 3. Execute code with code interpreter inside Sandbox
 
-Python
 ```py
 from e2b_code_interpreter import Sandbox
 
