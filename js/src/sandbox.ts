@@ -87,7 +87,25 @@ export interface CreateCodeContextOpts {
 }
 
 /**
- * Extension for Sandbox that allows executing code with a stateful context.
+ * E2B cloud sandbox is a secure and isolated cloud environment.
+ *
+ * The sandbox allows you to:
+ * - Access Linux OS
+ * - Create, list, and delete files and directories
+ * - Run commands
+ * - Run isolated code
+ * - Access the internet
+ *
+ * Check docs [here](https://e2b.dev/docs).
+ *
+ * Use {@link Sandbox.create} to create a new sandbox.
+ *
+ * @example
+ * ```ts
+ * import { Sandbox } from '@e2b/code-interpreter'
+ *
+ * const sandbox = await Sandbox.create()
+ * ```
  */
 export class Sandbox extends BaseSandbox {
   protected static override readonly defaultTemplate: string = 'code-interpreter-v1'
