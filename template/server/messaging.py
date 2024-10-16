@@ -41,6 +41,7 @@ class Execution:
             ]
         ]()
         self.input_accepted = False
+        self.errored = False
         self.in_background = in_background
 
 
@@ -232,6 +233,11 @@ class ContextWebSocket:
             logger.debug(
                 f"Execution {parent_msg_ig} finished execution with error: {data['content']['ename']}: {data['content']['evalue']}"
             )
+
+            if execution.errored:
+                return
+
+            execution.errored = True
             await queue.put(
                 Error(
                     name=data["content"]["ename"],
@@ -295,6 +301,11 @@ class ContextWebSocket:
         elif data["msg_type"] == "execute_reply":
             if data["content"]["status"] == "error":
                 logger.debug(f"Execution {parent_msg_ig} finished execution with error")
+
+                if execution.errored:
+                    return
+
+                execution.errored = True
                 await queue.put(
                     Error(
                         name=data["content"]["ename"],
