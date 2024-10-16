@@ -1,7 +1,7 @@
 export * from 'e2b'
 
 export { Sandbox } from './sandbox'
-export type { Context } from './sandbox'
+export type { Context, RunCodeOpts, CreateCodeContextOpts } from './sandbox'
 export type {
   Logs,
   ExecutionError,

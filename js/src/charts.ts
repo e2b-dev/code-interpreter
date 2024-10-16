@@ -27,6 +27,9 @@ export enum ScaleType {
   ASINH = "asinh",
 }
 
+/**
+ * Represents a chart.
+ */
 export type Chart = {
   type: ChartType
   title: string

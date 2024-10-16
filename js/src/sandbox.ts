@@ -1,90 +1,170 @@
 import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
 
-import {Result, Execution, OutputMessage, parseOutput, extractError, ExecutionError} from './messaging'
+import { Result, Execution, OutputMessage, parseOutput, extractError, ExecutionError } from './messaging'
 import { formatExecutionTimeoutError, formatRequestTimeoutError, readLines } from "./utils";
 import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
+
+/**
+ * Represents a context for code execution.
+ */
 export type Context = {
+  /**
+   * The ID of the context.
+   */
   id: string
+  /**
+   * The language of the context.
+   */
   language: string
+  /**
+   * The working directory of the context.
+   */
   cwd: string
 }
 
 /**
- * Code interpreter module for executing code in a stateful context.
+ * Options for running code.
+ */
+export interface RunCodeOpts {
+  /**
+   * Callback for handling stdout messages.
+   */
+  onStdout?: (output: OutputMessage) => (Promise<any> | any),
+  /**
+   * Callback for handling stderr messages.
+   */
+  onStderr?: (output: OutputMessage) => (Promise<any> | any),
+  /**
+   * Callback for handling the final execution result.
+   */
+  onResult?: (data: Result) => (Promise<any> | any),
+  /**
+   * Callback for handling the `ExecutionError` object.
+   */
+  onError?: (error: ExecutionError) => (Promise<any> | any),
+  /**
+   * Custom environment variables for code execution.
+   * 
+   * @default {}
+   */
+  envs?: Record<string, string>,
+  /**
+   * Timeout for the code execution in **milliseconds**.
+   * 
+   * @default 60_000 // 60 seconds
+   */
+  timeoutMs?: number,
+  /**
+   * Timeout for the request in **milliseconds**.
+   * 
+   * @default 30_000 // 30 seconds
+   */
+  requestTimeoutMs?: number,
+}
+
+/**
+ * Options for creating a code context.
+ */
+export interface CreateCodeContextOpts {
+  /**
+   * Working directory for the context.
+   * 
+   * @default /home/user
+   */
+  cwd?: string,
+  /**
+   * Language for the context.
+   * 
+   * @default python
+   */
+  language?: string,
+  /**
+   * Timeout for the request in **milliseconds**.
+   * 
+   * @default 30_000 // 30 seconds
+   */
+  requestTimeoutMs?: number,
+}
+
+/**
+ * Extension for Sandbox that allows executing code with a stateful context.
  */
 export class Sandbox extends BaseSandbox {
   protected static override readonly defaultTemplate: string = 'code-interpreter-v1'
 
   /**
-   * Run the code for the specified language. If no language is specified, Python is used.
+   * Run the code as Python.
+   * 
+   * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+   * 
    * You can reference previously defined variables, imports, and functions in the code.
    *
-   * @param code The code to execute
-   * @param opts Options for executing the code
-   * @param opts.language Based on the value, a default context for the language is used. If not defined, the default Python context is used.
-   * @param opts.onStdout Callback for handling stdout messages
-   * @param opts.onStderr Callback for handling stderr messages
-   * @param opts.onResult Callback for handling the final result
-   * @param opts.onError Callback for handling the `ExecutionError` object
-   * @param opts.envs Environment variables to set for the execution
-   * @param opts.timeoutMs Max time to wait for the execution to finish
-   * @param opts.requestTimeoutMs Max time to wait for the request to finish
-   * @returns Execution object
+   * @param code code to execute.
+   * @param opts options for executing the code.
+   * 
+   * @returns `Execution` result object.
    */
-async runCode(
+  async runCode(
     code: string,
-    opts?: {
-      language?: string,
-      onStdout?: (output: OutputMessage) => (Promise<any> | any),
-      onStderr?: (output: OutputMessage) => (Promise<any> | any),
-      onResult?: (data: Result) => (Promise<any> | any),
-      onError?: (error: ExecutionError) => (Promise<any> | any),
-      envs?: Record<string, string>,
-      timeoutMs?: number,
-      requestTimeoutMs?: number,
+    opts?: RunCodeOpts & {
+      /**
+       * Language to use for code execution.
+       * 
+       * If not defined, the default Python context is used.
+       */
+      language?: 'python',
     },
   ): Promise<Execution>
-    /**
+  /**
+   * Run the code for the specified language.
+   * 
+   * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+   * If no language is specified, Python is used.
+   * 
+   * You can reference previously defined variables, imports, and functions in the code.
+   *
+   * @param code code to execute.
+   * @param opts options for executing the code.
+   * 
+   * @returns `Execution` result object.
+   */
+  async runCode(
+    code: string,
+    opts?: RunCodeOpts & {
+      /**
+       * Language to use for code execution.
+       * 
+       * If not defined, the default Python context is used.
+       */
+      language?: string,
+    },
+  ): Promise<Execution>
+  /**
    * Runs the code in the specified context, if not specified, the default context is used.
+   * 
+   * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+   * 
    * You can reference previously defined variables, imports, and functions in the code.
    *
-   * @param code The code to execute
-   * @param opts Options for executing the code
-   * @param opts.context Concrete context to run the code in. If not specified, the default Python context is used.
-   * @param opts.onStdout Callback for handling stdout messages
-   * @param opts.onStderr Callback for handling stderr messages
-   * @param opts.onResult Callback for handling the final result
-   * @param opts.onError Callback for handling the `ExecutionError` object
-   * @param opts.envs Environment variables to set for the execution
-   * @param opts.timeoutMs Max time to wait for the execution to finish
-   * @param opts.requestTimeoutMs Max time to wait for the request to finish
-   * @returns Execution object
+   * @param code code to execute.
+   * @param opts options for executing the code
+   * 
+   * @returns `Execution` result object
    */
   async runCode(
     code: string,
-    opts?: {
+    opts?: RunCodeOpts & {
+      /**
+       * Context to run the code in.
+       */
       context?: Context,
-      onStdout?: (output: OutputMessage) => (Promise<any> | any),
-      onStderr?: (output: OutputMessage) => (Promise<any> | any),
-      onResult?: (data: Result) => (Promise<any> | any),
-      onError?: (error: ExecutionError) => (Promise<any> | any),
-      envs?: Record<string, string>,
-      timeoutMs?: number,
-      requestTimeoutMs?: number,
     },
   ): Promise<Execution>
   async runCode(
     code: string,
-    opts?: {
+    opts?: RunCodeOpts & {
       language?: string,
       context?: Context,
-      onStdout?: (output: OutputMessage) => (Promise<any> | any),
-      onStderr?: (output: OutputMessage) => (Promise<any> | any),
-      onResult?: (data: Result) => (Promise<any> | any),
-      onError?: (error: ExecutionError) => (Promise<any> | any),
-      envs?: Record<string, string>,
-      timeoutMs?: number,
-      requestTimeoutMs?: number,
     },
   ): Promise<Execution> {
     if (opts?.context && opts?.language) {
@@ -157,20 +237,11 @@ async runCode(
   /**
    * Creates a new context to run code in.
    *
-   * @param cwd The working directory for the context
-   * @param language The name of the context
-   * @param requestTimeoutMs Max time to wait for the request to finish
-   * @returns The context ID
+   * @param opts options for creating the context.
+   * 
+   * @returns context object.
    */
-  async createCodeContext({
-    cwd,
-    language,
-    requestTimeoutMs,
-  }: {
-    cwd?: string,
-    language?: string,
-    requestTimeoutMs?: number,
-  } = {}): Promise<Context> {
+  async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
     try {
 
       const res = await fetch(`${this.jupyterUrl}/contexts`, {
@@ -179,11 +250,11 @@ async runCode(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          language: language,
-          cwd,
+          language: opts?.language,
+          cwd: opts?.cwd,
         }),
         keepalive: true,
-        signal: this.connectionConfig.getSignal(requestTimeoutMs),
+        signal: this.connectionConfig.getSignal(opts?.requestTimeoutMs),
       })
 
       const error = await extractError(res)
@@ -198,6 +269,6 @@ async runCode(
   }
 
   protected get jupyterUrl(): string {
-    return  `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(JUPYTER_PORT)}`
+    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(JUPYTER_PORT)}`
   }
 }

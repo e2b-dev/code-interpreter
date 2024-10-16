@@ -18,15 +18,24 @@ export async function extractError(res: Response) {
   }
 }
 
+/**
+ * Represents an output message from the sandbox code execution.
+ */
 export class OutputMessage {
   constructor(
+    /**
+     * The output line.
+     */
     public readonly line: string,
     /**
-     * Unix epoch in nanoseconds
+     * Unix epoch in nanoseconds.
      */
     public readonly timestamp: number,
+    /**
+     * Whether the output is an error.
+     */
     public readonly error: boolean
-  ) {}
+  ) { }
 
   public toString() {
     return this.line
@@ -51,13 +60,14 @@ export class ExecutionError {
      * The raw traceback of the error.
      **/
     public traceback: string
-  ) {}
+  ) { }
 }
 
 /**
  * Represents a MIME type.
  */
 export type MIMEType = string
+
 
 type E2BData = {
   data: Record<string, unknown>
@@ -281,7 +291,7 @@ export class Execution {
      * Execution count of the cell.
      */
     public executionCount?: number
-  ) {}
+  ) { }
 
   /**
    * Returns the text representation of the main result of the cell.
