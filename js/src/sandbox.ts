@@ -1,6 +1,6 @@
 import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
 
-import { Result, Execution, OutputMessage, parseOutput, extractError } from './messaging'
+import {Result, Execution, OutputMessage, parseOutput, extractError, ExecutionError} from './messaging'
 import { formatExecutionTimeoutError, formatRequestTimeoutError, readLines } from "./utils";
 import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
 export type Context = {
@@ -25,6 +25,7 @@ export class Sandbox extends BaseSandbox {
    * @param opts.onStdout Callback for handling stdout messages
    * @param opts.onStderr Callback for handling stderr messages
    * @param opts.onResult Callback for handling the final result
+   * @param opts.onError Callback for handling the `ExecutionError` object
    * @param opts.envs Environment variables to set for the execution
    * @param opts.timeoutMs Max time to wait for the execution to finish
    * @param opts.requestTimeoutMs Max time to wait for the request to finish
@@ -37,6 +38,7 @@ async runCode(
       onStdout?: (output: OutputMessage) => (Promise<any> | any),
       onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
+      onError?: (error: ExecutionError) => (Promise<any> | any),
       envs?: Record<string, string>,
       timeoutMs?: number,
       requestTimeoutMs?: number,
@@ -52,6 +54,7 @@ async runCode(
    * @param opts.onStdout Callback for handling stdout messages
    * @param opts.onStderr Callback for handling stderr messages
    * @param opts.onResult Callback for handling the final result
+   * @param opts.onError Callback for handling the `ExecutionError` object
    * @param opts.envs Environment variables to set for the execution
    * @param opts.timeoutMs Max time to wait for the execution to finish
    * @param opts.requestTimeoutMs Max time to wait for the request to finish
@@ -64,6 +67,7 @@ async runCode(
       onStdout?: (output: OutputMessage) => (Promise<any> | any),
       onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
+      onError?: (error: ExecutionError) => (Promise<any> | any),
       envs?: Record<string, string>,
       timeoutMs?: number,
       requestTimeoutMs?: number,
@@ -77,6 +81,7 @@ async runCode(
       onStdout?: (output: OutputMessage) => (Promise<any> | any),
       onStderr?: (output: OutputMessage) => (Promise<any> | any),
       onResult?: (data: Result) => (Promise<any> | any),
+      onError?: (error: ExecutionError) => (Promise<any> | any),
       envs?: Record<string, string>,
       timeoutMs?: number,
       requestTimeoutMs?: number,
@@ -135,7 +140,7 @@ async runCode(
 
       try {
         for await (const chunk of readLines(res.body)) {
-          await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult)
+          await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult, opts?.onError)
         }
       } catch (error) {
         throw formatExecutionTimeoutError(error)

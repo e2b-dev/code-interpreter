@@ -11,6 +11,7 @@ from e2b_code_interpreter.constants import (
     DEFAULT_TIMEOUT,
 )
 from e2b_code_interpreter.models import (
+    ExecutionError,
     Execution,
     Context,
     Result,
@@ -46,6 +47,7 @@ class Sandbox(BaseSandbox):
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
+        on_error: Optional[OutputHandler[ExecutionError]] = None,
         envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
@@ -59,6 +61,7 @@ class Sandbox(BaseSandbox):
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
+        on_error: Optional[OutputHandler[ExecutionError]] = None,
         envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
@@ -72,6 +75,7 @@ class Sandbox(BaseSandbox):
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
+        on_error: Optional[OutputHandler[ExecutionError]] = None,
         envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
@@ -86,6 +90,7 @@ class Sandbox(BaseSandbox):
         :param on_stdout: Callback for stdout messages
         :param on_stderr: Callback for stderr messages
         :param on_result: Callback for the `Result` object
+        :param on_error: Callback for the `ExecutionError` object
         :param envs: Environment variables
         :param timeout: Max time to wait for the execution to finish
         :param request_timeout: Max time to wait for the request to finish
@@ -128,6 +133,7 @@ class Sandbox(BaseSandbox):
                         on_stdout=on_stdout,
                         on_stderr=on_stderr,
                         on_result=on_result,
+                        on_error=on_error,
                     )
 
                 return execution

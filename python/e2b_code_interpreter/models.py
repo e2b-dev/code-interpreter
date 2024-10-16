@@ -394,6 +394,7 @@ def parse_output(
     on_stdout: Optional[OutputHandler[OutputMessage]] = None,
     on_stderr: Optional[OutputHandler[OutputMessage]] = None,
     on_result: Optional[OutputHandler[Result]] = None,
+    on_error: Optional[OutputHandler[ExecutionError]] = None,
 ):
     data = json.loads(output)
     data_type = data.pop("type")
@@ -413,6 +414,8 @@ def parse_output(
             on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
         execution.error = ExecutionError(data["name"], data["value"], data["traceback"])
+        if on_error:
+            on_error(execution.error)
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]
 

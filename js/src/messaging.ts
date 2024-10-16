@@ -311,7 +311,8 @@ export async function parseOutput(
   line: string,
   onStdout?: (output: OutputMessage) => Promise<any> | any,
   onStderr?: (output: OutputMessage) => Promise<any> | any,
-  onResult?: (data: Result) => Promise<any> | any
+  onResult?: (data: Result) => Promise<any> | any,
+  onError?: (error: ExecutionError) => Promise<any> | any
 ) {
   const msg = JSON.parse(line)
 
@@ -348,6 +349,9 @@ export async function parseOutput(
       break
     case 'error':
       execution.error = new ExecutionError(msg.name, msg.value, msg.traceback)
+      if (onError) {
+        await onError(execution.error)
+      }
       break
     case 'number_of_executions':
       execution.executionCount = msg.execution_count
