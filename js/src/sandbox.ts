@@ -261,7 +261,6 @@ export class Sandbox extends BaseSandbox {
    */
   async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
     try {
-
       const res = await fetch(`${this.jupyterUrl}/contexts`, {
         method: 'POST',
         headers: {

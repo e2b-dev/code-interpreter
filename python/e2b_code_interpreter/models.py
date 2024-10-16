@@ -30,12 +30,22 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class OutputMessage:
+    """
+    Represents an output message from the sandbox code execution.
+    """
+
     line: str
+    """
+    The output line.
+    """
     timestamp: int
     """
     Unix epoch in nanoseconds
     """
     error: bool = False
+    """
+    Whether the output is an error.
+    """
 
     def __str__(self):
         return self.line
@@ -49,8 +59,17 @@ class ExecutionError:
     """
 
     name: str
+    """
+    Name of the error.
+    """
     value: str
+    """
+    Value of the error.
+    """
     traceback: str
+    """
+    The raw traceback of the error.
+    """
 
     def __init__(self, name: str, value: str, traceback: str, **kwargs):
         self.name = name
@@ -422,9 +441,22 @@ def parse_output(
 
 @dataclass
 class Context:
+    """
+    Represents a context for code execution.
+    """
+
     id: str
+    """
+    The ID of the context.
+    """
     language: str
+    """
+    The language of the context.
+    """
     cwd: str
+    """
+    The working directory of the context.
+    """
 
     def __init__(self, context_id: str, language: str, cwd: str, **kwargs):
         self.id = context_id

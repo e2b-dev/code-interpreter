@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, Dict, overload
+from typing import Optional, Dict, overload, Literal, Union
 from httpx import Client
 from e2b import Sandbox as BaseSandbox, InvalidArgumentException
 
@@ -29,6 +29,28 @@ logger = logging.getLogger(__name__)
 
 
 class Sandbox(BaseSandbox):
+    """
+    E2B cloud sandbox is a secure and isolated cloud environment.
+
+    The sandbox allows you to:
+    - Access Linux OS
+    - Create, list, and delete files and directories
+    - Run commands
+    - Run isolated code
+    - Access the internet
+
+    Check docs [here](https://e2b.dev/docs).
+
+    Use the `Sandbox()` to create a new sandbox.
+
+    Example:
+    ```python
+    from e2b_code_interpreter import Sandbox
+
+    sandbox = Sandbox()
+    ```
+    """
+
     default_template = DEFAULT_TEMPLATE
 
     @property
@@ -43,6 +65,40 @@ class Sandbox(BaseSandbox):
     def run_code(
         self,
         code: str,
+        language: Union[Literal["python"], None] = None,
+        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+        on_result: Optional[OutputHandler[Result]] = None,
+        on_error: Optional[OutputHandler[ExecutionError]] = None,
+        envs: Optional[Dict[str, str]] = None,
+        timeout: Optional[float] = None,
+        request_timeout: Optional[float] = None,
+    ) -> Execution:
+        """
+        Runs the code as Python.
+
+        Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+
+        You can reference previously defined variables, imports, and functions in the code.
+
+        :param code: Code to execute
+        :param language: Language to use for code execution. If not defined, the default Python context is used.
+        :param on_stdout: Callback for stdout messages
+        :param on_stderr: Callback for stderr messages
+        :param on_result: Callback for the `Result` object
+        :param on_error: Callback for the `ExecutionError` object
+        :param envs: Custom environment variables
+        :param timeout: Timeout for the code execution in **seconds**
+        :param request_timeout: Timeout for the request in **seconds**
+
+        :return: `Execution` result object
+        """
+        ...
+
+    @overload
+    def run_code(
+        self,
+        code: str,
         language: Optional[str] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
@@ -51,7 +107,28 @@ class Sandbox(BaseSandbox):
         envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
-    ) -> Execution: ...
+    ) -> Execution:
+        """
+        Runs the code for the specified language.
+
+        Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+        If no language is specified, Python is used.
+
+        You can reference previously defined variables, imports, and functions in the code.
+
+        :param code: Code to execute
+        :param language: Language to use for code execution. If not defined, the default Python context is used.
+        :param on_stdout: Callback for stdout messages
+        :param on_stderr: Callback for stderr messages
+        :param on_result: Callback for the `Result` object
+        :param on_error: Callback for the `ExecutionError` object
+        :param envs: Custom environment variables
+        :param timeout: Timeout for the code execution in **seconds**
+        :param request_timeout: Timeout for the request in **seconds**
+
+        :return: `Execution` result object
+        """
+        ...
 
     @overload
     def run_code(
@@ -65,7 +142,27 @@ class Sandbox(BaseSandbox):
         envs: Optional[Dict[str, str]] = None,
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
-    ) -> Execution: ...
+    ) -> Execution:
+        """
+        Runs the code in the specified context, if not specified, the default context is used.
+
+        Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
+
+        You can reference previously defined variables, imports, and functions in the code.
+
+        :param code: Code to execute
+        :param context: Concrete context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with the language.
+        :param on_stdout: Callback for stdout messages
+        :param on_stderr: Callback for stderr messages
+        :param on_result: Callback for the `Result` object
+        :param on_error: Callback for the `ExecutionError` object
+        :param envs: Custom environment variables
+        :param timeout: Timeout for the code execution in **seconds**
+        :param request_timeout: Timeout for the request in **seconds**
+
+        :return: `Execution` result object
+        """
+        ...
 
     def run_code(
         self,
@@ -80,23 +177,6 @@ class Sandbox(BaseSandbox):
         timeout: Optional[float] = None,
         request_timeout: Optional[float] = None,
     ) -> Execution:
-        """
-        Runs the code in the specified language/context, if not specified, the default context is used.
-        You can reference previously defined variables, imports, and functions in the code.
-
-        :param code: The code to execute
-        :param language Based on the value, a default context for the language is used. If not defined and no context is provided, the default Python context is used.
-        :param context Concrete context to run the code in. If not specified, the default context for the language is used. It's mutually exclusive with the language.
-        :param on_stdout: Callback for stdout messages
-        :param on_stderr: Callback for stderr messages
-        :param on_result: Callback for the `Result` object
-        :param on_error: Callback for the `ExecutionError` object
-        :param envs: Environment variables
-        :param timeout: Max time to wait for the execution to finish
-        :param request_timeout: Max time to wait for the request to finish
-        :return: Execution object
-        """
-
         logger.debug(f"Executing code {code}")
 
         if language and context:
@@ -146,17 +226,16 @@ class Sandbox(BaseSandbox):
         self,
         cwd: Optional[str] = None,
         language: Optional[str] = None,
-        envs: Optional[Dict[str, str]] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """
         Creates a new context to run code in.
 
-        :param cwd: Set the current working directory for the context
-        :param language: Language of the context. If not specified, the default Python context is used.
-        :param envs: Environment variables
-        :param request_timeout: Max time to wait for the request to finish
-        :return: Context id
+        :param cwd: Set the current working directory for the context, defaults to `/home/user`
+        :param language: Language of the context. If not specified, defaults to Python
+        :param request_timeout: Timeout for the request in **milliseconds**
+
+        :return: Context object
         """
         logger.debug(f"Creating new {language} context")
 
@@ -165,8 +244,6 @@ class Sandbox(BaseSandbox):
             data["language"] = language
         if cwd:
             data["cwd"] = cwd
-        if envs:
-            data["env_vars"] = envs
 
         try:
             response = self._client.post(
