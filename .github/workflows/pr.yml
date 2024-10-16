@@ -1,4 +1,4 @@
-name: Test Python package
+name: Test package
 
 on:
   push:
@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       python: ${{ steps.filter.outputs.python }}
+      js: ${{ steps.filter.outputs.js }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

@@ -1,4 +1,13 @@
 from e2b import *
-
-from .main import CodeInterpreter, JupyterExtension
-from .models import Execution, Error, Result, KernelException, MIMEType, Logs
+from .code_interpreter_sync import Sandbox
+from .code_interpreter_async import AsyncSandbox
+from .models import (
+    Context,
+    Execution,
+    ExecutionError,
+    Result,
+    MIMEType,
+    Logs,
+    OutputHandler,
+    OutputMessage,
+)

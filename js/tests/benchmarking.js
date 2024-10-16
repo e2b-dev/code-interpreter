@@ -1,4 +1,4 @@
-const { CodeInterpreter } = require('../dist')
+const { Sandbox } = require('../dist')
 const dotenv = require('dotenv')
 dotenv.config()
 
@@ -11,18 +11,18 @@ async function main() {
   for (let i = 0; i < iterations; i++) {
     console.log('Iteration:', i + 1)
     let startTime = new Date()
-    const sandbox = await CodeInterpreter.create()
+    const sandbox = await Sandbox.create()
     createSandboxTime += new Date() - startTime
 
     startTime = new Date()
-    await sandbox.notebook.execCell('x = 1')
+    await sandbox.runCode('x = 1')
     fistExecTime += new Date() - startTime
 
     startTime = new Date()
-    const result = await sandbox.notebook.execCell('x+=1; x')
+    const result = await sandbox.runCode('x+=1; x')
     secondExecTime += new Date() - startTime
 
-    await sandbox.close()
+    await sandbox.kill()
   }
   console.log('Average create sandbox time:', createSandboxTime / iterations)
   console.log('Average first exec time:', fistExecTime / iterations)

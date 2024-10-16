@@ -1,48 +1,20 @@
-import { expect, test } from 'vitest'
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-test('create new kernel', async () => {
-  const sandbox = await CodeInterpreter.create()
+import { sandboxTest } from './setup'
 
-  await sandbox.notebook.createKernel()
-
-  await sandbox.close()
+sandboxTest('create new kernel', async ({ sandbox }) => {
+  await sandbox.createCodeContext()
 })
 
-test('independence of kernels', async () => {
-  const sandbox = await CodeInterpreter.create()
-  await sandbox.notebook.execCell('x = 1')
-  const kernelID = await sandbox.notebook.createKernel()
-  const output = await sandbox.notebook.execCell('x', { kernelID })
+sandboxTest('independence of kernels', async ({ sandbox }) => {
+  await sandbox.runCode('x = 1')
+  const context = await sandbox.createCodeContext()
+  const output = await sandbox.runCode('x', { context })
 
   expect(output.error!.value).toEqual("name 'x' is not defined")
-
-  await sandbox.close()
 })
 
-test('restart kernel', async () => {
-  const sandbox = await CodeInterpreter.create()
-
-  await sandbox.notebook.execCell('x = 1')
-  await sandbox.notebook.restartKernel()
-
-  const output = await sandbox.notebook.execCell('x')
-
-  expect(output.error!.value).toEqual("name 'x' is not defined")
-
-  await sandbox.close()
-})
-
-test('list kernels', async () => {
-  const sandbox = await CodeInterpreter.create()
-
-  let kernels = await sandbox.notebook.listKernels()
-  expect(kernels.length).toEqual(1)
-
-  const kernelID = await sandbox.notebook.createKernel()
-  kernels = await sandbox.notebook.listKernels()
-  expect(kernels).toContain(kernelID)
-  expect(kernels.length).toEqual(2)
-
-  await sandbox.close()
+sandboxTest('pass context and language', async ({ sandbox }) => {
+  const context = await sandbox.createCodeContext()
+  await expect(sandbox.runCode({context, language: 'python'})).rejects.toThrowError()
 })

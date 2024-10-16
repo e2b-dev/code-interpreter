@@ -1,12 +1,10 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { sandboxTest } from './setup'
 
-test('display data', async () => {
-  const sandbox = await CodeInterpreter.create()
-
-  // plot random graph
-  const result = await sandbox.notebook.execCell(`
+sandboxTest('display data', async ({ sandbox }) => {
+  // plot random chart
+  const result = await sandbox.runCode(`
         import matplotlib.pyplot as plt
         import numpy as np
 
@@ -20,6 +18,4 @@ test('display data', async () => {
   const image = result.results[0]
   expect(image.png).toBeDefined()
   expect(image.text).toBeDefined()
-
-  await sandbox.close()
 })

@@ -1,79 +1,71 @@
-# Code Interpreter SDK
-E2B's [Code Interpreter SDK](https://github.com/e2b-dev/code-interpreter) allows you to add code interpreting capabilities to your AI apps.
+<p align="center">
+  <img width="100" src="/readme-assets/logo-circle.png" alt="e2b logo">
+</p>
 
-The code interpreter runs inside the [E2B Sandbox](https://github.com/e2b-dev/e2b) - an open-source secure sandbox made for running untrusted AI-generated code and AI agents.
-- ✅ Works with any LLM and AI framework
-- ✅ Supports streaming content like charts and stdout, stderr
-- ✅ Python & JS SDK
-- ✅ Runs on serverless and edge functions
-- ✅ Runs AI-generated code in secure sandboxed environments
-- ✅ 100% open source (including [infrastructure](https://github.com/e2b-dev/infra))
+<h4 align="center">
+  <a href="https://pypi.org/project/e2b/">
+    <img alt="Last 1 month downloads for the Python SDK" loading="lazy" width="200" height="20" decoding="async" data-nimg="1"
+    style="color:transparent;width:auto;height:100%" src="https://img.shields.io/pypi/dm/e2b?label=PyPI%20Downloads">
+  </a>
+  <a href="https://www.npmjs.com/package/e2b">
+    <img alt="Last 1 month downloads for the JavaScript SDK" loading="lazy" width="200" height="20" decoding="async" data-nimg="1"
+    style="color:transparent;width:auto;height:100%" src="https://img.shields.io/npm/dm/e2b?label=NPM%20Downloads">
+  </a>
+</h4>
 
-Follow E2B on [X (Twitter)](https://twitter.com/e2b_dev).
+<!---
+<img width="100%" src="/readme-assets/preview.png" alt="Cover image">
+--->
+## What is E2B?
+[E2B](https://www.e2b.dev/) is an open-source infrastructure that allows you run to AI-generated code in secure isolated sandboxes in the cloud. To start and control sandboxes, use our [JavaScript SDK](https://www.npmjs.com/package/@e2b/code-interpreter) or [Python SDK](https://pypi.org/project/e2b_code_interpreter).
 
-## 💻 Supported language runtimes
-- ✅ Python
-- [(Beta)](https://e2b.dev/docs/guide/beta-code-interpreter-language-runtimes) JavaScript, R, Java
-
-## 📖 Documentation
-- [e2b.dev/docs/code-interpreter](https://e2b.dev/docs/code-interpreter/installation)
-
-## 🚀 Quickstart
+## Run your first Sandbox
 
 ### 1. Install SDK
 
-JavaScript/TypeScript
+JavaScript / TypeScript
 ```
 npm i @e2b/code-interpreter
 ```
 
 Python
 ```
-pip install e2b_code_interpreter
+pip install e2b-code-interpreter
 ```
 
-### 2. Execute code with code interpreter inside sandbox
+### 2. Get your E2B API key
+1. Sign up to E2B [here](https://e2b.dev).
+2. Get your API key [here](https://e2b.dev/dashboard?tab=keys).
+3. Set environment variable with your API key
+```
+E2B_API_KEY=e2b_***
+```     
 
-**JavaScript**
+### 3. Execute code with code interpreter inside Sandbox
+
+JavaScript / TypeScript
 ```ts
-import { CodeInterpreter } from '@e2b/code-interpreter'
+import { Sandbox } from '@e2b/code-interpreter'
 
-const sandbox = await CodeInterpreter.create()
-await sandbox.notebook.execCell('x = 1')
+const sandbox = await Sandbox.create()
+await sbx.runCode()('x = 1')
 
-const execution = await sandbox.notebook.execCell('x+=1; x')
+const execution = await sbx.runCode()('x+=1; x')
 console.log(execution.text)  // outputs 2
-
-await sandbox.close()
 ```
 
-**Python**
+Python
 ```py
-from e2b_code_interpreter import CodeInterpreter
+from e2b_code_interpreter import Sandbox
 
-with CodeInterpreter() as sandbox:
-    sandbox.notebook.exec_cell("x = 1")
-
-    execution = sandbox.notebook.exec_cell("x+=1; x")
+with Sandbox() as sandbox:
+    sandbox.run_code()("x = 1")
+    execution = sandbox.run_code()("x+=1; x")
     print(execution.text)  # outputs 2
 ```
 
-### 3. Hello World guide
-Dive depeer and check out the [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js) and [Python](https://e2b.dev/docs/hello-world/py) "Hello World" guides to learn how to connect code interpreter LLMs.
+### 4. Check docs
+Visit [E2B documentation](https://e2b.dev/docs).
 
-## 📖 Cookbook examples
-
-**Hello World**
-- [JavaScript/TypeScript](https://e2b.dev/docs/hello-world/js)
-- [Python](https://e2b.dev/docs/hello-world/py)
-
-**LLM Providers**
-- 🪸 [Claude with code intepreter](https://github.com/e2b-dev/e2b-cookbook/blob/main/examples/claude-code-interpreter-python/claude_code_interpreter.ipynb)
-- 🦙 [Llama 3 with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/llama-3-code-interpreter-python)
-- [Mixtral with code interpreter and chat UI](https://github.com/e2b-dev/e2b-cookbook/tree/main/templates/mixtral-8x7b-code-interpreter-nextjs)
-
-**AI Frameworks**
-- 🦜⛓️ [LangChain with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langchain-python)
-- 🦜🕸️ [LangGraph with code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/langgraph-python)
-- [Autogen with secure sandboxed code interpreter](https://github.com/e2b-dev/e2b-cookbook/tree/main/examples/e2b_autogen)
-
+### 5. E2B cookbook
+Visit our [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) to get inspired by examples with different LLMs and AI frameworks.

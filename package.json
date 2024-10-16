@@ -11,5 +11,8 @@
     "@changesets/cli": "^2.26.2",
     "@changesets/read": "^0.5.9",
     "changeset": "^0.2.6"
+  },
+  "engines": {
+      "pnpm": ">=9.0.0 <10"
   }
 }

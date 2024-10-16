@@ -1,16 +1,12 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { Sandbox } from '../src'
+import { sandboxTest } from './setup'
 
-test('reconnect', async () => {
-  let sandbox = await CodeInterpreter.create()
-  await sandbox.close()
+sandboxTest('reconnect', async ({ sandbox }) => {
+  sandbox = await Sandbox.connect(sandbox.sandboxId)
 
-  sandbox = await CodeInterpreter.reconnect(sandbox.id)
-
-  const result = await sandbox.notebook.execCell('x =1; x')
+  const result = await sandbox.runCode('x =1; x')
 
   expect(result.text).toEqual('1')
-
-  await sandbox.close()
 })

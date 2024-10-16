@@ -1,15 +1,12 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { isDebug, sandboxTest } from './setup'
 
-test('statefulness', async () => {
-  const sandbox = await CodeInterpreter.create()
+// Skip this test if we are running in debug mode — the execution is persisted between all tests so the result is not reset.
+sandboxTest.skipIf(isDebug)('statefulness', async ({ sandbox }) => {
+  await sandbox.runCode('x = 1')
 
-  await sandbox.notebook.execCell('x = 1')
-
-  const result = await sandbox.notebook.execCell('x += 1; x')
+  const result = await sandbox.runCode('x += 1; x')
 
   expect(result.text).toEqual('2')
-
-  await sandbox.close()
 })

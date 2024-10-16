@@ -1,13 +1,10 @@
-import { CodeInterpreter } from '../src'
+import { expect } from 'vitest'
 
-import { expect, test } from 'vitest'
+import { isDebug, sandboxTest } from './setup'
 
-test('bash', async () => {
-  const sandbox = await CodeInterpreter.create()
-
-  const result = await sandbox.notebook.execCell('!pwd')
+// Skip this test if we are running in debug mode — the pwd and user in the testing docker container are not the same as in the actual sandbox.
+sandboxTest.skipIf(isDebug)('bash', async ({ sandbox }) => {
+  const result = await sandbox.runCode('!pwd')
 
   expect(result.logs.stdout.join().trim()).toEqual('/home/user')
-
-  await sandbox.close()
 })

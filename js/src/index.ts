@@ -1,9 +1,32 @@
-export { CodeInterpreter, JupyterExtension } from './code-interpreter'
-
-export type { Logs, ExecutionError, Result, Execution, MIMEType, RawData } from './messaging'
-
-import { CodeInterpreter } from './code-interpreter'
-
 export * from 'e2b'
 
-export default CodeInterpreter
+export { Sandbox } from './sandbox'
+export type { Context, RunCodeOpts, CreateCodeContextOpts } from './sandbox'
+export type {
+  Logs,
+  ExecutionError,
+  Result,
+  Execution,
+  MIMEType,
+  RawData,
+  OutputMessage,
+} from './messaging'
+export type {
+  ScaleType,
+  ChartType,
+  ChartTypes,
+  Chart,
+  BarChart,
+  BarData,
+  LineChart,
+  ScatterChart,
+  BoxAndWhiskerChart,
+  BoxAndWhiskerData,
+  PieChart,
+  PieData,
+  SuperChart,
+  PointData,
+} from './charts'
+import { Sandbox } from './sandbox'
+
+export default Sandbox

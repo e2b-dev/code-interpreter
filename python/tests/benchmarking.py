@@ -2,7 +2,7 @@ import time
 
 from dotenv import load_dotenv
 
-from e2b_code_interpreter.main import CodeInterpreter
+from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 load_dotenv()
 
@@ -14,18 +14,18 @@ second_exec_time = 0
 for i in range(iterations):
     print("Iteration:", i + 1)
     start_time = time.time()
-    sandbox = CodeInterpreter()
+    sandbox = Sandbox()
     create_sandbox_time += time.time() - start_time
 
     start_time = time.time()
-    sandbox.notebook.exec_cell("x = 1")
+    sandbox.run_code("x = 1")
     first_exec_time += time.time() - start_time
 
     start_time = time.time()
-    result = sandbox.notebook.exec_cell("x+=1; x")
+    result = sandbox.run_code("x+=1; x")
     second_exec_time += time.time() - start_time
 
-    sandbox.close()
+    sandbox.kill()
 
 
 print(f"Average Create Sandbox Time: {create_sandbox_time / iterations}s")
