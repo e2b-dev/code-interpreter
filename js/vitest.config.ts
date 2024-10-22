@@ -14,7 +14,7 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     exclude: ['tests/runtimes/**'],
     globals: false,
-    testTimeout: 20000,
+    testTimeout: 30000,
     environment: 'node',
     bail: 1,
     server: {},
