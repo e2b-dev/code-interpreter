@@ -18,4 +18,5 @@ sandboxTest('display data', async ({ sandbox }) => {
   const image = result.results[0]
   expect(image.png).toBeDefined()
   expect(image.text).toBeDefined()
+  expect(image.extra).toEqual({})
 })

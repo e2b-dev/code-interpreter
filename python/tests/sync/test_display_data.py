@@ -20,3 +20,4 @@ def test_display_data(sandbox: Sandbox):
     data = result.results[0]
     assert data.png
     assert data.text
+    assert not data.extra
