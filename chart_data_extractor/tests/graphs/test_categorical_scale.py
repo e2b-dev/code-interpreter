@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
-from e2b_code_interpreter_data_extraction import graph_figure_to_graph
-from e2b_code_interpreter_data_extraction.graphs import LineGraph
+from e2b_data_extraction import graph_figure_to_graph
+from e2b_data_extraction.graphs import LineGraph
 
 
 def _prep_graph_figure():

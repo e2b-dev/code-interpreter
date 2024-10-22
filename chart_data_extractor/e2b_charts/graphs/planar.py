@@ -8,7 +8,7 @@ from matplotlib.dates import _SwitchableDateConverter
 from pydantic import BaseModel, field_validator, Field
 
 from .base import Graph2D, GraphType
-from ..utils.filtering import is_grid_line
+from ..utils import is_grid_line
 
 
 class PointData(BaseModel):
@@ -22,18 +22,18 @@ class PointData(BaseModel):
     ) -> List[Tuple[Union[str, float], Union[str, float]]]:
         parsed_value = []
         for x, y in value:
-            if isinstance(x, date):
-                x = x.isoformat()
-            if isinstance(x, numpy.datetime64):
-                x = x.astype("datetime64[s]").astype(str)
-
-            if isinstance(y, date):
-                y = y.isoformat()
-            if isinstance(y, numpy.datetime64):
-                y = y.astype("datetime64[s]").astype(str)
-
+            x = cls._parse_point(x)
+            y = cls._parse_point(y)
             parsed_value.append((x, y))
         return parsed_value
+
+    @staticmethod
+    def _parse_point(point):
+        if isinstance(point, date):
+            return point.isoformat()
+        if isinstance(point, numpy.datetime64):
+            return point.astype("datetime64[s]").astype(str)
+        return point
 
 
 class PointGraph(Graph2D):

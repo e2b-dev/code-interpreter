@@ -1,13 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from e2b_code_interpreter_data_extraction import graph_figure_to_graph
-from e2b_code_interpreter_data_extraction.graphs import (
+from e2b_data_extraction import graph_figure_to_graph
+from e2b_data_extraction.graphs import (
     GraphType,
     LineGraph,
     ScatterGraph,
 )
-from e2b_code_interpreter_data_extraction.main import SuperGraph
+from e2b_data_extraction.main import SuperGraph
 
 
 def _prep_graph_figure():

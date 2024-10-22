@@ -7,7 +7,7 @@ license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://e2b.dev/"
 repository = "https://github.com/e2b-dev/e2b-code-interpreter/tree/python"
-packages = [{ include = "e2b_code_interpreter_data_extraction" }]
+packages = [{ include = "e2b_charts" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"

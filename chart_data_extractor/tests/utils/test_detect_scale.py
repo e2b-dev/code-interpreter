@@ -2,7 +2,7 @@ import datetime
 
 from matplotlib.dates import _SwitchableDateConverter
 
-from e2b_code_interpreter_data_extraction.graphs.planar import PointGraph
+from e2b_data_extraction.graphs.planar import PointGraph
 
 
 def test_detect_scale():

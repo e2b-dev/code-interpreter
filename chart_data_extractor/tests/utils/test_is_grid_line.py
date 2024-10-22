@@ -1,6 +1,6 @@
 from matplotlib.lines import Line2D
 
-from e2b_code_interpreter_data_extraction.utils.filtering import is_grid_line
+from e2b_data_extraction.utils.filtering import is_grid_line
 
 
 def test_is_grid_line():

@@ -1,4 +1,4 @@
-from typing import Optional, List, Any, Literal
+from typing import Optional, List, Literal
 
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
@@ -7,9 +7,9 @@ from matplotlib.patches import Rectangle, Wedge, PathPatch
 from matplotlib.pyplot import Figure
 
 from matplotlib.text import Text
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from e2b_code_interpreter_data_extraction.graphs import (
+from e2b_data_extraction.graphs import (
     GraphType,
     Graph,
     LineGraph,
@@ -18,7 +18,7 @@ from e2b_code_interpreter_data_extraction.graphs import (
     PieGraph,
     ScatterGraph,
 )
-from e2b_code_interpreter_data_extraction.utils.filtering import is_grid_line
+from e2b_data_extraction.utils.filtering import is_grid_line
 
 
 class SuperGraph(Graph):
