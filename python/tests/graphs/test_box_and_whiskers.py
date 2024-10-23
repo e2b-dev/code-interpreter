@@ -15,9 +15,6 @@ data = {
 # Create figure and axis
 fig, ax = plt.subplots(figsize=(10, 6))
 
-# Plot box plot
-ax.boxplot(data.values(), labels=data.keys())
-
 # Customize plot
 ax.set_title('Exam Scores Distribution')
 ax.set_xlabel('Class')
@@ -54,9 +51,10 @@ async def test_box_and_whiskers(async_sandbox: AsyncSandbox):
     bars = chart.elements
     assert len(bars) == 3
 
-    assert all(isinstance(bar.min, float) for bar in bars)
-    assert all(isinstance(bar.first_quartile, float) for bar in bars)
-    assert all(isinstance(bar.median, float) for bar in bars)
-    assert all(isinstance(bar.third_quartile, float) for bar in bars)
-    assert all(isinstance(bar.max, float) for bar in bars)
-    assert all(isinstance(bar.label, str) for bar in bars)
+    assert [bar.outliers for bar in bars] == [[], [76], []]
+    assert [bar.min for bar in bars] == [78, 84, 75]
+    assert [bar.first_quartile for bar in bars] == [85, 84.75, 79]
+    assert [bar.median for bar in bars] == [88, 88, 82]
+    assert [bar.third_quartile for bar in bars] == [90, 90.5, 86]
+    assert [bar.max for bar in bars] == [92, 95, 88]
+    assert [bar.label for bar in bars] == ["Class A", "Class B", "Class C"]
