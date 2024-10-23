@@ -41,7 +41,7 @@ def _dynamic_round(number):
     decimal_number = Decimal(str(number))
 
     # Dynamically determine precision based on magnitude
-    precision = max(1, 16 - decimal_number.adjusted())  # 16 digits of precision
+    precision = max(1, 8 - decimal_number.adjusted())  # 8 digits of precision
 
     with localcontext() as ctx:
         ctx.prec = precision  # Set the dynamic precision
