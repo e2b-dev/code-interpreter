@@ -17,9 +17,6 @@ data = {
 # Create figure and axis
 fig, ax = plt.subplots(figsize=(10, 6))
 
-# Plot box plot
-ax.boxplot(data.values(), labels=data.keys())
-
 # Customize plot
 ax.set_title('Exam Scores Distribution')
 ax.set_xlabel('Class')
@@ -52,12 +49,11 @@ plt.show()
   const bars = chart.elements
   expect(bars.length).toBe(3)
 
-  bars.forEach((bar: any) => {
-    expect(typeof bar.min).toBe('number')
-    expect(typeof bar.first_quartile).toBe('number')
-    expect(typeof bar.median).toBe('number')
-    expect(typeof bar.third_quartile).toBe('number')
-    expect(typeof bar.max).toBe('number')
-    expect(typeof bar.label).toBe('string')
-  })
+  expect(bars.map((bar) => bar.label)).toEqual(['Class A', 'Class B', 'Class C'])
+  expect(bars.map((bar) => bar.outliers)).toEqual([[], [76], []])
+  expect(bars.map((bar) => bar.min)).toEqual([78, 84, 75])
+  expect(bars.map((bar) => bar.first_quartile)).toEqual([85, 84.75, 79])
+  expect(bars.map((bar) => bar.median)).toEqual([88, 88, 82])
+  expect(bars.map((bar) => bar.third_quartile)).toEqual([90, 90.5, 86])
+  expect(bars.map((bar) => bar.max)).toEqual([92, 95, 88])
 })

@@ -95,6 +95,7 @@ export type BoxAndWhiskerData = {
   median: number
   third_quartile: number
   max: number
+  outliers: number[]
 }
 
 export type BoxAndWhiskerChart = Chart2D & {
