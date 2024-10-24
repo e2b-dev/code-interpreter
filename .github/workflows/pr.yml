@@ -12,6 +12,7 @@ jobs:
     outputs:
       python: ${{ steps.filter.outputs.python }}
       js: ${{ steps.filter.outputs.js }}
+      charts: ${{ steps.filter.outputs.charts }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -38,6 +39,8 @@ jobs:
               - 'python/**'
             js:
               - 'js/**'
+            charts:
+              - 'chart_data_extractor/**'
 
   python-tests:
     needs: [ changes ]
@@ -51,4 +54,12 @@ jobs:
     name: Tests JS package
     if: needs.changes.outputs.js == 'true'
     uses: ./.github/workflows/js_tests.yml
+    secrets: inherit
+
+  charts-tests:
+    needs: [ changes ]
+    name: Tests Chart package
+    #    If the PR does not have the label 'js-rc', the code is already tested in the prerelease workflow
+    if: needs.changes.outputs.charts == 'true' && !contains( github.event.pull_request.labels.*.name, 'charts-rc')
+    uses: ./.github/workflows/charts_tests.yml
     secrets: inherit

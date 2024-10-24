@@ -1,0 +1,11 @@
+{
+  "name": "@e2b/data-extractor",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "test": "poetry run pytest -n 4 --verbose -x",
+    "example": "poetry run python3 example.py",
+    "postVersion": "poetry version $(pnpm pkg get version --workspaces=false | tr -d \\\")",
+    "pretest": "poetry install"
+  }
+}
