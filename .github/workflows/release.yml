@@ -99,7 +99,7 @@ jobs:
 
   release:
     needs: [python-tests, js-tests]
-    if: always() && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
+    if: (!cancelled()) && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
     name: Release
     runs-on: ubuntu-latest
     steps:

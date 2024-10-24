@@ -10,4 +10,4 @@ test('Bun test', async () => {
   } finally {
     await sbx.kill()
   }
-})
+}, { timeout: 30_000 })

@@ -183,7 +183,9 @@ export class Result {
           'json',
           'javascript',
           'data',
+          'chart',
           'extra',
+          "text"
         ].includes(key)
       ) {
         this.extra[key] = data[key]

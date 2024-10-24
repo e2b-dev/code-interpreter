@@ -1,6 +1,7 @@
 from datetime import date
 import enum
 import re
+from decimal import Decimal, localcontext
 from typing import Optional, List, Tuple, Literal, Any, Union, Sequence
 
 import matplotlib
@@ -33,6 +34,18 @@ def _is_grid_line(line: Line2D) -> bool:
         return True
 
     return False
+
+
+def _dynamic_round(number):
+    # Convert to Decimal for precise control
+    decimal_number = Decimal(str(number))
+
+    # Dynamically determine precision based on magnitude
+    precision = max(1, 8 - decimal_number.adjusted())  # 8 digits of precision
+
+    with localcontext() as ctx:
+        ctx.prec = precision  # Set the dynamic precision
+        return +decimal_number  # The + operator applies rounding
 
 
 class ChartType(str, enum.Enum):
@@ -277,7 +290,9 @@ class PieChart(Chart):
         for wedge in ax.patches:
             pie_data = PieData(
                 label=wedge.get_label(),
-                angle=abs(round(wedge.theta2 - wedge.theta1, 4)),
+                angle=abs(
+                    _dynamic_round(Decimal(wedge.theta2) - Decimal(wedge.theta1))
+                ),
                 radius=wedge.r,
             )
 
@@ -291,6 +306,7 @@ class BoxAndWhiskerData(BaseModel):
     median: float
     third_quartile: float
     max: float
+    outliers: List[float] = Field(default_factory=list)
 
 
 class BoxAndWhiskerChart(Chart2D):
@@ -301,20 +317,23 @@ class BoxAndWhiskerChart(Chart2D):
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
 
+        labels = [item.get_text() for item in ax.get_xticklabels()]
+
         boxes = []
-        for box in ax.patches:
+        for label, box in zip(labels, ax.patches):
             vertices = box.get_path().vertices
-            x_vertices = vertices[:, 0]
-            y_vertices = vertices[:, 1]
+            x_vertices = [_dynamic_round(x) for x in vertices[:, 0]]
+            y_vertices = [_dynamic_round(y) for y in vertices[:, 1]]
             x = min(x_vertices)
             y = min(y_vertices)
             boxes.append(
                 {
                     "x": x,
                     "y": y,
-                    "label": box.get_label(),
-                    "width": round(max(x_vertices) - x, 4),
-                    "height": round(max(y_vertices) - y, 4),
+                    "label": label,
+                    "width": max(x_vertices) - x,
+                    "height": max(y_vertices) - y,
+                    "outliers": [],
                 }
             )
 
@@ -328,13 +347,21 @@ class BoxAndWhiskerChart(Chart2D):
                 box["x"], box["y"] = box["y"], box["x"]
                 box["width"], box["height"] = box["height"], box["width"]
 
-        for line in ax.lines:
-            xdata = line.get_xdata()
-            ydata = line.get_ydata()
+        for i, line in enumerate(ax.lines):
+            xdata = [_dynamic_round(x) for x in line.get_xdata()]
+            ydata = [_dynamic_round(y) for y in line.get_ydata()]
 
             if orientation == "vertical":
                 xdata, ydata = ydata, xdata
 
+            if len(xdata) == 1:
+                for box in boxes:
+                    if box["x"] <= xdata[0] <= box["x"] + box["width"]:
+                        break
+                else:
+                    continue
+
+                box["outliers"].append(ydata[0])
             if len(ydata) != 2:
                 continue
             for box in boxes:
@@ -344,6 +371,7 @@ class BoxAndWhiskerChart(Chart2D):
                 continue
 
             if (
+                # Check if the line is inside the box, prevent floating point errors
                 ydata[0] == ydata[1]
                 and box["y"] <= ydata[0] <= box["y"] + box["height"]
             ):
@@ -365,6 +393,7 @@ class BoxAndWhiskerChart(Chart2D):
                 median=box["median"],
                 third_quartile=box["y"] + box["height"],
                 max=box["whisker_upper"],
+                outliers=box["outliers"],
             )
             for box in boxes
         ]

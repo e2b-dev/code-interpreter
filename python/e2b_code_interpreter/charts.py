@@ -165,6 +165,7 @@ class BoxAndWhiskerData:
     median: float
     third_quartile: float
     max: float
+    outliers: List[float]
 
     def __init__(self, **kwargs):
         self.label = kwargs["label"]
@@ -173,6 +174,7 @@ class BoxAndWhiskerData:
         self.median = kwargs["median"]
         self.third_quartile = kwargs["third_quartile"]
         self.max = kwargs["max"]
+        self.outliers = kwargs.get("outliers") or []
 
 
 class BoxAndWhiskerChart(Chart2D):

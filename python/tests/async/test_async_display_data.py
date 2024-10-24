@@ -20,3 +20,4 @@ async def test_display_data(async_sandbox: AsyncSandbox):
     data = result.results[0]
     assert data.png
     assert data.text
+    assert not data.extra
