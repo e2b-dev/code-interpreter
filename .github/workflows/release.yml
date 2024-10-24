@@ -100,6 +100,8 @@ jobs:
     needs: [charts-tests]
     if: needs.changes.outputs.charts == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.output_version.outputs.version }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
@@ -146,12 +148,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.CHARTS_PYPI_TOKEN }}
 
+      - name: Output new version
+        id: output_version
+        working-directory: ./chart_data_extractor
+        run: |
+            echo "::set-output name=version::$(pnpm pkg get version --workspaces=false | tr -d \\\")"
 
   build-docker-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: [changes, charts-release]
-    if: needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
+    if: always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -170,6 +180,9 @@ jobs:
       - name: Build and push to DockerHub
         working-directory: ./template
         run: |
+          CHARTS_VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
+          VERSION=${{ needs.charts-release.outputs.version || CHARTS_VERSION }}
+          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" Dockerfile
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
           docker buildx build \
             --file Dockerfile \
