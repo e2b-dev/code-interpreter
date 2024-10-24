@@ -4,7 +4,7 @@ import IPython
 from IPython.core.formatters import BaseFormatter
 from traitlets.traitlets import Unicode, ObjectName
 
-from e2b_charts import graph_figure_to_graph
+from e2b_charts import chart_figure_to_dict
 
 
 def _figure_repr_e2b_chart_(self: Figure):
@@ -13,7 +13,7 @@ def _figure_repr_e2b_chart_(self: Figure):
     """
     # Get all Axes objects from the Figure
     try:
-        return graph_figure_to_graph(self)
+        return chart_figure_to_dict(self)
     except:
         return {}
 
