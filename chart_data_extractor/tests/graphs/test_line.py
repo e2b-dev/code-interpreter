@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
-from e2b_charts import graph_figure_to_graph
-from e2b_charts.graphs import LineGraph
+from e2b_charts import chart_figure_to_chart
+from e2b_charts.charts import LineChart
 
 
-def _prep_graph_figure():
+def _prep_chart_figure():
     # Generate x values
     dates = [
         datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(100)
@@ -30,32 +30,32 @@ def _prep_graph_figure():
     return plt.gcf()
 
 
-def test_line_graph():
-    figure = _prep_graph_figure()
-    graph = graph_figure_to_graph(figure)
-    assert graph
+def test_line_chart():
+    figure = _prep_chart_figure()
+    chart = chart_figure_to_chart(figure)
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.title == "Plot of sin(x) and cos(x)"
+    assert isinstance(chart, LineChart)
+    assert chart.title == "Plot of sin(x) and cos(x)"
 
-    assert graph.x_label == "Time (s)"
-    assert graph.y_label == "Amplitude (Hz)"
+    assert chart.x_label == "Time (s)"
+    assert chart.y_label == "Amplitude (Hz)"
 
-    assert graph.x_unit == "s"
-    assert graph.y_unit == "Hz"
+    assert chart.x_unit == "s"
+    assert chart.y_unit == "Hz"
 
-    assert graph.x_scale == "datetime"
-    assert graph.y_scale == "linear"
+    assert chart.x_scale == "datetime"
+    assert chart.y_scale == "linear"
 
-    assert all(isinstance(x, str) for x in graph.x_ticks)
-    parsed_date = datetime.datetime.fromisoformat(graph.x_ticks[0])
+    assert all(isinstance(x, str) for x in chart.x_ticks)
+    parsed_date = datetime.datetime.fromisoformat(chart.x_ticks[0])
     assert isinstance(parsed_date, datetime.datetime)
-    assert all(isinstance(y, float) for y in graph.y_ticks)
+    assert all(isinstance(y, float) for y in chart.y_ticks)
 
-    assert all(isinstance(x, str) for x in graph.y_tick_labels)
-    assert all(isinstance(y, str) for y in graph.y_tick_labels)
+    assert all(isinstance(x, str) for x in chart.y_tick_labels)
+    assert all(isinstance(y, str) for y in chart.y_tick_labels)
 
-    lines = graph.elements
+    lines = chart.elements
     assert len(lines) == 2
 
     first_line = lines[0]

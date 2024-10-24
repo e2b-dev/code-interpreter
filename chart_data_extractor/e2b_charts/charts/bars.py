@@ -3,7 +3,7 @@ from typing import Literal, List
 from matplotlib.axes import Axes
 from pydantic import BaseModel, Field
 
-from .base import Graph2D, GraphType
+from .base import Chart2D, ChartType
 from ..utils.rounding import dynamic_round
 
 
@@ -13,8 +13,8 @@ class BarData(BaseModel):
     value: float
 
 
-class BarGraph(Graph2D):
-    type: Literal[GraphType.BAR] = GraphType.BAR
+class BarChart(Chart2D):
+    type: Literal[ChartType.BAR] = ChartType.BAR
 
     elements: List[BarData] = Field(default_factory=list)
 
@@ -52,8 +52,8 @@ class BoxAndWhiskerData(BaseModel):
     outliers: List[float]
 
 
-class BoxAndWhiskerGraph(Graph2D):
-    type: Literal[GraphType.BOX_AND_WHISKER] = GraphType.BOX_AND_WHISKER
+class BoxAndWhiskerChart(Chart2D):
+    type: Literal[ChartType.BOX_AND_WHISKER] = ChartType.BOX_AND_WHISKER
 
     elements: List[BoxAndWhiskerData] = Field(default_factory=list)
 

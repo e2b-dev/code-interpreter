@@ -1,1 +1,1 @@
-from .main import graph_figure_to_graph
+from .main import chart_figure_to_chart, chart_figure_to_dict

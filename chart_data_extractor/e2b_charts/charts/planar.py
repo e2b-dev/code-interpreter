@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.dates import _SwitchableDateConverter
 from pydantic import BaseModel, field_validator, Field
 
-from .base import Graph2D, GraphType
+from .base import Chart2D, ChartType
 from ..utils import is_grid_line
 
 
@@ -36,7 +36,7 @@ class PointData(BaseModel):
         return point
 
 
-class PointGraph(Graph2D):
+class PointChart(Chart2D):
     x_ticks: List[Union[str, float]] = Field(default_factory=list)
     x_tick_labels: List[str] = Field(default_factory=list)
     x_scale: str = Field(default="linear")
@@ -49,7 +49,7 @@ class PointGraph(Graph2D):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for PointGraph
+        Function to extract information for PointChart
         """
         super()._extract_info(ax)
 
@@ -101,8 +101,8 @@ class PointGraph(Graph2D):
                 return list(ticks)
 
 
-class LineGraph(PointGraph):
-    type: Literal[GraphType.LINE] = GraphType.LINE
+class LineChart(PointChart):
+    type: Literal[ChartType.LINE] = ChartType.LINE
 
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
@@ -120,8 +120,8 @@ class LineGraph(PointGraph):
             self.elements.append(line_data)
 
 
-class ScatterGraph(PointGraph):
-    type: Literal[GraphType.SCATTER] = GraphType.SCATTER
+class ScatterChart(PointChart):
+    type: Literal[ChartType.SCATTER] = ChartType.SCATTER
 
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)

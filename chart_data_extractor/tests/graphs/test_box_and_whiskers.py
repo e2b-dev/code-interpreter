@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 
-from e2b_charts import graph_figure_to_graph
-from e2b_charts.graphs import BoxAndWhiskerGraph, GraphType
+from e2b_charts import chart_figure_to_chart
+from e2b_charts.charts import BoxAndWhiskerChart, ChartType
 
 
-def _prep_graph_figure():
+def _prep_chart_figure():
     # Sample data
     data = {
         "Class A": [85, 90, 78, 92, 88],
@@ -32,21 +32,21 @@ def _prep_graph_figure():
 
 
 def test_box_and_whiskers():
-    figure = _prep_graph_figure()
-    graph = graph_figure_to_graph(figure)
-    assert graph
+    figure = _prep_chart_figure()
+    chart = chart_figure_to_chart(figure)
+    assert chart
 
-    assert isinstance(graph, BoxAndWhiskerGraph)
-    assert graph.type == GraphType.BOX_AND_WHISKER
-    assert graph.title == "Exam Scores Distribution"
+    assert isinstance(chart, BoxAndWhiskerChart)
+    assert chart.type == ChartType.BOX_AND_WHISKER
+    assert chart.title == "Exam Scores Distribution"
 
-    assert graph.x_label == "Class"
-    assert graph.y_label == "Score"
+    assert chart.x_label == "Class"
+    assert chart.y_label == "Score"
 
-    assert graph.x_unit is None
-    assert graph.y_unit is None
+    assert chart.x_unit is None
+    assert chart.y_unit is None
 
-    bars = graph.elements
+    bars = chart.elements
     assert len(bars) == 3
 
     assert all(isinstance(bar.min, float) for bar in bars)

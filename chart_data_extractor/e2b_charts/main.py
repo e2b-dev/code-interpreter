@@ -9,40 +9,40 @@ from matplotlib.pyplot import Figure
 from matplotlib.text import Text
 from pydantic import Field
 
-from .graphs import (
-    GraphType,
-    Graph,
-    LineGraph,
-    BarGraph,
-    BoxAndWhiskerGraph,
-    PieGraph,
-    ScatterGraph,
+from .charts import (
+    ChartType,
+    Chart,
+    LineChart,
+    BarChart,
+    BoxAndWhiskerChart,
+    PieChart,
+    ScatterChart,
 )
 from .utils.filtering import is_grid_line
 
 
-class SuperGraph(Graph):
-    type: Literal[GraphType.SUPERGRAPH] = GraphType.SUPERGRAPH
+class SuperChart(Chart):
+    type: Literal[ChartType.SUPERCHART] = ChartType.SUPERCHART
     elements: List[
-        LineGraph | ScatterGraph | BarGraph | PieGraph | BoxAndWhiskerGraph
+        LineChart | ScatterChart | BarChart | PieChart | BoxAndWhiskerChart
     ] = Field(default_factory=list)
 
     def __init__(self, figure: Figure):
         title = figure.get_suptitle()
         super().__init__(title=title)
 
-        self.elements = [get_graph_from_ax(ax) for ax in figure.axes]
+        self.elements = [get_chart_from_ax(ax) for ax in figure.axes]
 
 
-def _get_type_of_graph(ax: Axes) -> GraphType:
+def _get_type_of_chart(ax: Axes) -> ChartType:
     objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
 
     # Check for Line plots
     if all(isinstance(line, Line2D) for line in objects):
-        return GraphType.LINE
+        return ChartType.LINE
 
     if all(isinstance(box_or_path, (PathPatch, Line2D)) for box_or_path in objects):
-        return GraphType.BOX_AND_WHISKER
+        return ChartType.BOX_AND_WHISKER
 
     filtered = []
     for obj in objects:
@@ -54,41 +54,41 @@ def _get_type_of_graph(ax: Axes) -> GraphType:
 
     # Check for Scatter plots
     if all(isinstance(path, PathCollection) for path in objects):
-        return GraphType.SCATTER
+        return ChartType.SCATTER
 
     # Check for Pie plots
     if all(isinstance(artist, Wedge) for artist in objects):
-        return GraphType.PIE
+        return ChartType.PIE
 
     # Check for Bar plots
     if all(isinstance(rect, Rectangle) for rect in objects):
-        return GraphType.BAR
+        return ChartType.BAR
 
-    return GraphType.UNKNOWN
+    return ChartType.UNKNOWN
 
 
-def get_graph_from_ax(
+def get_chart_from_ax(
     ax: Axes,
-) -> LineGraph | ScatterGraph | BarGraph | PieGraph | BoxAndWhiskerGraph | Graph:
-    graph_type = _get_type_of_graph(ax)
+) -> LineChart | ScatterChart | BarChart | PieChart | BoxAndWhiskerChart | Chart:
+    chart_type = _get_type_of_chart(ax)
 
-    if graph_type == GraphType.LINE:
-        graph = LineGraph(ax=ax)
-    elif graph_type == GraphType.SCATTER:
-        graph = ScatterGraph(ax=ax)
-    elif graph_type == GraphType.BAR:
-        graph = BarGraph(ax=ax)
-    elif graph_type == GraphType.PIE:
-        graph = PieGraph(ax=ax)
-    elif graph_type == GraphType.BOX_AND_WHISKER:
-        graph = BoxAndWhiskerGraph(ax=ax)
+    if chart_type == ChartType.LINE:
+        chart = LineChart(ax=ax)
+    elif chart_type == ChartType.SCATTER:
+        chart = ScatterChart(ax=ax)
+    elif chart_type == ChartType.BAR:
+        chart = BarChart(ax=ax)
+    elif chart_type == ChartType.PIE:
+        chart = PieChart(ax=ax)
+    elif chart_type == ChartType.BOX_AND_WHISKER:
+        chart = BoxAndWhiskerChart(ax=ax)
     else:
-        graph = Graph(ax=ax, type=graph_type)
+        chart = Chart(ax=ax, type=chart_type)
 
-    return graph
+    return chart
 
 
-def graph_figure_to_graph(figure: Figure) -> Optional[Graph]:
+def chart_figure_to_chart(figure: Figure) -> Optional[Chart]:
     """
     This method is used to extract data from the figure object to a dictionary
     """
@@ -98,14 +98,14 @@ def graph_figure_to_graph(figure: Figure) -> Optional[Graph]:
     if not axes:
         return
     elif len(axes) > 1:
-        return SuperGraph(figure=figure)
+        return SuperChart(figure=figure)
     else:
         ax = axes[0]
-        return get_graph_from_ax(ax)
+        return get_chart_from_ax(ax)
 
 
-def graph_figure_to_dict(figure: Figure) -> dict:
-    graph = graph_figure_to_graph(figure)
-    if graph:
-        return graph.model_dump()
+def chart_figure_to_dict(figure: Figure) -> dict:
+    chart = chart_figure_to_chart(figure)
+    if chart:
+        return chart.model_dump()
     return {}

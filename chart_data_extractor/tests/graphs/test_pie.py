@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 
-from e2b_charts import graph_figure_to_graph
-from e2b_charts.graphs import PieGraph
+from e2b_charts import chart_figure_to_chart
+from e2b_charts.charts import PieChart
 
 
-def _prep_graph_figure():
+def _prep_chart_figure():
     # Step 1: Define the data for the pie chart
     categories = ["No", "No, in blue"]
     sizes = [90, 10]
@@ -31,23 +31,23 @@ def _prep_graph_figure():
     return plt.gcf()
 
 
-def test_pie_graph():
-    figure = _prep_graph_figure()
-    graph = graph_figure_to_graph(figure)
-    assert graph
+def test_pie_chart():
+    figure = _prep_chart_figure()
+    chart = chart_figure_to_chart(figure)
+    assert chart
 
-    assert isinstance(graph, PieGraph)
+    assert isinstance(chart, PieChart)
 
-    assert graph.title == "Will I wake up early tomorrow?"
+    assert chart.title == "Will I wake up early tomorrow?"
 
-    assert len(graph.elements) == 2
+    assert len(chart.elements) == 2
 
-    first_data = graph.elements[0]
+    first_data = chart.elements[0]
     assert first_data.label == "No"
     assert first_data.angle == 324
     assert first_data.radius == 1
 
-    second_data = graph.elements[1]
+    second_data = chart.elements[1]
     assert second_data.label == "No, in blue"
     assert second_data.angle == 36
     assert second_data.radius == 1

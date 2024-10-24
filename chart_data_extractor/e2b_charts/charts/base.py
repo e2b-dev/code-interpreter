@@ -6,18 +6,18 @@ from matplotlib.axes import Axes
 from pydantic import BaseModel, Field
 
 
-class GraphType(str, enum.Enum):
+class ChartType(str, enum.Enum):
     LINE = "line"
     SCATTER = "scatter"
     BAR = "bar"
     PIE = "pie"
     BOX_AND_WHISKER = "box_and_whisker"
-    SUPERGRAPH = "supergraph"
+    SUPERCHART = "superchart"
     UNKNOWN = "unknown"
 
 
-class Graph(BaseModel):
-    type: GraphType
+class Chart(BaseModel):
+    type: ChartType
     title: Optional[str] = None
 
     elements: List[Any] = Field(default_factory=list)
@@ -29,7 +29,7 @@ class Graph(BaseModel):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for Graph
+        Function to extract information for Chart
         """
         title = ax.get_title()
         if title == "":
@@ -38,7 +38,7 @@ class Graph(BaseModel):
         self.title = title
 
 
-class Graph2D(Graph):
+class Chart2D(Chart):
     x_label: Optional[str] = None
     y_label: Optional[str] = None
     x_unit: Optional[str] = None
@@ -46,7 +46,7 @@ class Graph2D(Graph):
 
     def _extract_info(self, ax: Axes) -> None:
         """
-        Function to extract information for Graph2D
+        Function to extract information for Chart2D
         """
         super()._extract_info(ax)
         x_label = ax.get_xlabel()

@@ -4,7 +4,7 @@ from typing import Literal, List
 from matplotlib.axes import Axes
 from pydantic import BaseModel, Field
 
-from .base import Graph, GraphType
+from .base import Chart, ChartType
 from ..utils.rounding import dynamic_round
 
 
@@ -14,8 +14,8 @@ class PieData(BaseModel):
     radius: float
 
 
-class PieGraph(Graph):
-    type: Literal[GraphType.PIE] = GraphType.PIE
+class PieChart(Chart):
+    type: Literal[ChartType.PIE] = ChartType.PIE
 
     elements: List[PieData] = Field(default_factory=list)
 

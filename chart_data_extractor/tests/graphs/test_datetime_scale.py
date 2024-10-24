@@ -2,11 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 
-from e2b_charts import graph_figure_to_graph
-from e2b_charts.graphs import LineGraph
+from e2b_charts import chart_figure_to_chart
+from e2b_charts.charts import LineChart
 
 
-def _prep_graph_figure():
+def _prep_chart_figure():
     # Generate x values
     dates = [
         datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(100)
@@ -21,10 +21,10 @@ def _prep_graph_figure():
 
 
 def test_datetime_scale():
-    figure = _prep_graph_figure()
-    graph = graph_figure_to_graph(figure)
-    assert graph
+    figure = _prep_chart_figure()
+    chart = chart_figure_to_chart(figure)
+    assert chart
 
-    assert isinstance(graph, LineGraph)
-    assert graph.x_scale == "datetime"
-    assert graph.y_scale == "linear"
+    assert isinstance(chart, LineChart)
+    assert chart.x_scale == "datetime"
+    assert chart.y_scale == "linear"
