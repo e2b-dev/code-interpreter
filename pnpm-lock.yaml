@@ -18,6 +18,8 @@ importers:
         specifier: ^0.2.6
         version: 0.2.6
 
+  chart_data_extractor: {}
+
   js:
     dependencies:
       e2b:
