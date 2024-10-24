@@ -6,7 +6,7 @@ authors = ["e2b <hello@e2b.dev>"]
 license = "Apache-2.0"
 readme = "README.md"
 homepage = "https://e2b.dev/"
-repository = "https://github.com/e2b-dev/e2b-code-interpreter/tree/python"
+repository = "https://github.com/e2b-dev/code-interpreter/tree/main/python"
 packages = [{ include = "e2b_code_interpreter" }]
 
 [tool.poetry.dependencies]
