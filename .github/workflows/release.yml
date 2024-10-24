@@ -180,8 +180,12 @@ jobs:
       - name: Build and push to DockerHub
         working-directory: ./template
         run: |
-          CHARTS_VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
-          VERSION=${{ needs.charts-release.outputs.version || CHARTS_VERSION }}
+          if [ -z "${{ needs.charts-release.outputs.version }}" ]; then
+            VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
+          else
+            VERSION=${{ needs.charts-release.outputs.version }}
+          fi
+
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" Dockerfile
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
           docker buildx build \
