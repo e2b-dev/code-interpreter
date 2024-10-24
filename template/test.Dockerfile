@@ -15,7 +15,7 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   SERVER_PATH="/root/.server"
 
 # Install Jupyter
-COPY ./requirements.txt requirements.txt
+COPY ./template/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
 # Javascript Kernel
@@ -28,22 +28,24 @@ RUN python -m venv $SERVER_PATH/.venv
 
 # Copy server and its requirements
 RUN mkdir -p $SERVER_PATH/
-COPY ./server/requirements.txt $SERVER_PATH
+COPY ./template/server/requirements.txt $SERVER_PATH
 RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
-COPY ./server $SERVER_PATH
+COPY ./template/server $SERVER_PATH
 
 # Copy Jupyter configuration
-COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
+COPY ./template/start-up.sh $JUPYTER_CONFIG_PATH/
 RUN chmod +x $JUPYTER_CONFIG_PATH/start-up.sh
 
-COPY ./jupyter_server_config.py $JUPYTER_CONFIG_PATH/
+COPY ./template/jupyter_server_config.py $JUPYTER_CONFIG_PATH/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default
-COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
+COPY ./template/ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
-COPY startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
+COPY ./template/startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
 
 # Setup entrypoint for local development
 WORKDIR /home/user
+COPY ./chart_data_extractor ./chart_data_extractor
+RUN pip install -e ./chart_data_extractor
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
