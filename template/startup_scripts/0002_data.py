@@ -4,7 +4,7 @@ import IPython
 from IPython.core.formatters import BaseFormatter
 from traitlets.traitlets import Unicode, ObjectName
 
-from e2b_code_interpreter_data_extraction import graph_figure_to_graph
+from e2b_charts import graph_figure_to_graph
 
 
 def _figure_repr_e2b_chart_(self: Figure):

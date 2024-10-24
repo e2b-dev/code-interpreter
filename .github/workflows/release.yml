@@ -56,6 +56,8 @@ jobs:
     outputs:
       js: ${{ steps.filter.outputs.js }}
       python: ${{ steps.filter.outputs.python }}
+      charts: ${{ steps.filter.outputs.charts }}
+      template: ${{ steps.filter.outputs.template }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -82,6 +84,10 @@ jobs:
               - 'js/**'
             python:
               - 'python/**'
+            charts:
+              - 'chart_data_extractor/**'
+            template:
+              - 'template/**'
 
   charts-tests:
     name: Charts tests
@@ -93,13 +99,37 @@ jobs:
     name: Charts release
     needs: [charts-tests]
     if: needs.changes.outputs.charts == 'true'
-    defaults:
-      run:
-        working-directory: ./charts
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        id: pnpm-install
+        with:
+          version: 9.5
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Configure pnpm
+        run: |
+          pnpm config set auto-install-peers true
+          pnpm config set exclude-links-from-lockfile true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Create new versions
         run: pnpm run version
@@ -107,20 +137,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release new versions
-        uses: changesets/action@v1
-        with:
-          publish: pnpm run publish
-          createGithubReleases: true
+        run: |
+          poetry build
+          poetry config pypi-token.pypi ${PYPI_TOKEN}
+          poetry publish --skip-existing
+        working-directory:  ./chart_data_extractor
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.CHARTS_PYPI_TOKEN }}
 
 
   build-docker-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: [changes, charts-release]
-    if: !cancelled() && needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
+    if: needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -147,10 +178,10 @@ jobs:
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest .
 
   build-template:
-    name: Build Docker Image
+    name: Build E2B template
     runs-on: ubuntu-latest
     needs: [build-docker-image]
-    if: !cancelled() && needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
+    if: needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -168,20 +199,29 @@ jobs:
   python-tests:
     name: Python Tests
     needs: [changes, build-template]
-    if: !cancelled() && needs.changes.outputs.python == 'true' || needs.changes.outputs.template == 'true'
+    if: always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.changes.outputs.python == 'true' || needs.changes.outputs.template == 'true')
     uses: ./.github/workflows/python_tests.yml
     secrets: inherit
 
   js-tests:
     name: JS Tests
-    needs: [changes]
-    if: !cancelled() && needs.changes.outputs.js == 'true' || needs.changes.outputs.template == 'true'
+    needs: [changes, build-template]
+    if: always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.changes.outputs.js == 'true' || needs.changes.outputs.template == 'true')
     uses: ./.github/workflows/js_tests.yml
     secrets: inherit
 
   release:
     needs: [python-tests, js-tests]
-    if: (!cancelled()) && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
+    if: always() && 
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true')
     name: Release
     runs-on: ubuntu-latest
     steps:

@@ -9,7 +9,7 @@ from matplotlib.pyplot import Figure
 from matplotlib.text import Text
 from pydantic import Field
 
-from e2b_data_extraction.graphs import (
+from .graphs import (
     GraphType,
     Graph,
     LineGraph,
@@ -18,7 +18,7 @@ from e2b_data_extraction.graphs import (
     PieGraph,
     ScatterGraph,
 )
-from e2b_data_extraction.utils.filtering import is_grid_line
+from .utils.filtering import is_grid_line
 
 
 class SuperGraph(Graph):

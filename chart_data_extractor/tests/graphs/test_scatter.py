@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from e2b_data_extraction import graph_figure_to_graph
-from e2b_data_extraction.graphs import ScatterGraph
+from e2b_charts import graph_figure_to_graph
+from e2b_charts.graphs import ScatterGraph
 
 
 def _prep_graph_figure():

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-from e2b_data_extraction import graph_figure_to_graph
-from e2b_data_extraction.graphs import Graph, GraphType
+from e2b_charts import graph_figure_to_graph
+from e2b_charts.graphs import Graph, GraphType
 
 
 def _prep_graph_figure():

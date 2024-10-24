@@ -1,9 +1,11 @@
+from decimal import Decimal
 from typing import Literal, List
 
 from matplotlib.axes import Axes
 from pydantic import BaseModel, Field
 
 from .base import Graph, GraphType
+from ..utils.rounding import dynamic_round
 
 
 class PieData(BaseModel):
@@ -23,7 +25,7 @@ class PieGraph(Graph):
         for wedge in ax.patches:
             pie_data = PieData(
                 label=wedge.get_label(),
-                angle=abs(round(wedge.theta2 - wedge.theta1, 4)),
+                angle=abs(dynamic_round(Decimal(wedge.theta2) - Decimal(wedge.theta1))),
                 radius=wedge.r,
             )
 
