@@ -177,7 +177,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push to DockerHub
+      - name: Set package version
         working-directory: ./template
         run: |
           if [ -z "${{ needs.charts-release.outputs.version }}" ]; then
@@ -187,12 +187,24 @@ jobs:
           fi
 
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
-          docker buildx build \
-            --file Dockerfile \
-            --platform linux/amd64 \
-            --push \
-            --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest .
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./template
+          push: true
+          platforms: linux/amd64
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
   build-template:
     name: Build E2B template
@@ -238,7 +250,7 @@ jobs:
     if: always() && 
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true')
+      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.charts == 'true')
     name: Release
     runs-on: ubuntu-latest
     steps:
