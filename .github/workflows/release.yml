@@ -81,11 +81,11 @@ jobs:
           base: ${{ steps.last_release.outputs.tag_name }}
           filters: |
             js:
-              - 'js/**'
+              - 'js/src/**'
             python:
-              - 'python/**'
+              - 'python/e2b_code_interpreter/**'
             charts:
-              - 'chart_data_extractor/**'
+              - 'chart_data_extractor/e2b_charts/**'
             template:
               - 'template/**'
 
