@@ -186,7 +186,7 @@ jobs:
             VERSION=${{ needs.charts-release.outputs.version }}
           fi
 
-          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" Dockerfile
+          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest || true
           docker buildx build \
             --file Dockerfile \
