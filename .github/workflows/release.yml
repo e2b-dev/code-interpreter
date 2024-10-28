@@ -185,6 +185,7 @@ jobs:
           else
             VERSION=${{ needs.charts-release.outputs.version }}
           fi
+          echo "Version: $VERSION"
 
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
