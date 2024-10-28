@@ -189,14 +189,6 @@ jobs:
 
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
@@ -204,8 +196,6 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
   build-template:
     name: Build E2B template
