@@ -5,6 +5,7 @@ from IPython.core.formatters import BaseFormatter
 from traitlets.traitlets import Unicode, ObjectName
 
 from e2b_charts import chart_figure_to_dict
+import orjson
 
 
 def _figure_repr_e2b_chart_(self: Figure):
@@ -19,7 +20,7 @@ def _figure_repr_e2b_chart_(self: Figure):
 
 
 def _dataframe_repr_e2b_data_(self: pandas.DataFrame):
-    return self.to_dict(orient="list")
+    return orjson.loads(orjson.dumps(self.to_dict(orient="list")))
 
 
 class E2BDataFormatter(BaseFormatter):
