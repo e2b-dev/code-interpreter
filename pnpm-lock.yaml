@@ -53,6 +53,8 @@ importers:
 
   python: {}
 
+  template: {}
+
 packages:
 
   '@ampproject/remapping@2.3.0':
