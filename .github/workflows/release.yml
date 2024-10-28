@@ -210,7 +210,10 @@ jobs:
     name: Build E2B template
     runs-on: ubuntu-latest
     needs: [build-docker-image]
-    if: needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
+    if: always() &&
+      !contains(needs.*.result, 'failure') &&
+      !contains(needs.*.result, 'cancelled') &&
+      needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -250,7 +253,7 @@ jobs:
     if: always() && 
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.charts == 'true')
+      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.charts == 'true' || needs.changes.outputs.template == 'true')
     name: Release
     runs-on: ubuntu-latest
     steps:

@@ -2,3 +2,4 @@ packages:
   - js
   - python
   - chart_data_extractor
+  - template
