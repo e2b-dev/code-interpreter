@@ -1,4 +1,5 @@
 import logging
+import sys
 import uuid
 import httpx
 
@@ -17,7 +18,7 @@ from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.Logger(__name__)
 http_logger = logging.getLogger("httpcore.http11")
 http_logger.setLevel(logging.WARNING)
