@@ -1,10 +1,8 @@
-from typing import Any, io
+from typing import Any
 
 from IPython.core.display_functions import display
-from PIL import ImageShow
 from PIL.Image import Image
-
-original_show = ImageShow.show
+from PIL.ImageShow import UnixViewer
 
 
 def show_file(self, path: str, **options: Any) -> int:
@@ -12,31 +10,25 @@ def show_file(self, path: str, **options: Any) -> int:
     return 0
 
 
-ImageShow.show_file = show_file
+UnixViewer.show_file = show_file
+
+original_show = UnixViewer.show
+
+
+def show(self, image, **options):
+    display(image)
+    original_show(self, image, **options)
+
+
+UnixViewer.show = show
 
 original_save = Image.save
 
 
-# To prevent circular save and display calls
-def __repr_image(self, image_format: str, **kwargs: Any) -> bytes | None:
-    """Helper function for iPython display hook.
-
-    :param image_format: Image format.
-    :returns: image as bytes, saved into the given format.
-    """
-    b = io.BytesIO()
-    try:
-        original_save(self, b, image_format, **kwargs)
-    except Exception:
-        return None
-    return b.getvalue()
-
-
-Image._repr_image = __repr_image
-
-
 def save(image, fp, format=None, **options):
-    display(image)
+    if isinstance(fp, str):
+        display(image)
+
     original_save(image, fp, format, **options)
 
 

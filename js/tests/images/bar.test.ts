@@ -9,9 +9,10 @@ sandboxTest('test show image', async ({ sandbox }) => {
     from PIL import Image
     
     imarray = numpy.random.rand(16,16,3) * 255
-    im = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
+    image = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
     
     image.show()
+    print("done")
     `
 
   const execution = await sandbox.runCode(code)
@@ -26,7 +27,7 @@ sandboxTest('test image represent', async ({ sandbox }) => {
     from PIL import Image
 
     imarray = numpy.random.rand(16,16,3) * 255
-    im = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
+    image = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
 
     image
     `
@@ -43,7 +44,7 @@ sandboxTest('test image represent', async ({ sandbox }) => {
     from PIL import Image
 
     imarray = numpy.random.rand(16,16,3) * 255
-    im = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
+    image = Image.fromarray(imarray.astype('uint8')).convert('RGBA')
 
     image.save("test.png")
     `
