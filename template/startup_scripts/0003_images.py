@@ -11,17 +11,6 @@ def show_file(self, path: str, **options: Any) -> int:
 
 
 UnixViewer.show_file = show_file
-
-original_show = UnixViewer.show
-
-
-def show(self, image, **options):
-    display(image)
-    original_show(self, image, **options)
-
-
-UnixViewer.show = show
-
 original_save = Image.save
 
 
