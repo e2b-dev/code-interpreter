@@ -3,7 +3,7 @@ import sys
 import uuid
 import httpx
 
-from typing import Dict, Union, Literal, List
+from typing import Dict, Union, Literal, Set
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -16,7 +16,7 @@ from consts import JUPYTER_BASE_URL
 from contexts import create_context, normalize_language
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
-
+from utils.locks import LockedMap
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.Logger(__name__)
@@ -25,7 +25,7 @@ http_logger.setLevel(logging.WARNING)
 
 
 websockets: Dict[Union[str, Literal["default"]], ContextWebSocket] = {}
-default_websockets: Dict[str, str] = {}
+default_websockets = LockedMap()
 global client
 
 
@@ -84,11 +84,16 @@ async def post_execute(request: ExecutionRequest):
     context_id = None
     if request.language:
         language = normalize_language(request.language)
-        context_id = default_websockets.get(language)
 
-        if not context_id:
-            context = await create_context(client, websockets, language, "/home/user")
-            context_id = context.id
+        async with await default_websockets.get_lock(language):
+            context_id = default_websockets.get(language)
+
+            if not context_id:
+                context = await create_context(
+                    client, websockets, language, "/home/user"
+                )
+                context_id = context.id
+                default_websockets[language] = context_id
 
     elif request.context_id:
         context_id = request.context_id
@@ -120,19 +125,19 @@ async def post_contexts(request: CreateContext) -> Context:
 
 
 @app.get("/contexts")
-async def get_contexts() -> List[Context]:
+async def get_contexts() -> Set[Context]:
     logger.info(f"Listing contexts")
 
-    context_ids = list(websockets.keys())
+    context_ids = websockets.keys()
 
-    return [
+    return set(
         Context(
             id=websockets[context_id].context_id,
             language=websockets[context_id].language,
             cwd=websockets[context_id].cwd,
         )
         for context_id in context_ids
-    ]
+    )
 
 
 @app.post("/contexts/{context_id}/restart")
