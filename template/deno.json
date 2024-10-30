@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/usr/bin/deno",
+    "jupyter",
+    "--kernel",
+    "--conn",
+    "{connection_file}"
+  ],
+  "display_name": "Deno",
+  "env": {
+    "NO_COLOR": "1"
+  },
+  "language": "typescript"
+}

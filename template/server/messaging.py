@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import uuid
@@ -95,14 +96,21 @@ class ContextWebSocket:
                     "session": self.session_id,
                     "msg_type": "execute_request",
                     "version": "5.3",
+                    "date": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                 },
                 "parent_header": {},
-                "metadata": {},
+                "metadata": {
+                    "trusted": True,
+                    "deletedCells": [],
+                    "recordTiming": False,
+                    "cellId": str(uuid.uuid4()),
+                },
                 "content": {
                     "code": code,
                     "silent": background,
                     "store_history": True,
                     "user_expressions": {},
+                    "stop_on_error": True,
                     "allow_stdin": False,
                 },
             }
@@ -127,10 +135,25 @@ class ContextWebSocket:
 
             yield output.model_dump(exclude_none=True)
 
-    async def change_current_directory(self, path: Union[str, StrictStr]):
+    async def change_current_directory(
+        self, path: Union[str, StrictStr], language: str
+    ):
         message_id = str(uuid.uuid4())
         self._executions[message_id] = Execution(in_background=True)
-        request = self._get_execute_request(message_id, f"%cd {path}", True)
+        if language == "python":
+            request = self._get_execute_request(message_id, f"%cd {path}", True)
+        elif language == "deno":
+            request = self._get_execute_request(
+                message_id, f"Deno.chdir('{path}')", True
+            )
+        elif language == "r":
+            request = self._get_execute_request(message_id, f"setwd('{path}')", True)
+        elif language == "java":
+            request = self._get_execute_request(
+                message_id, f"System.setProperty('user.dir', '{path}')", True
+            )
+        else:
+            return
 
         await self._ws.send(request)
 
@@ -165,11 +188,12 @@ class ContextWebSocket:
                         indent = len(line) - len(line.lstrip())
                         break
 
-                code = (
-                    indent * " "
-                    + f"os.environ.set_envs_for_execution({vars_to_set})\n"
-                    + code
-                )
+                if self.language == "python":
+                    code = (
+                        indent * " "
+                        + f"os.environ.set_envs_for_execution({vars_to_set})\n"
+                        + code
+                    )
 
             logger.info(code)
             request = self._get_execute_request(message_id, code, False)
@@ -192,7 +216,9 @@ class ContextWebSocket:
             async for message in self._ws:
                 await self._process_message(json.loads(message))
         except Exception as e:
-            logger.error(f"WebSocket received error while receiving messages: {e}")
+            logger.error(
+                f"WebSocket received error while receiving messages: {type(e)}: {str(e)}"
+            )
 
     async def _process_message(self, data: dict):
         """
@@ -308,11 +334,21 @@ class ContextWebSocket:
                 execution.errored = True
                 await queue.put(
                     Error(
-                        name=data["content"]["ename"],
-                        value=data["content"]["evalue"],
-                        traceback="".join(data["content"]["traceback"]),
+                        name=data["content"].get("ename", ""),
+                        value=data["content"].get("evalue", ""),
+                        traceback="".join(data["content"].get("traceback", [])),
                     )
                 )
+            elif data["content"]["status"] == "abort":
+                logger.debug(f"Execution {parent_msg_ig} was aborted")
+                await queue.put(
+                    Error(
+                        name="ExecutionAborted",
+                        value="Execution was aborted",
+                        traceback="",
+                    )
+                )
+                await queue.put(EndOfExecution())
             elif data["content"]["status"] == "ok":
                 pass
 

@@ -110,7 +110,10 @@ async def post_execute(request: ExecutionRequest):
         )
 
     return StreamingListJsonResponse(
-        ws.execute(request.code, env_vars=request.env_vars)
+        ws.execute(
+            request.code,
+            env_vars=request.env_vars,
+        )
     )
 
 
