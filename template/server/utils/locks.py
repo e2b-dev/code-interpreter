@@ -1,30 +1,18 @@
 import asyncio
 
 
-class LockedMap:
+class LockedMap(dict):
     def __init__(self):
-        self.map_lock = asyncio.Lock()
-        self.map = {}
-        self.locks = {}
-
-    def get(self, key):
-        return self.map.get(key)
-
-    def set(self, key, value):
-        self.map[key] = value
+        super().__init__()
+        self._map_lock = asyncio.Lock()
+        self._locks = {}
 
     async def get_lock(self, key):
-        await self.map_lock.acquire()
-        if key not in self.locks:
-            self.locks[key] = asyncio.Lock()
+        await self._map_lock.acquire()
+        if key not in self._locks:
+            self._locks[key] = asyncio.Lock()
 
-        lock = self.locks[key]
+        lock = self._locks[key]
         print(f"Lock acquired for {key}")
-        self.map_lock.release()
+        self._map_lock.release()
         return lock
-
-    def __getitem__(self, key):
-        return self.get(key)
-
-    def __setitem__(self, key, value):
-        self.set(key, value)
