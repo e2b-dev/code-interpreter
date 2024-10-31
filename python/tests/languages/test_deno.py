@@ -66,3 +66,22 @@ subtract(1, 2);
         language="deno",
     )
     assert execution.results[0].text == "-1"
+
+
+async def test_display(async_sandbox: AsyncSandbox):
+    code = """
+{
+  [Symbol.for("Jupyter.display")]() {
+    return {
+      // Plain text content
+      "text/plain": "Hello world!",
+
+      // HTML output
+      "text/html": "<h1>Hello world!</h1>",
+    }
+  }
+}
+    """
+    execution = await async_sandbox.run_code(code, language="deno")
+    assert execution.results[0].text == "Hello world!"
+    assert execution.results[0].html == "<h1>Hello world!</h1>"
