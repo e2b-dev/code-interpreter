@@ -36,9 +36,8 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     response = await client.post(f"{JUPYTER_BASE_URL}/api/sessions", json=data)
 
     if not response.is_success:
-        return PlainTextResponse(
+        raise Exception(
             f"Failed to create context: {response.text}",
-            status_code=500,
         )
 
     session_data = response.json()
