@@ -146,6 +146,10 @@ class ContextWebSocket:
             request = self._get_execute_request(
                 message_id, f"Deno.chdir('{path}')", True
             )
+        elif language == "js":
+            request = self._get_execute_request(
+                message_id, f"process.chdir('{path}')", True
+            )
         elif language == "r":
             request = self._get_execute_request(message_id, f"setwd('{path}')", True)
         elif language == "java":
@@ -216,9 +220,7 @@ class ContextWebSocket:
             async for message in self._ws:
                 await self._process_message(json.loads(message))
         except Exception as e:
-            logger.error(
-                f"WebSocket received error while receiving messages: {type(e)}: {str(e)}"
-            )
+            logger.error(f"WebSocket received error while receiving messages: {str(e)}")
 
     async def _process_message(self, data: dict):
         """
