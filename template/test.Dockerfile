@@ -23,6 +23,12 @@ RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
 
+# Deno Kernel
+COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
+RUN chmod +x /usr/bin/deno
+RUN deno jupyter --unstable --install
+COPY ./template/deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
 

@@ -89,9 +89,13 @@ async def post_execute(request: ExecutionRequest):
             context_id = default_websockets.get(language)
 
             if not context_id:
-                context = await create_context(
-                    client, websockets, language, "/home/user"
-                )
+                try:
+                    context = await create_context(
+                        client, websockets, language, "/home/user"
+                    )
+                except Exception as e:
+                    return PlainTextResponse(str(e), status_code=500)
+
                 context_id = context.id
                 default_websockets[language] = context_id
 
@@ -110,7 +114,10 @@ async def post_execute(request: ExecutionRequest):
         )
 
     return StreamingListJsonResponse(
-        ws.execute(request.code, env_vars=request.env_vars)
+        ws.execute(
+            request.code,
+            env_vars=request.env_vars,
+        )
     )
 
 
@@ -121,7 +128,10 @@ async def post_contexts(request: CreateContext) -> Context:
     language = normalize_language(request.language)
     cwd = request.cwd or "/home/user"
 
-    return await create_context(client, websockets, language, cwd)
+    try:
+        return await create_context(client, websockets, language, cwd)
+    except Exception as e:
+        return PlainTextResponse(str(e), status_code=500)
 
 
 @app.get("/contexts")
