@@ -3,13 +3,13 @@ import { expect } from 'vitest'
 import { sandboxTest } from '../setup'
 
 sandboxTest('js simple', async ({ sandbox }) => {
-  const result = await sandbox.runCode('console.log("Hello, World!")', {language: "js"})
+  const result = await sandbox.runCode('console.log("Hello, World!")', {language: "deno"})
 
   expect(result.logs.stdout.join().trim()).toEqual('Hello, World!')
 })
 
 sandboxTest('js import', async ({ sandbox }) => {
-  const result = await sandbox.runCode('import isOdd from "npm:is-odd"\nisOdd(3)', {language: "js"})
+  const result = await sandbox.runCode('import isOdd from "npm:is-odd"\nisOdd(3)', {language: "deno"})
 
   expect(result.results[0].text).toEqual('true')
 })
@@ -21,30 +21,29 @@ sandboxTest('js top level await', async ({ sandbox }) => {
     }
 
     await main()
-    `, {language: "js"})
+    `, {language: "deno"})
   expect(result.results[0].text).toEqual('Hello, World!')
 })
 
 sandboxTest('js es6', async ({ sandbox }) => {
   const result = await sandbox.runCode(`
-const add = (x, y) => x + y;
-add(1, 2)
-`, {language: "js"})
+   const add = (x, y) => x + y;
+   add(1, 2)`, {language: "deno"})
   expect(result.results[0].text).toEqual('3')
 })
 
 
 sandboxTest('js context', async ({ sandbox }) => {
-  await sandbox.runCode('const z = 1', {language: "js"})
-  const result = await sandbox.runCode('z', {language: "js"})
+  await sandbox.runCode('const z = 1', {language: "deno"})
+  const result = await sandbox.runCode('z', {language: "deno"})
   expect(result.results[0].text).toEqual('1')
 })
 
 sandboxTest('js cwd', async ({ sandbox }) => {
-  const result = await sandbox.runCode('process.cwd()', {language: "js"})
+  const result = await sandbox.runCode('process.cwd()', {language: "deno})
   expect(result.results[0].text).toEqual('/home/user')
 
-  const ctx = await sandbox.createCodeContext( {cwd: '/home', language: "js"})
+  const ctx = await sandbox.createCodeContext( {cwd: '/home', language: "deno"})
   const result2 = await sandbox.runCode('process.cwd()', {context: ctx})
   expect(result2.results[0].text).toEqual('/home')
 })
@@ -56,7 +55,7 @@ function subtract(x: number, y: number): number {
 }
 
 subtract(1, 2)
-`, {language: "ts"})
+`, {language: "deno"})
 
   expect(result.results[0].text).toEqual('-1')
 })

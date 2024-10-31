@@ -20,16 +20,11 @@ def normalize_language(language: Optional[str]) -> str:
 
     if language == "js":
         return "javascript"
-    if language == "ts":
-        return "typescript"
 
     return language
 
 
 async def create_context(client, websockets: dict, language: str, cwd: str) -> Context:
-    if language == "javascript" or language == "typescript":
-        language = "deno"
-
     data = {
         "path": str(uuid.uuid4()),
         "kernel": {"name": language},
