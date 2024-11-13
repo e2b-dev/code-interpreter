@@ -1,7 +1,7 @@
 import pandas
 from matplotlib.pyplot import Figure
 import IPython
-from IPython.core.formatters import BaseFormatter
+from IPython.core.formatters import BaseFormatter, JSONFormatter
 from traitlets.traitlets import Unicode, ObjectName
 
 from e2b_charts import chart_figure_to_dict
@@ -48,10 +48,24 @@ class E2BChartFormatter(BaseFormatter):
         return super().__call__(obj)
 
 
+class E2BDictFormatter(JSONFormatter):
+    def __call__(self, obj):
+        # Figure object is for some reason removed on execution of the cell,
+        # so it can't be used in type_printers or with top-level import
+
+        if isinstance(obj, dict):
+            return obj, {"expanded": True}
+        return super().__call__(obj)
+
+
 ip = IPython.get_ipython()
 ip.display_formatter.formatters["e2b/data"] = E2BDataFormatter(
     parent=ip.display_formatter
 )
 ip.display_formatter.formatters["e2b/chart"] = E2BChartFormatter(
+    parent=ip.display_formatter
+)
+
+ip.display_formatter.formatters["application/json"] = E2BDictFormatter(
     parent=ip.display_formatter
 )
