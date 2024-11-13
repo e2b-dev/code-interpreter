@@ -13,7 +13,7 @@ from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
 from consts import JUPYTER_BASE_URL
-from contexts import create_context, normalize_language
+from contexts import create_context, normalize_language, restart_context
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
@@ -94,6 +94,7 @@ async def post_execute(request: ExecutionRequest):
                         client, websockets, language, "/home/user"
                     )
                 except Exception as e:
+                    print("[ERROR] ", e)
                     return PlainTextResponse(str(e), status_code=500)
 
                 context_id = context.id
@@ -131,6 +132,7 @@ async def post_contexts(request: CreateContext) -> Context:
     try:
         return await create_context(client, websockets, language, cwd)
     except Exception as e:
+        print("[ERROR] ", e)
         return PlainTextResponse(str(e), status_code=500)
 
 
@@ -151,7 +153,7 @@ async def get_contexts() -> Set[Context]:
 
 
 @app.post("/contexts/{context_id}/restart")
-async def restart_context(context_id: str) -> None:
+async def post_restart_context(context_id: str) -> None:
     logger.info(f"Restarting context {context_id}")
 
     ws = websockets.get(context_id, None)
@@ -161,28 +163,7 @@ async def restart_context(context_id: str) -> None:
             status_code=404,
         )
 
-    session_id = ws.session_id
-
-    await ws.close()
-
-    response = await client.post(
-        f"{JUPYTER_BASE_URL}/api/kernels/{ws.context_id}/restart"
-    )
-    if not response.is_success:
-        return PlainTextResponse(
-            f"Failed to restart context {context_id}",
-            status_code=500,
-        )
-
-    ws = ContextWebSocket(
-        ws.context_id,
-        session_id,
-        ws.language,
-        ws.cwd,
-    )
-
-    await ws.connect()
-
+    await restart_context(ws, client)
     websockets[context_id] = ws
 
 

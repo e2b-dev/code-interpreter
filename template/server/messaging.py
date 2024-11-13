@@ -4,7 +4,7 @@ import logging
 import uuid
 import asyncio
 
-from asyncio import Queue
+from asyncio import Queue, Future
 from envs import get_envs
 from typing import (
     Dict,
@@ -46,6 +46,10 @@ class Execution:
         self.in_background = in_background
 
 
+class FailedContextException(Exception):
+    pass
+
+
 class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
@@ -60,8 +64,9 @@ class ContextWebSocket:
         self.language = language
         self.cwd = cwd
         self.context_id = context_id
-        self.url = f"ws://localhost:8888/api/kernels/{context_id}/channels"
+        self.url = f"ws://localhost:8888/api/kernels/{context_id}/channels?session_id={session_id}"
         self.session_id = session_id
+        self.ready = Future()
 
         self._executions: Dict[str, Execution] = {}
         self._lock = asyncio.Lock()
@@ -84,6 +89,13 @@ class ContextWebSocket:
             self._receive_message(),
             name="receive_message",
         )
+
+        try:  # Wait for the context to be ready
+            await asyncio.wait_for(self.ready, timeout=5)
+
+        except asyncio.TimeoutError:
+            logger.error("Context is not ready")
+            raise FailedContextException("Context is not ready")
 
     def _get_execute_request(
         self, msg_id: str, code: Union[str, StrictStr], background: bool
@@ -113,6 +125,7 @@ class ContextWebSocket:
                     "stop_on_error": True,
                     "allow_stdin": False,
                 },
+                "channel": "shell",
             }
         )
 
@@ -218,9 +231,14 @@ class ContextWebSocket:
 
         try:
             async for message in self._ws:
-                await self._process_message(json.loads(message))
+                try:
+                    await self._process_message(json.loads(message))
+                except Exception as e:
+                    logger.error(
+                        f"WebSocket received error while receiving messages: {str(e)}"
+                    )
         except Exception as e:
-            logger.error(f"WebSocket received error while receiving messages: {str(e)}")
+            logger.error(f"WebSocket error while receiving messages: {str(e)}")
 
     async def _process_message(self, data: dict):
         """
@@ -246,6 +264,12 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(EndOfExecution())
             return
+
+        if data["msg_type"] == "status":
+            print(f"[{self.context_id}]: {data['content']['execution_state']}")
+            if data["content"]["execution_state"] == "idle":
+                if not self.ready.done():
+                    self.ready.set_result(True)
 
         parent_msg_ig = data["parent_header"].get("msg_id", None)
         if parent_msg_ig is None:

@@ -17,11 +17,6 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
-# R Kernel
-RUN apt-get update && apt-get install -y r-base
-RUN R -e "install.packages('IRkernel')"
-RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
-
 # Javascript Kernel
 RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
