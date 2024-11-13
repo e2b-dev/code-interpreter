@@ -45,3 +45,7 @@ c.ServerApp.disable_check_xsrf = True
 # Whether to allow the user to run the server as root.
 #  Default: False
 c.ServerApp.allow_root = True
+
+# (bytes/sec) Maximum rate at which messages can be sent on iopub before they are limited.
+#  Default: 1000000
+c.ServerApp.iopub_data_rate_limit = 1000000000
