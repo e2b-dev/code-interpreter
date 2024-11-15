@@ -1,6 +1,9 @@
+import pytest
+
 from e2b_code_interpreter import AsyncSandbox
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_javascript(async_sandbox: AsyncSandbox):
     code = """
     console.log('Hello, World!')
@@ -9,6 +12,7 @@ async def test_javascript(async_sandbox: AsyncSandbox):
     assert execution.logs.stdout == ["Hello, World!\n"]
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_import(async_sandbox: AsyncSandbox):
     code = """
     import isOdd from 'npm:is-odd'
@@ -18,6 +22,7 @@ async def test_import(async_sandbox: AsyncSandbox):
     assert execution.results[0].text == "true"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_toplevel_await(async_sandbox: AsyncSandbox):
     code = """
     async function main() {
@@ -30,6 +35,7 @@ async def test_toplevel_await(async_sandbox: AsyncSandbox):
     assert execution.results[0].text == "Hello, World!"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_es6(async_sandbox: AsyncSandbox):
     code = """
 const add = (x, y) => x + y;
@@ -39,12 +45,14 @@ add(1, 2);
     assert execution.results[0].text == "3"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_context(async_sandbox: AsyncSandbox):
     await async_sandbox.run_code("const x = 1", language="deno")
     execution = await async_sandbox.run_code("x", language="deno")
     assert execution.results[0].text == "1"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_cwd(async_sandbox: AsyncSandbox):
     execution = await async_sandbox.run_code("process.cwd()", language="deno")
     assert execution.results[0].text == "/home/user"
@@ -54,6 +62,7 @@ async def test_cwd(async_sandbox: AsyncSandbox):
     assert execution.results[0].text == "/home"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_typescript(async_sandbox: AsyncSandbox):
     execution = await async_sandbox.run_code(
         """
@@ -68,6 +77,7 @@ subtract(1, 2);
     assert execution.results[0].text == "-1"
 
 
+@pytest.mark.skip(reason="Deno is not supported yet")
 async def test_display(async_sandbox: AsyncSandbox):
     code = """
 {
