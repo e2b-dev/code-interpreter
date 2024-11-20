@@ -50,18 +50,12 @@ class E2BChartFormatter(BaseFormatter):
 
 class E2BJSONFormatter(JSONFormatter):
     def __call__(self, obj):
-        # Figure object is for some reason removed on execution of the cell,
-        # so it can't be used in type_printers or with top-level import
-
-        if isinstance(obj, dict):
-            return orjson.loads(orjson.dumps(obj, option=orjson.OPT_SERIALIZE_NUMPY)), {
-                "expanded": True
-            }
-
-        if isinstance(obj, list):
-            return orjson.loads(orjson.dumps(obj, option=orjson.OPT_SERIALIZE_NUMPY)), {
-                "expanded": True
-            }
+        if isinstance(obj, (list, dict)):
+            return orjson.loads(
+                orjson.dumps(
+                    obj, option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS
+                )
+            ), {"expanded": True}
 
         return super().__call__(obj)
 
