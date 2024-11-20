@@ -54,9 +54,15 @@ class E2BJSONFormatter(JSONFormatter):
         # so it can't be used in type_printers or with top-level import
 
         if isinstance(obj, dict):
-            return obj, {"expanded": True}
+            return orjson.loads(orjson.dumps(obj, option=orjson.OPT_SERIALIZE_NUMPY)), {
+                "expanded": True
+            }
+
         if isinstance(obj, list):
-            return obj, {"expanded": True}
+            return orjson.loads(orjson.dumps(obj, option=orjson.OPT_SERIALIZE_NUMPY)), {
+                "expanded": True
+            }
+
         return super().__call__(obj)
 
 
