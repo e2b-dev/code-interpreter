@@ -51,11 +51,14 @@ class E2BChartFormatter(BaseFormatter):
 class E2BJSONFormatter(JSONFormatter):
     def __call__(self, obj):
         if isinstance(obj, (list, dict)):
-            return orjson.loads(
-                orjson.dumps(
-                    obj, option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS
-                )
-            ), {"expanded": True}
+            try:
+                return orjson.loads(
+                    orjson.dumps(
+                        obj, option=orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS
+                    )
+                ), {"expanded": True}
+            except TypeError:
+                pass
 
         return super().__call__(obj)
 
