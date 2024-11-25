@@ -1,0 +1,31 @@
+{
+  "out": "api_ref",
+  "plugin": ["typedoc-plugin-markdown", "./scripts/CustomMarkdownTheme.js"],
+  "exclude": ["**/*.spec.ts"],
+  "entryPoints": [
+    "src/index.ts",
+    "src/charts.ts",
+    "src/consts.ts",
+    "src/messaging.ts",
+    "src/sandbox.ts"
+  ],
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "navigation": {
+    "includeGroups": false,
+    "includeCategories": false
+  },
+  "outputFileStrategy": "modules",
+  "readme": "none",
+  "disableSources": true,
+  // typedoc-plugin-markdown options
+  "classPropertiesFormat": "table",
+  "typeDeclarationFormat": "table",
+  "enumMembersFormat": "table",
+  "parametersFormat": "table",
+  "expandParameters": true,
+  "useCodeBlocks": true,
+  "hidePageTitle": true,
+  "hideBreadcrumbs": true
+}
