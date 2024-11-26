@@ -1,5 +1,0 @@
-- charts
-- consts
-- index
-- messaging
-- sandbox
