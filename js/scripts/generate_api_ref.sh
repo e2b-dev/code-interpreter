@@ -10,7 +10,6 @@ npx typedoc
 
 PKG_VERSION="v$(node -p "require('./package.json').version")"
 ROUTES_DIR="../api-reference/code-interpreter-js-sdk/${PKG_VERSION}"
-# move to docs web app
 mkdir -p "${ROUTES_DIR}"
 
 rm -rf api_ref/README.md
