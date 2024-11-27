@@ -77,7 +77,7 @@ jobs:
           installer-parallel: true
 
       - name: Install dependencies
-        working-directory: ./packages/python-sdk
+        working-directory: ./python
         run: poetry install --no-interaction --no-root
 
       - name: Generate Python SDK reference
