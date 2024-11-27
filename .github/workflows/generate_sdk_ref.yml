@@ -6,7 +6,7 @@ on:
   # Remove after testing
   push:
     branches:
-      - improved-api-refs
+      - generate-api-reference-for-code-interpreter-sdk-e2b-1235
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
