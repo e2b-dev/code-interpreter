@@ -1,13 +1,15 @@
 {
   "name": "@e2b/code-interpreter-python",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
+  "packageManager": "pnpm@8.7.6",
   "scripts": {
     "test": "poetry run pytest -n 4 --verbose -x",
     "example": "poetry run python3 example.py",
     "async-example": "poetry run python3 async_example.py",
     "postVersion": "poetry version $(pnpm pkg get version --workspaces=false | tr -d \\\")",
     "postPublish": "poetry build && poetry config pypi-token.pypi ${PYPI_TOKEN} && poetry publish --skip-existing",
-    "pretest": "poetry install"
+    "pretest": "poetry install",
+    "generate-ref": "poetry install && ./scripts/generate_sdk_ref.sh"
   }
 }
