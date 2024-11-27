@@ -329,13 +329,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  generate_sdk_ref:
-    name: Generate SDK reference
-    needs: [is_release, python-tests, js-tests]
-    if: (!cancelled()) && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
-    uses: ./.github/workflows/generate_sdk_ref.yml
-    secrets: inherit
-
   report-failure:
     needs: [python-tests, js-tests, release]
     if: failure()
