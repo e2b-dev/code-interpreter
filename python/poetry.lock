@@ -348,23 +348,23 @@ test = ["black", "pytest"]
 
 [[package]]
 name = "e2b"
-version = "1.0.0"
+version = "1.0.4"
 description = "E2B SDK that give agents cloud environments"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "e2b-1.0.0-py3-none-any.whl", hash = "sha256:25815ce38781a5e3a0fb8d7249dfd3de2c8542434bf4e6b0b963cbd79bb46546"},
-    {file = "e2b-1.0.0.tar.gz", hash = "sha256:c60af575d96ab0fef463f8ba59f721589857bbeadf856c9cc4359d1047d305d8"},
+    {file = "e2b-1.0.4-py3-none-any.whl", hash = "sha256:1a9c765eb1b2cc291c5ebd3f2e268f8fba9471a12f470f4651395b5753730170"},
+    {file = "e2b-1.0.4.tar.gz", hash = "sha256:5ed3db4f984e52cf3aabb717725493ff060a8374b7c878b31bceeff46a0b5648"},
 ]
 
 [package.dependencies]
-attrs = ">=23.2.0,<24.0.0"
+attrs = ">=23.2.0"
 httpcore = ">=1.0.5,<2.0.0"
 httpx = ">=0.27.0,<0.28.0"
-packaging = ">=24.1,<25.0"
+packaging = ">=24.1"
 protobuf = ">=3.20.0,<6.0.0"
 python-dateutil = ">=2.8.2"
-typing-extensions = ">=4.12.2,<5.0.0"
+typing-extensions = ">=4.1.0"
 
 [[package]]
 name = "exceptiongroup"
@@ -1137,4 +1137,4 @@ tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "e2f03261602ed622d815addae04e5b506463051720f6ca682834a624f577d705"
+content-hash = "c5bd69ecb54e2f92533254d100ad6e739fd8ced2be876a2fc510e5dd44e8a150"
