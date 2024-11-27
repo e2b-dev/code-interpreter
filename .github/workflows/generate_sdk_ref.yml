@@ -93,7 +93,7 @@ jobs:
         run: ./scripts/generate_sdk_ref.sh
 
       - name: Show docs file structure
-        run: tree apps/web/src/app/\(docs\)/docs/sdk-reference
+        run: tree ./sdk-reference
 
       - name: Commit new SDK reference versions
         env:
