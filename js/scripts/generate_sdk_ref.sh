@@ -5,7 +5,7 @@ set -euo pipefail
 # This script generates the Code Interpreter JS SDK reference markdown files
 # Run it in the `js/` directory
 
-# generate raw sdk reference markdown files
+# generate raw SDK reference markdown files
 npx typedoc
 
 PKG_VERSION="v$(node -p "require('./package.json').version")"
