@@ -319,27 +319,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  is_new_sdk_ref:
-    name: Is new SDK reference?
-    runs-on: ubuntu-latest
-    outputs:
-      new_sdk_ref: ${{ steps.sdk-changes.outputs.new_sdk_ref }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-      
-      - name: Check if SDK changes
-        id: sdk-changes
-        run: |
-          IS_NEW_SDK_REF=$(./.github/scripts/is_new_sdk_ref.sh)
-          echo "new_sdk_ref=$IS_NEW_SDK_REF" >> "$GITHUB_OUTPUT"
-
   generate_sdk_ref:
     name: Generate SDK reference
-    needs: [is_release, python-tests, js-tests, is_new_sdk_ref]
-    if: (!cancelled()) && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true' && needs.is_new_sdk_ref.outputs.new_sdk_ref == 'true'
+    needs: [is_release, python-tests, js-tests]
+    if: (!cancelled()) && !contains(needs.*.result, 'failure') && needs.is_release.outputs.release == 'true'
     uses: ./.github/workflows/generate_sdk_ref.yml
     secrets: inherit
 
