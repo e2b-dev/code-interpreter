@@ -1,5 +1,5 @@
 import enum
-from typing import List, Tuple, Any, Optional, Union
+from typing import Any, List, Tuple, Optional, Union
 
 
 class ChartType(str, enum.Enum):
