@@ -12,7 +12,7 @@ packages = [{ include = "e2b_code_interpreter" }]
 [tool.poetry.dependencies]
 python = "^3.8"
 
-httpx = ">=0.20.0,<0.28.0"
+httpx = ">=0.20.0, <1.0.0"
 attrs = ">=21.3.0"
 e2b = "^1.0.4"
 
