@@ -348,19 +348,19 @@ test = ["black", "pytest"]
 
 [[package]]
 name = "e2b"
-version = "1.0.4"
+version = "1.1.0b17"
 description = "E2B SDK that give agents cloud environments"
 optional = false
 python-versions = "<4.0,>=3.8"
 files = [
-    {file = "e2b-1.0.4-py3-none-any.whl", hash = "sha256:1a9c765eb1b2cc291c5ebd3f2e268f8fba9471a12f470f4651395b5753730170"},
-    {file = "e2b-1.0.4.tar.gz", hash = "sha256:5ed3db4f984e52cf3aabb717725493ff060a8374b7c878b31bceeff46a0b5648"},
+    {file = "e2b-1.1.0b17-py3-none-any.whl", hash = "sha256:f5487d354ef75c35792ff928c6967489c31bf342800a47d4916981bb5bca1c1c"},
+    {file = "e2b-1.1.0b17.tar.gz", hash = "sha256:70d9b731a25d8b3147d2b0d8b025ea1e86b2347ec19a0888027936dd2689eabe"},
 ]
 
 [package.dependencies]
 attrs = ">=23.2.0"
 httpcore = ">=1.0.5,<2.0.0"
-httpx = ">=0.27.0,<0.28.0"
+httpx = ">=0.27.0,<1.0.0"
 packaging = ">=24.1"
 protobuf = ">=3.20.0,<6.0.0"
 python-dateutil = ">=2.8.2"
