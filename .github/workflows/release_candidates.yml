@@ -1,7 +1,9 @@
 name: Release Candidates
 
 on:
-  pull_request:
+  push:
+    branches:
+      - beta
 
 permissions:
   contents: write
@@ -52,8 +54,8 @@ jobs:
         working-directory: js
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
-          npm version prerelease --preid=${{ github.head_ref }}
-          npm publish --tag rc || true
+          npm version prerelease --preid=beta
+          npm publish --tag beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
