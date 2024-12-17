@@ -20,31 +20,26 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - uses: pnpm/action-setup@v3
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
           version: 9.5
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
           node-version: '18.x'
           registry-url: https://registry.npmjs.org
           cache: pnpm
 
       - name: Configure pnpm
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
           pnpm config set auto-install-peers true
           pnpm config set exclude-links-from-lockfile true
 
       - name: Install dependencies
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: pnpm install --frozen-lockfile
 
       - name: Test JS SDK
         working-directory: js
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
           pnpm run test
         env:
@@ -52,7 +47,6 @@ jobs:
 
       - name: Release JS Candidate
         working-directory: js
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         run: |
           npm version prerelease --preid=beta
           npm publish --tag beta
@@ -61,13 +55,11 @@ jobs:
 
       - name: Set up Python
         uses: actions/setup-python@v4
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         with:
           python-version: "3.8"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         with:
           version: 1.8.1
           virtualenvs-create: true
@@ -75,7 +67,6 @@ jobs:
           installer-parallel: true
 
       - name: Test Python SDK
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         working-directory: python
         run: |
           poetry install
@@ -84,7 +75,6 @@ jobs:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
 
       - name: Release Candidate
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         working-directory: python
         run: |
           poetry version prerelease
@@ -94,7 +84,6 @@ jobs:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
       - name: Commit new versions
-        if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') || contains( github.event.pull_request.labels.*.name, 'python-rc') }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
