@@ -29,6 +29,11 @@ RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
 COPY ./template/deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
 
+# Tslab Kernel
+RUN npm install -g tslab
+RUN tslab install --version
+RUN tslab install --python=python3
+
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
 
