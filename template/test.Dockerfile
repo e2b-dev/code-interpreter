@@ -5,7 +5,7 @@ COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq sudo nodejs npm
+  build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -37,6 +37,9 @@ RUN mkdir -p $SERVER_PATH/
 COPY ./template/server/requirements.txt $SERVER_PATH
 RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
 COPY ./template/server $SERVER_PATH
+
+# Copy matplotlibrc
+COPY ./template/matplotlibrc /root/.config/matplotlib/matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./template/start-up.sh $JUPYTER_CONFIG_PATH/
