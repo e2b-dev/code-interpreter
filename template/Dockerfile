@@ -4,7 +4,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq sudo nodejs npm
+  build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -45,6 +45,9 @@ RUN mkdir -p $SERVER_PATH/
 COPY ./server/requirements.txt $SERVER_PATH
 RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
 COPY ./server $SERVER_PATH
+
+# Copy matplotlibrc
+COPY matplotlibrc /root/.config/matplotlib/.matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
