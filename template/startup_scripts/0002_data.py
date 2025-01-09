@@ -20,7 +20,13 @@ def _figure_repr_e2b_chart_(self: Figure):
 
 
 def _dataframe_repr_e2b_data_(self: pandas.DataFrame):
-    return orjson.loads(orjson.dumps(self.to_dict(orient="list")))
+    result = self.to_dict(orient="list")
+    for key, value in result.items():
+        # Check each column's values
+        result[key] = [
+            v.isoformat() if isinstance(v, pandas.Timestamp) else v for v in value
+        ]
+    return result
 
 
 class E2BDataFormatter(BaseFormatter):
