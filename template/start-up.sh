@@ -33,4 +33,4 @@ export PATH="/opt/java/openjdk/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin
 
 echo "Starting Code Interpreter server..."
 start_jupyter_server &
-jupyter server --IdentityProvider.token="" >/dev/null 2>&1
+MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >/dev/null 2>&1
