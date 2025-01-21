@@ -44,9 +44,13 @@ class Chart:
     elements: List[Any]
 
     def __init__(self, **kwargs):
+        self._raw_data = kwargs
         self.type = ChartType(kwargs["type"] or ChartType.UNKNOWN)
         self.title = kwargs["title"]
         self.elements = kwargs["elements"]
+
+    def to_dict(self) -> dict:
+        return self._raw_data
 
 
 class Chart2D(Chart):
