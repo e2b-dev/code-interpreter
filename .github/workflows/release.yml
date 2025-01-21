@@ -88,6 +88,7 @@ jobs:
               - 'chart_data_extractor/e2b_charts/**'
             template:
               - 'template/**'
+              - '!template/package.json'
 
   charts-tests:
     name: Charts tests
