@@ -1,7 +1,7 @@
 {
   "name": "@e2b/code-interpreter-python",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.2.0b0",
   "packageManager": "pnpm@8.7.6",
   "scripts": {
     "test": "poetry run pytest -n 4 --verbose -x",
