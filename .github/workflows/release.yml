@@ -75,10 +75,11 @@ jobs:
           draft: false
 
       - name: Find changes since the last release
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3.0.2
         id: filter
         with:
           base: ${{ steps.last_release.outputs.tag_name }}
+          predicate-quantifier: 'every'
           filters: |
             js:
               - 'js/src/**'
@@ -205,7 +206,7 @@ jobs:
     if: always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true'
+      (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
