@@ -57,9 +57,6 @@ class AsyncSandbox(BaseAsyncSandbox):
 
     default_template = DEFAULT_TEMPLATE
 
-    def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
-        super().__init__(sandbox_id=sandbox_id, connection_config=connection_config)
-
     @property
     def _jupyter_url(self) -> str:
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
