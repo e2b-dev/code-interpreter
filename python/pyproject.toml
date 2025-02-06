@@ -10,7 +10,7 @@ repository = "https://github.com/e2b-dev/code-interpreter/tree/main/python"
 packages = [{ include = "e2b_code_interpreter" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.9"
 
 httpx = ">=0.20.0, <1.0.0"
 attrs = ">=21.3.0"
