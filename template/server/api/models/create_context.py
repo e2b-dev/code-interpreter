@@ -1,5 +1,4 @@
-from pydantic import BaseModel, StrictStr
-from pydantic import Field
+from pydantic import BaseModel, StrictStr, Field
 from typing import Optional
 
 

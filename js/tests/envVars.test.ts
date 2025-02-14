@@ -26,7 +26,7 @@ sandboxTest('env vars on sandbox', async ({ sandbox }) => {
     { envs: { FOO: 'bar' } }
   )
 
-  expect(result.results[0].text.trim()).toEqual('bar')
+  expect(result?.results[0]?.text?.trim()).toEqual('bar')
 })
 
 sandboxTest('env vars on sandbox override', async () => {
@@ -43,23 +43,29 @@ sandboxTest('env vars on sandbox override', async () => {
       { envs: { FOO: 'baz' } }
     )
 
-    expect(result.results[0].text.trim()).toEqual('baz')
+    expect(result?.results[0]?.text?.trim()).toEqual('baz')
 
     const result2 = await sandbox.runCode(
       "import os; os.getenv('RUNTIME_ENV')"
     )
-    expect(result2.results[0].text.trim()).toEqual('js_runtime')
+    expect(result2?.results[0]?.text?.trim()).toEqual('js_runtime')
 
     if (!isDebug) {
       const result3 = await sandbox.runCode(
         "import os; os.getenv('SBX')"
       )
-      expect(result3.results[0].text.trim()).toEqual('value')
+      expect(result3?.results[0]?.text?.trim()).toEqual('value')
     }
 
     const result4 = await sandbox.runCode("import os; os.getenv('FOO')")
-    expect(result4.results[0].text.trim()).toEqual('bar')
+    expect(result4?.results[0]?.text?.trim()).toEqual('bar')
   } finally {
     await sandbox.kill()
   }
+})
+
+sandboxTest('default env vars present', async ({ sandbox }) => {
+  const result = await sandbox.runCode('import os; os.getenv("E2B_SANDBOX")')
+
+  expect(result?.results[0]?.text?.trim()).toEqual('true')
 })
