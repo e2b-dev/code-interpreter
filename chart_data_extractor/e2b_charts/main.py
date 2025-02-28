@@ -88,6 +88,14 @@ def get_chart_from_ax(
     return chart
 
 
+def is_figure_blank(axes: List[Axes]) -> bool:
+    """Check if a Matplotlib figure is blank (has no user-added artists)."""
+    for ax in axes:
+        if ax.has_data():
+            return False  # The figure contains user-added data
+    return True  # No data found, figure is blank
+
+
 def chart_figure_to_chart(figure: Figure) -> Optional[Chart]:
     """
     This method is used to extract data from the figure object to a dictionary
@@ -95,7 +103,7 @@ def chart_figure_to_chart(figure: Figure) -> Optional[Chart]:
     # Get all Axes objects from the Figure
     axes = figure.get_axes()
 
-    if not axes:
+    if not axes or is_figure_blank(axes):
         return
     elif len(axes) > 1:
         return SuperChart(figure=figure)
