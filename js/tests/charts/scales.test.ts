@@ -8,7 +8,7 @@ sandboxTest('datetime scale', async ({ sandbox }) => {
     import datetime
 
     # Generate x values
-    dates = [datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(10)]
+    dates = [datetime.date(2023, 9, 1) + datetime.timedelta(seconds=i) for i in range(100)]
     y_sin = np.sin(np.linspace(0, 2*np.pi, 100))
 
     # Create the plot
