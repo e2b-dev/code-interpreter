@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "e2b-code-interpreter"
-version = "1.0.4"
+version = "1.0.4rc1"
 description = "E2B Code Interpreter - Stateful code execution"
 authors = ["e2b <hello@e2b.dev>"]
 license = "Apache-2.0"
@@ -14,7 +14,7 @@ python = "^3.8"
 
 httpx = ">=0.20.0, <1.0.0"
 attrs = ">=21.3.0"
-e2b = "^1.0.4"
+e2b = "1.1.0rc1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
