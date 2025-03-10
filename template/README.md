@@ -1,10 +1,10 @@
 # Using custom sandbox with Code Interpreter SDK
 
-If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled package) you can do that by using a [custom sandbox template](https://e2b.dev/docs/sandbox/templates/overview).
+If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled package) you can do that by using a [custom sandbox template](https://e2b.dev/docs/sandbox-template).
 
 
 ## Step-by-step guide
-1. Create custom sandbox by following [this guide](https://e2b.dev/docs/guide/custom-sandbox)
+1. Create custom sandbox by following [this guide](https://e2b.dev/docs/sandbox-template)
 
 2. Use prebuilt [E2B Code Interpreter image](https://hub.docker.com/r/e2bdev/code-interpreter) by replacing the `FROM` command in your `e2b.Dockerfile` with following
 
