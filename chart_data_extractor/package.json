@@ -1,7 +1,7 @@
 {
   "name": "@e2b/data-extractor",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "test": "poetry run pytest -n 4 --verbose -x",
     "example": "poetry run python3 example.py",
