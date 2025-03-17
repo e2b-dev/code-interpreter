@@ -12,7 +12,7 @@ timeout = 60
 
 @pytest.fixture()
 def sandbox(debug):
-    sandbox = Sandbox(timeout=timeout)
+    sandbox = Sandbox(timeout=timeout, auto_pause=True)
 
     try:
         yield sandbox
@@ -28,7 +28,7 @@ def sandbox(debug):
 
 @pytest_asyncio.fixture
 async def async_sandbox(debug):
-    sandbox = await AsyncSandbox.create(timeout=timeout)
+    sandbox = await AsyncSandbox.create(timeout=timeout, auto_pause=True)
 
     try:
         yield sandbox
