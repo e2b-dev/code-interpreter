@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test'
 import { Sandbox } from '../../../src'
 
 test('Bun test', async () => {
-  const sbx = await Sandbox.create({ timeoutMs: 5_000 })
+  const sbx = await Sandbox.create({ timeoutMs: 5_000, autoPause: true })
 
   try {
     const result = await sbx.runCode('print("Hello, World!")')

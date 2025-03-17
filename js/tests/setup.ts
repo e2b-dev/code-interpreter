@@ -1,7 +1,7 @@
 import { Sandbox } from '../src'
 import { test as base } from 'vitest'
 
-const timeoutMs = 60_000
+export const timeoutMs = 60_000
 
 interface SandboxFixture {
   sandbox: Sandbox
@@ -9,8 +9,8 @@ interface SandboxFixture {
 
 export const sandboxTest = base.extend<SandboxFixture>({
   sandbox: [
-    async ({}, use) => {
-      const sandbox = await Sandbox.create({ timeoutMs })
+    async ({ }, use) => {
+      const sandbox = await Sandbox.create({ timeoutMs, autoPause: true })
       try {
         await use(sandbox)
       } finally {

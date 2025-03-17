@@ -1,10 +1,10 @@
 import { expect } from 'vitest'
 
 import { Sandbox } from '../src'
-import { sandboxTest } from './setup'
+import { sandboxTest, timeoutMs } from './setup'
 
 sandboxTest('reconnect', async ({ sandbox }) => {
-  sandbox = await Sandbox.connect(sandbox.sandboxId)
+  sandbox = await Sandbox.connect(sandbox.sandboxId, { timeoutMs, autoPause: true })
 
   const result = await sandbox.runCode('x =1; x')
 

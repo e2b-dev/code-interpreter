@@ -6,7 +6,7 @@ await load({ envPath: '.env', export: true })
 import { Sandbox } from '../../../dist/index.mjs'
 
 Deno.test('Deno test', async () => {
-  const sbx = await Sandbox.create({ timeoutMs: 5_000 })
+  const sbx = await Sandbox.create({ timeoutMs: 5_000, autoPause: true })
 
   try {
     const result = await sbx.runCode('print("Hello, World!")')
