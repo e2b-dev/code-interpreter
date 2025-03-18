@@ -317,9 +317,16 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
     """
     serialized = []
     for result in results:
-        serialized_dict = {key: result[key] for key in result.formats()}
+        serialized_dict = {}
+        for key in result.formats():
+            if key == "chart":
+                serialized_dict[key] = result.chart.to_dict()
+            else:
+                serialized_dict[key] = result[key]
+
         serialized_dict["text"] = result.text
         serialized.append(serialized_dict)
+
     return serialized
 
 
