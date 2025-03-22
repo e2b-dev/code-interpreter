@@ -1,6 +1,9 @@
-<p align="center">
+<!-- <p align="center">
   <img width="100" src="https://raw.githubusercontent.com/e2b-dev/E2B/refs/heads/main/readme-assets/logo-circle.png" alt="e2b logo">
-</p>
+</p> -->
+
+![E2B Code Interpreter Preview](/readme-assets/e2b-code-interpreter-light.png#gh-light-mode-only)
+![E2B Code Interpreter Preview](/readme-assets/e2b-code-interpreter-dark.png#gh-dark-mode-only)
 
 <h4 align="center">
   <a href="https://pypi.org/project/e2b/">
