@@ -54,42 +54,59 @@ jobs:
     if: needs.is_release.outputs.release == 'true'
     runs-on: ubuntu-latest
     outputs:
-      js: ${{ steps.filter.outputs.js }}
-      python: ${{ steps.filter.outputs.python }}
-      charts: ${{ steps.filter.outputs.charts }}
-      template: ${{ steps.filter.outputs.template }}
+      js: ${{ steps.js.outputs.release }}
+      python: ${{ steps.python.outputs.release }}
+      charts: ${{ steps.charts.outputs.release }}
+      template: ${{ steps.template.outputs.release }}
     steps:
-      - name: Checkout repository
+      - name: Checkout Repo
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Get the last release
-        id: last_release
-        uses: cardinalby/git-get-release-action@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        id: pnpm-install
         with:
-          latest: true
-          prerelease: false
-          draft: false
+          version: 9.5
 
-      - name: Find changes since the last release
-        uses: dorny/paths-filter@v3.0.2
-        id: filter
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          base: ${{ steps.last_release.outputs.tag_name }}
-          predicate-quantifier: 'every'
-          filters: |
-            js:
-              - 'js/src/**'
-            python:
-              - 'python/e2b_code_interpreter/**'
-            charts:
-              - 'chart_data_extractor/e2b_charts/**'
-            template:
-              - 'template/**'
-              - '!template/package.json'
+          node-version: "18.x"
+          registry-url: "https://registry.npmjs.org"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Configure pnpm
+        run: |
+          pnpm config set auto-install-peers true
+          pnpm config set exclude-links-from-lockfile true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check JavasScript SDK Release
+        id: js
+        run: |
+          IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter")
+          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Check Python SDK Release
+        id: python
+        run: |
+          IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-python")
+          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Check Charts SDK Release
+        id: charts
+        run: |
+          IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/data-extractor")
+          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Check Template SDK Release
+        id: template
+        run: |
+          IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-template")
+          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
   charts-tests:
     name: Charts tests
