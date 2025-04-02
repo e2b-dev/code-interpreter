@@ -321,7 +321,12 @@ jobs:
         run: pnpm run --recursive generate-ref
       
       - name: Show docs file structure
-        run: tree ./sdk-reference
+        run: |
+          if [ -d "./sdk-reference" ]; then
+            tree ./sdk-reference
+          else
+            echo "sdk-reference directory does not exist"
+          fi
 
       - name: Release new versions
         uses: changesets/action@v1
