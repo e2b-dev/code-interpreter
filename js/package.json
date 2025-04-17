@@ -67,7 +67,7 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "1.1.0-autopause.1"
+    "e2b": "1.2.5-autopause.0"
   },
   "engines": {
     "node": ">=18"
