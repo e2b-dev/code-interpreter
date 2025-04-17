@@ -67,7 +67,7 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "1.2.0-beta.0"
+    "e2b": "1.2.0-beta.4"
   },
   "engines": {
     "node": ">=18"
