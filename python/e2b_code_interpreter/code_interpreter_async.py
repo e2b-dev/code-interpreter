@@ -1,34 +1,29 @@
 import logging
+from typing import Dict, Literal, Optional, Union, overload
+
 import httpx
-
-from typing import Optional, Dict, overload, Union, Literal
-from httpx import AsyncClient
-
-from e2b import (
-    AsyncSandbox as BaseAsyncSandbox,
-    ConnectionConfig,
-    InvalidArgumentException,
-)
-
+from e2b import AsyncSandbox as BaseAsyncSandbox
+from e2b import ConnectionConfig, InvalidArgumentException
 from e2b_code_interpreter.constants import (
     DEFAULT_TEMPLATE,
-    JUPYTER_PORT,
     DEFAULT_TIMEOUT,
-)
-from e2b_code_interpreter.models import (
-    Execution,
-    ExecutionError,
-    Context,
-    Result,
-    aextract_exception,
-    parse_output,
-    OutputHandler,
-    OutputMessage,
+    JUPYTER_PORT,
 )
 from e2b_code_interpreter.exceptions import (
     format_execution_timeout_error,
     format_request_timeout_error,
 )
+from e2b_code_interpreter.models import (
+    Context,
+    Execution,
+    ExecutionError,
+    OutputHandler,
+    OutputMessage,
+    Result,
+    aextract_exception,
+    parse_output,
+)
+from httpx import AsyncClient
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +51,6 @@ class AsyncSandbox(BaseAsyncSandbox):
     """
 
     default_template = DEFAULT_TEMPLATE
-
-    def __init__(self, sandbox_id: str, connection_config: ConnectionConfig):
-        super().__init__(sandbox_id=sandbox_id, connection_config=connection_config)
 
     @property
     def _jupyter_url(self) -> str:
