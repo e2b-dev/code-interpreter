@@ -1,0 +1,15 @@
+{
+  "$schema": "https://swc.rs/schema.json",
+  "jsc": {
+    "parser": {
+      "syntax": "typescript"
+    }
+  },
+  "module": {
+    "type": "commonjs"
+  },
+  "env": {
+    "targets": "node 22"
+  },
+  "isModule": false
+}

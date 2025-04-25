@@ -1,7 +1,11 @@
 FROM python:3.10.14
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
+  build-essential curl git util-linux jq sudo fonts-noto-cjk
+
+# Install Node.js 20.x from NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -24,9 +28,12 @@ RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
 RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Javascript Kernel
-RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
+
+## TypeScript support
+RUN npm install -g @swc/cli @swc/core
+COPY .ts.swcrc /root/.ts.swcrc
 
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno

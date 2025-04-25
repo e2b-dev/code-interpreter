@@ -11,6 +11,11 @@ from messaging import ContextWebSocket
 
 logger = logging.Logger(__name__)
 
+def get_kernel_for_language(language: str) -> str:
+    if language == "typescript":
+        return "javascript"
+
+    return language
 
 def normalize_language(language: Optional[str]) -> str:
     if not language:
@@ -21,13 +26,16 @@ def normalize_language(language: Optional[str]) -> str:
     if language == "js":
         return "javascript"
 
+    if language == "ts":
+        return "typescript"
+
     return language
 
 
 async def create_context(client, websockets: dict, language: str, cwd: str) -> Context:
     data = {
         "path": str(uuid.uuid4()),
-        "kernel": {"name": language},
+        "kernel": {"name": get_kernel_for_language(language)},
         "type": "notebook",
         "name": str(uuid.uuid4()),
     }
