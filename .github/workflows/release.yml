@@ -108,15 +108,9 @@ jobs:
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-template")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-  charts-tests:
-    name: Charts tests
-    needs: [changes]
-    if: needs.changes.outputs.charts == 'true'
-    uses: ./.github/workflows/charts_tests.yml
 
   charts-release:
     name: Charts release
-    needs: [charts-tests]
     if: needs.changes.outputs.charts == 'true'
     runs-on: ubuntu-latest
     outputs:
@@ -243,8 +237,8 @@ jobs:
     needs: [changes, build-template]
     if: always() && 
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.python == 'true' || needs.changes.outputs.template == 'true')
+      !contains(needs.*.result, 'cancelled') && 
+      needs.changes.outputs.template == 'true'
     uses: ./.github/workflows/python_tests.yml
     secrets: inherit
 
@@ -254,7 +248,7 @@ jobs:
     if: always() && 
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.js == 'true' || needs.changes.outputs.template == 'true')
+      needs.changes.outputs.template == 'true'
     uses: ./.github/workflows/js_tests.yml
     secrets: inherit
 

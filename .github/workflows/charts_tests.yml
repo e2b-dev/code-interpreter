@@ -11,7 +11,7 @@ jobs:
     defaults:
       run:
         working-directory: ./chart_data_extractor
-    name: Build and test Chart Data Extractor
+    name: Chart Data Extractor - Build and test
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
