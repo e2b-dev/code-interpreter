@@ -9,7 +9,7 @@
     "type": "commonjs"
   },
   "env": {
-    "targets": "node 22"
+    "targets": "node 20"
   },
   "isModule": false
 }
