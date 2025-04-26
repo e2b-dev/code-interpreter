@@ -3,12 +3,14 @@ FROM python:3.10.14
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
 
+RUN mkdir -p /home/user/.jupyter /home/user/.ipython /home/user/.server
+
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
   PIP_NO_CACHE_DIR=1 \
-  JUPYTER_CONFIG_PATH="/root/.jupyter" \
-  IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server" \
+  JUPYTER_CONFIG_PATH="/home/user/.jupyter" \
+  IPYTHON_CONFIG_PATH="/home/user/.ipython" \
+  SERVER_PATH="/home/user/.server" \
   R_VERSION=4.4.2
 
 ENV R_HOME=/opt/R/${R_VERSION} \
@@ -19,9 +21,9 @@ COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
 # R Kernel
-RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
-RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
-RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
+# RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
+# RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
+# RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Javascript Kernel
 RUN npm install -g node-gyp
@@ -32,7 +34,7 @@ RUN ijsinstall --install=global
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
-COPY ./deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+COPY ./deno.json /home/user/.local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel
 RUN pip install bash_kernel
@@ -42,13 +44,12 @@ RUN python -m bash_kernel.install
 RUN python -m venv $SERVER_PATH/.venv
 
 # Copy server and its requirements
-RUN mkdir -p $SERVER_PATH/
 COPY ./server/requirements.txt $SERVER_PATH
 RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
 COPY ./server $SERVER_PATH
 
 # Copy matplotlibrc
-COPY matplotlibrc /root/.config/matplotlib/.matplotlibrc
+COPY matplotlibrc /home/user/.config/matplotlib/.matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
