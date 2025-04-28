@@ -26,9 +26,9 @@ function start_jupyter_server() {
 	echo "${response}" > /home/user/.jupyter/.session_info
 
 	cd /home/user/.server/
-	/home/user/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
+	/home/user/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors >> /home/user/uvicorn_server.log 2>&1
 }
 
 echo "Starting Code Interpreter server..."
 start_jupyter_server &
-MATPLOTLIBRC=/home/user/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >/dev/null 2>&1
+MATPLOTLIBRC=/home/user/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >> /home/user/jupyter_server.log 2>&1

@@ -1,16 +1,18 @@
 FROM python:3.10.14
 
+ENV HOME=/home/user
+
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
 
-RUN mkdir -p /home/user/.jupyter /home/user/.ipython /home/user/.server
+RUN mkdir -p $HOME/.jupyter $HOME/.ipython $HOME/.server
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
   PIP_NO_CACHE_DIR=1 \
-  JUPYTER_CONFIG_PATH="/home/user/.jupyter" \
-  IPYTHON_CONFIG_PATH="/home/user/.ipython" \
-  SERVER_PATH="/home/user/.server" \
+  JUPYTER_CONFIG_PATH="$HOME/.jupyter" \
+  IPYTHON_CONFIG_PATH="$HOME/.ipython" \
+  SERVER_PATH="$HOME/.server" \
   R_VERSION=4.4.2
 
 ENV R_HOME=/opt/R/${R_VERSION} \
@@ -34,7 +36,7 @@ RUN ijsinstall --install=global
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
-COPY ./deno.json /home/user/.local/share/jupyter/kernels/deno/kernel.json
+COPY ./deno.json $HOME/.local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel
 RUN pip install bash_kernel
@@ -49,7 +51,7 @@ RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requiremen
 COPY ./server $SERVER_PATH
 
 # Copy matplotlibrc
-COPY matplotlibrc /home/user/.config/matplotlib/.matplotlibrc
+COPY matplotlibrc $HOME/.config/matplotlib/matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
@@ -62,7 +64,6 @@ COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
 COPY startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
-
 
 COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 RUN ln -s ${JAVA_HOME}/bin/java /usr/bin/java

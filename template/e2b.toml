@@ -12,6 +12,6 @@
 
 team_id = "400a4584-3d22-4b70-82ee-0bc6cce4aaa5"
 memory_mb = 1_024
-start_cmd = "/home/user/.jupyter/start-up.sh"
+start_cmd = "sudo -u user /home/user/.jupyter/start-up.sh"
 dockerfile = "Dockerfile"
 template_id = "8cvk102nkxqyd5l3kelv"
