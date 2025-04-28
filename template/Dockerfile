@@ -23,9 +23,9 @@ COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
 # R Kernel
-# RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
-# RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
-# RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
+RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
+RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
+RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Javascript Kernel
 RUN npm install -g node-gyp
