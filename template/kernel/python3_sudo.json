@@ -1,8 +1,6 @@
 {
     "argv": [
      "sudo",
-     "-u",
-     "user",
      "/usr/local/bin/python",
      "-m",
      "ipykernel_launcher",

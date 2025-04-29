@@ -1,6 +1,6 @@
 FROM python:3.10.14
 
-ENV HOME=/root
+ENV HOME=/home/user
 
 ENV JAVA_HOME=/opt/java/openjdk
 COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
@@ -13,9 +13,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
 RUN useradd -m -s /bin/bash user && \
   echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
   echo 'user:password' | chpasswd && \
-  usermod -aG sudo user && \
-  chmod -R o+rx /root && \
-  chown -R user:user /root
+  usermod -aG sudo user
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -40,10 +38,9 @@ RUN deno jupyter --unstable --install && \
     mkdir -p /usr/local/share/jupyter/kernels/deno && \
     mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
     rmdir $HOME/.local/share/jupyter/kernels/deno
-# COPY ./template/kernel/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
-# Copy non-root kernels
-COPY ./template/kernel/python3_user.json /usr/local/share/jupyter/kernels/python3_user/kernel.json
+# Copy sudo kernels
+COPY ./template/kernel/python3_sudo.json /usr/local/share/jupyter/kernels/python3_sudo/kernel.json
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
@@ -74,4 +71,8 @@ WORKDIR $HOME
 COPY ./chart_data_extractor ./chart_data_extractor
 RUN pip install -e ./chart_data_extractor
 
+# Change ownership of all files to user
+RUN chown -R user:user $HOME
+
+USER user
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
