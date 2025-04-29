@@ -1,5 +1,27 @@
 #!/bin/bash
 
+function create_root_kernels() {
+	# Get all installed kernels
+	kernels=$(jupyter kernelspec list --json | jq -r '.kernelspecs | keys[]')
+	
+	for kernel in $kernels; do
+		# Get the kernel directory
+		kernel_dir=$(jupyter kernelspec list --json | jq -r ".kernelspecs[\"$kernel\"].resource_dir")
+		
+		# Create directory for root kernel if it doesn't exist
+		root_kernel_dir="/usr/local/share/jupyter/kernels/${kernel}_root"
+		sudo mkdir -p "$root_kernel_dir"
+		
+		# Copy all files from original kernel first
+		sudo cp -r "$kernel_dir"/* "$root_kernel_dir/" 2>/dev/null || true
+		
+		# Create and write the modified kernel.json
+		cat "$kernel_dir/kernel.json" | jq '.argv = ["sudo"] + .argv | .display_name = .display_name + " (root)"' | sudo tee "$root_kernel_dir/kernel.json" > /dev/null
+		
+		echo "Created root version of kernel: ${kernel}_root"
+	done
+}
+
 function start_jupyter_server() {
 	counter=0
 	response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
@@ -28,6 +50,9 @@ function start_jupyter_server() {
 	cd $HOME/.server/
 	$HOME/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
 }
+
+echo "Creating root versions of kernels..."
+create_root_kernels
 
 echo "Starting Code Interpreter server..."
 start_jupyter_server &

@@ -35,8 +35,10 @@ RUN ijsinstall --install=global
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
-RUN deno jupyter --unstable --install
-RUN mkdir -p /usr/local/share/jupyter/kernels/deno
+RUN deno jupyter --unstable --install && \
+    mkdir -p /usr/local/share/jupyter/kernels/deno && \
+    mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
+    rmdir $HOME/.local/share/jupyter/kernels/deno
 COPY ./kernel/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel

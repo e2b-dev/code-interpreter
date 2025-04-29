@@ -39,8 +39,7 @@ RUN deno jupyter --unstable --install && \
     mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
     rmdir $HOME/.local/share/jupyter/kernels/deno
 
-# Copy sudo kernels
-COPY ./template/kernel/python3_sudo.json /usr/local/share/jupyter/kernels/python3_sudo/kernel.json
+COPY ./template/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
