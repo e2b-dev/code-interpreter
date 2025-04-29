@@ -39,7 +39,7 @@ RUN deno jupyter --unstable --install && \
     mkdir -p /usr/local/share/jupyter/kernels/deno && \
     mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
     rmdir $HOME/.local/share/jupyter/kernels/deno
-COPY ./kernel/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
+COPY ./deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel
 RUN pip install bash_kernel
