@@ -13,22 +13,22 @@ function start_jupyter_server() {
 		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
 	done
 
-	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "/home/user", "kernel": {"name": "python3"}, "type": "notebook", "name": "default"}')
+	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "/root", "kernel": {"name": "python3"}, "type": "notebook", "name": "default"}')
 	status=$(echo "${response}" | jq -r '.kernel.execution_state')
 	if [[ ${status} != "starting" ]]; then
 		echo "Error creating kernel: ${response} ${status}"
 		exit 1
 	fi
 
-	mkdir -p /home/user/.jupyter
+	mkdir -p /root/.jupyter
 	kernel_id=$(echo "${response}" | jq -r '.kernel.id')
-	echo "${kernel_id}" > /home/user/.jupyter/kernel_id
-	echo "${response}" > /home/user/.jupyter/.session_info
+	echo "${kernel_id}" > /root/.jupyter/kernel_id
+	echo "${response}" > /root/.jupyter/.session_info
 
-	cd /home/user/.server/
-	/home/user/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors >> /home/user/uvicorn_server.log 2>&1
+	cd /root/.server/
+	/root/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
 }
 
 echo "Starting Code Interpreter server..."
 start_jupyter_server &
-MATPLOTLIBRC=/home/user/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >> /home/user/jupyter_server.log 2>&1
+MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token=""

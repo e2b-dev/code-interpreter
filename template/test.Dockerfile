@@ -1,8 +1,6 @@
 FROM python:3.10.14
 
-# Create a non-root user
-RUN useradd -m -s /bin/bash user
-ENV HOME=/home/user
+ENV HOME=/root
 
 ENV JAVA_HOME=/opt/java/openjdk
 COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
@@ -20,7 +18,7 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
 
 # Install Jupyter
 COPY ./template/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
+RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3"
 
 # Javascript Kernel
 RUN npm install -g node-gyp
@@ -30,8 +28,14 @@ RUN ijsinstall --install=global
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
-RUN deno jupyter --unstable --install
-COPY ./template/deno.json $HOME/.local/share/jupyter/kernels/deno/kernel.json
+RUN deno jupyter --unstable --install && \
+    mkdir -p /usr/local/share/jupyter/kernels/deno && \
+    mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
+    rmdir $HOME/.local/share/jupyter/kernels/deno
+# COPY ./template/kernel/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
+
+# Copy non-root kernels
+COPY ./template/kernel/python3_user.json /usr/local/share/jupyter/kernels/python3_user/kernel.json
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
@@ -61,11 +65,5 @@ COPY ./template/startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
 WORKDIR $HOME
 COPY ./chart_data_extractor ./chart_data_extractor
 RUN pip install -e ./chart_data_extractor
-
-# Set ownership of all files to the user
-RUN chown -R user:user $HOME
-
-# Switch to non-root user
-USER user
 
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh

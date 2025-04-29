@@ -20,7 +20,7 @@ ENV R_HOME=/opt/R/${R_VERSION} \
 
 # Install Jupyter
 COPY ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
+RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3"
 
 # R Kernel
 RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
@@ -36,7 +36,8 @@ RUN ijsinstall --install=global
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
-COPY ./deno.json $HOME/.local/share/jupyter/kernels/deno/kernel.json
+RUN mkdir -p /usr/local/share/jupyter/kernels/deno
+COPY ./kernel/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel
 RUN pip install bash_kernel
