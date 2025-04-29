@@ -7,7 +7,15 @@ COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq nodejs npm fonts-noto-cjk
+  build-essential curl git util-linux jq nodejs npm fonts-noto-cjk sudo
+
+# Create new user with root privileges while keeping root user
+RUN useradd -m -s /bin/bash user && \
+  echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+  echo 'user:password' | chpasswd && \
+  usermod -aG sudo user && \
+  chmod -R o+rx /root && \
+  chown -R user:user /root
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \

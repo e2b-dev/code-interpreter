@@ -1,0 +1,17 @@
+{
+    "argv": [
+     "sudo",
+     "-u",
+     "user",
+     "/usr/local/bin/python",
+     "-m",
+     "ipykernel_launcher",
+     "-f",
+     "{connection_file}"
+    ],
+    "display_name": "Python 3 (user)",
+    "language": "python",
+    "metadata": {
+     "debugger": true
+    }
+}
