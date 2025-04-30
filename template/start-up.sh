@@ -20,15 +20,15 @@ function start_jupyter_server() {
 		exit 1
 	fi
 
-	sudo mkdir -p /root/.jupyter
+	sudo mkdir -p /home/user/.jupyter
 	kernel_id=$(echo "${response}" | jq -r '.kernel.id')
-	sudo echo "${kernel_id}" | sudo tee /root/.jupyter/kernel_id >/dev/null
-	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
+	sudo echo "${kernel_id}" | sudo tee /home/user/.jupyter/kernel_id >/dev/null
+	sudo echo "${response}" | sudo tee /home/user/.jupyter/.session_info >/dev/null
 
-	cd /root/.server/
-	/root/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
+	cd /home/user/.server/
+	/home/user/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors >> /home/user/code-interpreter.log 2>&1
 }
 
 echo "Starting Code Interpreter server..."
 start_jupyter_server &
-MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >/dev/null 2>&1
+MATPLOTLIBRC=/home/user/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >> /home/user/jupyter.log 2>&1

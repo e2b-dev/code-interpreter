@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     global client
     client = httpx.AsyncClient()
 
-    with open("/root/.jupyter/kernel_id") as file:
+    with open("/home/user/.jupyter/kernel_id") as file:
         default_context_id = file.read().strip()
 
     default_ws = ContextWebSocket(

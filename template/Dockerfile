@@ -6,9 +6,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
   PIP_NO_CACHE_DIR=1 \
-  JUPYTER_CONFIG_PATH="/root/.jupyter" \
-  IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server" \
+  JUPYTER_CONFIG_PATH="/home/user/.jupyter" \
+  IPYTHON_CONFIG_PATH="/home/user/.ipython" \
+  SERVER_PATH="/home/user/.server" \
   R_VERSION=4.4.2
 
 ENV R_HOME=/opt/R/${R_VERSION} \
@@ -32,7 +32,7 @@ RUN ijsinstall --install=global
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
-COPY ./deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+COPY ./deno.json /home/user/.local/share/jupyter/kernels/deno/kernel.json
 
 # Bash Kernel
 RUN pip install bash_kernel
@@ -48,7 +48,7 @@ RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requiremen
 COPY ./server $SERVER_PATH
 
 # Copy matplotlibrc
-COPY matplotlibrc /root/.config/matplotlib/.matplotlibrc
+COPY matplotlibrc /home/user/.config/matplotlib/.matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
