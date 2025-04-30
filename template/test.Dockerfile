@@ -26,9 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --n
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
 
-## TypeScript support
+## TypeScript compiler
 RUN npm install -g @swc/cli @swc/core
-COPY ./template/.ts.swcrc /root/.ts.swcrc
+COPY ./template/.ts.swcrc $SERVER_PATH/.ts.swcrc
 
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno

@@ -31,7 +31,7 @@ RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
 
-## TypeScript support
+## TypeScript compiler
 RUN npm install -g @swc/cli @swc/core
 COPY .ts.swcrc /root/.ts.swcrc
 

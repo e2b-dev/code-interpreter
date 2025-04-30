@@ -28,8 +28,6 @@ from errors import ExecutionError
 
 logger = logging.getLogger(__name__)
 
-compile_typescript_cmd = "/usr/lib/node_modules/@swc/cli/bin/swc.js --config-file /root/.ts.swcrc --filename index.ts"
-
 class Execution:
     def __init__(self, in_background: bool = False):
         self.queue = Queue[
@@ -204,19 +202,28 @@ class ContextWebSocket:
             if self.language == "typescript":
                 logger.info("Compiling TypeScript: %s", code)
 
-                # call swc to compile the typescript code
-                compile_result = subprocess.run(compile_typescript_cmd.split(), input=code.encode(), capture_output=True)
+                # call SWC to compile the typescript code
+                try:
+                    compile_result = subprocess.run("swc --config-file .ts.swcrc --filename index.ts".split(), input=code.encode(), capture_output=True)
 
-                if compile_result.returncode != 0:
-                    logger.error("Error during TypeScript compilation: %s", compile_result.stderr.decode())
+                    if compile_result.returncode != 0:
+                        logger.error("Error during TypeScript compilation: %s", compile_result.stderr.decode())
+                        yield Error(
+                            name="TypeScriptCompilerError",
+                            value=compile_result.stderr.decode(),
+                            traceback="",
+                        )
+                        return
+
+                    code = compile_result.stdout.decode()
+                except Exception as e:
+                    logger.error("Error starting SWC process: %s", e)
                     yield Error(
                         name="TypeScriptCompilerError",
-                        value=compile_result.stderr.decode(),
+                        value=str(e),
                         traceback="",
                     )
                     return
-
-                code = compile_result.stdout.decode()
 
             logger.info(code)
             request = self._get_execute_request(message_id, code, False)
