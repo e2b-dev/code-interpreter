@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     global client
     client = httpx.AsyncClient()
 
-    with open("/root/.jupyter/kernel_id") as file:
+    with open("/home/user/.jupyter/kernel_id") as file:
         default_context_id = file.read().strip()
 
     default_ws = ContextWebSocket(
@@ -91,7 +91,7 @@ async def post_execute(request: ExecutionRequest):
             if not context_id:
                 try:
                     context = await create_context(
-                        client, websockets, language, "/home/user"
+                        client, websockets, language, "/home/user", "root"
                     )
                 except Exception as e:
                     return PlainTextResponse(str(e), status_code=500)
@@ -127,9 +127,10 @@ async def post_contexts(request: CreateContext) -> Context:
 
     language = normalize_language(request.language)
     cwd = request.cwd or "/home/user"
+    user = request.user or "root"
 
     try:
-        return await create_context(client, websockets, language, cwd)
+        return await create_context(client, websockets, language, cwd, user)
     except Exception as e:
         return PlainTextResponse(str(e), status_code=500)
 
