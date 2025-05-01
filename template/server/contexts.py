@@ -24,10 +24,16 @@ def normalize_language(language: Optional[str]) -> str:
     return language
 
 
-async def create_context(client, websockets: dict, language: str, cwd: str) -> Context:
+def get_kernel_name(language: str, user: str) -> str:
+    if user == "root":
+        return language+"_root"
+    return language
+
+
+async def create_context(client, websockets: dict, language: str, cwd: str, user: str) -> Context:
     data = {
         "path": str(uuid.uuid4()),
-        "kernel": {"name": language},
+        "kernel": {"name": get_kernel_name(language, user)}, # replace with root kernel when user is root
         "type": "notebook",
         "name": str(uuid.uuid4()),
     }
@@ -59,4 +65,4 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
             status_code=500,
         )
 
-    return Context(language=language, id=context_id, cwd=cwd)
+    return Context(language=language, id=context_id, cwd=cwd, user=user)

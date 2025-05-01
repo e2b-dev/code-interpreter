@@ -91,7 +91,7 @@ async def post_execute(request: ExecutionRequest):
             if not context_id:
                 try:
                     context = await create_context(
-                        client, websockets, language, "/home/user"
+                        client, websockets, language, "/home/user", "root"
                     )
                 except Exception as e:
                     return PlainTextResponse(str(e), status_code=500)
@@ -127,9 +127,10 @@ async def post_contexts(request: CreateContext) -> Context:
 
     language = normalize_language(request.language)
     cwd = request.cwd or "/home/user"
+    user = request.user or "root"
 
     try:
-        return await create_context(client, websockets, language, cwd)
+        return await create_context(client, websockets, language, cwd, user)
     except Exception as e:
         return PlainTextResponse(str(e), status_code=500)
 
