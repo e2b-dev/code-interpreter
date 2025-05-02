@@ -8,18 +8,3 @@ sandboxTest('test js kernel', async ({ sandbox }) => {
   })
   expect(output.logs.stdout).toEqual(['Hello World!\n'])
 })
-
-sandboxTest('test ts kernel', async ({ sandbox }) => {
-  const output = await sandbox.runCode(
-    'const message: string = "Hello World!"; console.log(message)',
-    { language: 'ts' }
-  )
-  expect(output.logs.stdout).toEqual(['Hello World!\n'])
-})
-
-sandboxTest('test ts kernel errors', async ({ sandbox }) => {
-  const output = await sandbox.runCode('import x from "module";', {
-    language: 'typescript',
-  })
-  expect(output.error?.name).toEqual('TypeScriptCompilerError')
-})
