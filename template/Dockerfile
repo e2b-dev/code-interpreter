@@ -33,7 +33,7 @@ RUN ijsinstall --install=global
 
 ## TypeScript compiler
 RUN npm install -g @swc/cli @swc/core
-COPY .ts.swcrc /root/.ts.swcrc
+COPY .ts.swcrc $SERVER_PATH/.ts.swcrc
 
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
