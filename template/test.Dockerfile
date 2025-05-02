@@ -5,7 +5,11 @@ COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq sudo nodejs npm fonts-noto-cjk
+  build-essential curl git util-linux jq sudo fonts-noto-cjk
+
+# Install Node.js 20.x from NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
 
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
@@ -19,9 +23,12 @@ COPY ./template/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
 # Javascript Kernel
-RUN npm install -g node-gyp
 RUN npm install -g --unsafe-perm ijavascript
 RUN ijsinstall --install=global
+
+## TypeScript compiler
+RUN npm install -g @swc/cli @swc/core
+COPY ./template/.ts.swcrc $SERVER_PATH/.ts.swcrc
 
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
