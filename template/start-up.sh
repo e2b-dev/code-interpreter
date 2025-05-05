@@ -26,7 +26,7 @@ function start_jupyter_server() {
 	sudo echo "${response}" | sudo tee /root/.jupyter/.session_info >/dev/null
 
 	cd /root/.server/
-	/root/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors
+	/root/.server/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors --timeout-keep-alive 640 --timeout 84600
 }
 
 echo "Starting Code Interpreter server..."
