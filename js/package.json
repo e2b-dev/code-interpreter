@@ -1,6 +1,6 @@
 {
   "name": "@e2b/code-interpreter",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "packageManager": "pnpm@8.7.6",
   "description": "E2B Code Interpreter - Stateful code execution",
   "homepage": "https://e2b.dev",
@@ -66,7 +66,7 @@
     "vm"
   ],
   "dependencies": {
-    "e2b": "^1.2.3"
+    "e2b": "^1.4.0"
   },
   "engines": {
     "node": ">=18"
