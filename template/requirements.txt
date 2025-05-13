@@ -15,12 +15,12 @@ e2b_charts
 aiohttp==3.11.18
 beautifulsoup4==4.13.4
 bokeh==3.7.3
-# gensim==4.3.3
+gensim==4.3.3 # unmaintained, blocking numpy and scipy bump
 imageio==2.37.0
 joblib==1.5.0
 librosa==0.11.0
 nltk==3.9.1
-numpy==2.2.5
+numpy==1.26.4 # bump blocked by gensim
 numba==0.61.2
 opencv-python==4.11.0.86
 openpyxl==3.1.5
@@ -31,10 +31,10 @@ pytz==2025.2
 requests==2.32.3
 scikit-image==0.25.2
 scikit-learn==1.6.1
-scipy==1.15.3
+scipy==1.13.1 # bump blocked by gensim
 seaborn==0.13.2
 soundfile==0.13.1
-# spacy==3.8.2
+spacy==3.8.2 # doesn't work on 3.13.x
 textblob==0.19.0
 tornado==6.4.2
 urllib3==2.4.0
