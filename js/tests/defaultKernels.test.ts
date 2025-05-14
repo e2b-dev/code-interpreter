@@ -23,3 +23,10 @@ sandboxTest('test ts kernel errors', async ({ sandbox }) => {
   })
   expect(output.error?.name).toEqual('TypeScriptCompilerError')
 })
+
+sandboxTest('test ruby kernel', async ({ sandbox }) => {
+  const output = await sandbox.runCode('puts "Hello World!"', {
+    language: 'ruby',
+  })
+  expect(output.logs.stdout).toEqual(['Hello World!\n'])
+})
