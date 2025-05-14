@@ -16,7 +16,7 @@ export default defineConfig({
     globals: false,
     testTimeout: 30000,
     environment: 'node',
-    bail: 1,
+    bail: 0,
     server: {},
     deps: {
       interopDefault: true,

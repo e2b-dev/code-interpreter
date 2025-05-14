@@ -11,7 +11,6 @@ from messaging import ContextWebSocket
 
 logger = logging.Logger(__name__)
 
-
 def normalize_language(language: Optional[str]) -> str:
     if not language:
         return "python"
@@ -21,10 +20,16 @@ def normalize_language(language: Optional[str]) -> str:
     if language == "js":
         return "javascript"
 
+    if language == "ts":
+        return "typescript"
+
     return language
 
 
 def get_kernel_name(language: str, user: str) -> str:
+    if language == "typescript":
+        language = "javascript"
+  
     if user == "root":
         return language+"_root"
     return language
