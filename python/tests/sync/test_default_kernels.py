@@ -30,3 +30,8 @@ def test_ts_kernel_errors(sandbox: Sandbox):
     execution = sandbox.run_code("import x from 'module';", language="ts")
     assert execution.error is not None
     assert execution.error.name == "TypeScriptCompilerError"
+
+
+def test_ruby_kernel(sandbox: Sandbox):
+    execution = sandbox.run_code("puts 'Hello, World!'", language="ruby")
+    assert execution.logs.stdout == ["Hello, World!\n"]
