@@ -81,9 +81,9 @@ export interface CreateCodeContextOpts {
   /**
    * User for the context.
    * 
-   * @default root
+   * @default user
    */
-  user?: "root" | "user",
+  user?: "user" | "root",
   /**
    * Timeout for the request in **milliseconds**.
    * 

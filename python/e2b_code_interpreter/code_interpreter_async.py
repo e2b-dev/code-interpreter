@@ -231,7 +231,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         self,
         cwd: Optional[str] = None,
         language: Optional[str] = None,
-        user: Optional[Literal["root", "user"]] = None,
+        user: Optional[Literal["user", "root"]] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """
@@ -239,7 +239,7 @@ class AsyncSandbox(BaseAsyncSandbox):
 
         :param cwd: Set the current working directory for the context, defaults to `/home/user`
         :param language: Language of the context. If not specified, defaults to Python
-        :param user: User of the context. If not specified, defaults to `root`
+        :param user: User of the context. If not specified, defaults to `user`
         :param request_timeout: Timeout for the request in **milliseconds**
 
         :return: Context object

@@ -35,7 +35,7 @@ function start_jupyter_server() {
 		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
 	done
 
-	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "'$HOME'", "kernel": {"name": "python3_root"}, "type": "notebook", "name": "default"}')
+	response=$(curl -s -X POST "localhost:8888/api/sessions" -H "Content-Type: application/json" -d '{"path": "'$HOME'", "kernel": {"name": "python3"}, "type": "notebook", "name": "default"}')
 	status=$(echo "${response}" | jq -r '.kernel.execution_state')
 	if [[ ${status} != "starting" ]]; then
 		echo "Error creating kernel: ${response} ${status}"

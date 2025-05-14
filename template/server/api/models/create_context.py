@@ -5,7 +5,7 @@ from typing import Optional
 
 class CreateContext(BaseModel):
     user: Optional[StrictStr] = Field(
-        default="root",
+        default="user",
         description="User to run the context",
     )
     cwd: Optional[StrictStr] = Field(
