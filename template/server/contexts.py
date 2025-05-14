@@ -42,7 +42,7 @@ async def create_context(client, websockets: dict, language: str, cwd: str, user
         "type": "notebook",
         "name": str(uuid.uuid4()),
     }
-    logger.debug(f"Creating new {language} context")
+    logger.debug(f"Creating new {language} context for user {user}")
 
     response = await client.post(f"{JUPYTER_BASE_URL}/api/sessions", json=data)
 
