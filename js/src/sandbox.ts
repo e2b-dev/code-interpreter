@@ -79,6 +79,12 @@ export interface CreateCodeContextOpts {
    */
   language?: string,
   /**
+   * User for the context.
+   * 
+   * @default root
+   */
+  user?: "root" | "user",
+  /**
    * Timeout for the request in **milliseconds**.
    * 
    * @default 30_000 // 30 seconds
@@ -269,6 +275,7 @@ export class Sandbox extends BaseSandbox {
         body: JSON.stringify({
           language: opts?.language,
           cwd: opts?.cwd,
+          user: opts?.user,
         }),
         keepalive: true,
         signal: this.connectionConfig.getSignal(opts?.requestTimeoutMs),
