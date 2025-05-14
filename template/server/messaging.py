@@ -183,21 +183,24 @@ class ContextWebSocket:
         async with self._lock:
             if env_vars:
                 vars_to_set = {**global_env_vars, **env_vars}
-
-                # if there is an indent in the code, we need to add the env vars at the beginning of the code
-                lines = code.split("\n")
-                indent = 0
-                for i, line in enumerate(lines):
-                    if line.strip() != "":
-                        indent = len(line) - len(line.lstrip())
-                        break
+                env_vars_snippet = ""
 
                 if self.language == "python":
-                    code = (
-                        indent * " "
-                        + f"os.environ.set_envs_for_execution({vars_to_set})\n"
-                        + code
-                    )
+                    env_vars_snippet = f"os.environ.set_envs_for_execution({vars_to_set})\n"
+                elif self.language in ["javascript", "typescript"]:
+                    env_vars_snippet = "\n".join([f"process.env['{k}'] = '{v}';" for k, v in vars_to_set.items()])
+                elif self.language == "deno":
+                    env_vars_snippet = "\n".join([f"Deno.env.set('{k}', '{v}');" for k, v in vars_to_set.items()])
+                elif self.language == "r":
+                    env_vars_snippet = "\n".join([f"Sys.setenv('{k}' = '{v}')" for k, v in vars_to_set.items()])
+                elif self.language == "java":
+                    env_vars_snippet = "\n".join([f"System.setProperty('{k}', '{v}');" for k, v in vars_to_set.items()])
+                else:
+                    raise Exception(f"Unsupported language: {self.language}")
+
+                print(f"Setting env vars: {env_vars_snippet}")
+                request = self._get_execute_request(str(uuid.uuid4()), env_vars_snippet, False)
+                await self._ws.send(request)
 
             if self.language == "typescript":
                 logger.info("Compiling TypeScript: %s", code)
