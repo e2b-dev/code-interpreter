@@ -11,6 +11,13 @@ from messaging import ContextWebSocket
 
 logger = logging.Logger(__name__)
 
+def get_user_cwd(user: str, cwd: Optional[str]) -> str:
+    if not cwd:
+        if user == "root":
+            return "/root"
+        return "/home/user"
+    return cwd
+
 def normalize_language(language: Optional[str]) -> str:
     if not language:
         return "python"

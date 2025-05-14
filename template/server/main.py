@@ -13,7 +13,7 @@ from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
 from consts import JUPYTER_BASE_URL
-from contexts import create_context, normalize_language
+from contexts import create_context, normalize_language, get_user_cwd
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
@@ -126,8 +126,8 @@ async def post_contexts(request: CreateContext) -> Context:
     logger.info(f"Creating a new context")
 
     language = normalize_language(request.language)
-    cwd = request.cwd or "/home/user"
     user = request.user or "user"
+    cwd = get_user_cwd(user, request.cwd)
 
     try:
         return await create_context(client, websockets, language, cwd, user)
