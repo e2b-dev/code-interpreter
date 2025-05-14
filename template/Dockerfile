@@ -1,4 +1,4 @@
-FROM python:3.10.14
+FROM python:3.12
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq sudo fonts-noto-cjk
