@@ -29,6 +29,9 @@ def normalize_language(language: Optional[str]) -> str:
     if language == "ts":
         return "typescript"
 
+    if language == "ruby" or language == "rb":
+        return "ruby3"
+
     return language
 
 
