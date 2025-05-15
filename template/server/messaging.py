@@ -195,6 +195,8 @@ class ContextWebSocket:
                     env_vars_snippet = "\n".join([f"Sys.setenv('{k}' = '{v}')" for k, v in vars_to_set.items()])
                 elif self.language == "java":
                     env_vars_snippet = "\n".join([f"System.setProperty('{k}', '{v}');" for k, v in vars_to_set.items()])
+                elif self.language == "bash":
+                    env_vars_snippet = "\n".join([f"export {k}='{v}'" for k, v in vars_to_set.items()])
                 else:
                     raise Exception(f"Unsupported language: {self.language}")
 
