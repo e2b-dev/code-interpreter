@@ -8,6 +8,7 @@ from fastapi.responses import PlainTextResponse
 from consts import JUPYTER_BASE_URL
 from errors import ExecutionError
 from messaging import ContextWebSocket
+from envs import get_envs
 
 logger = logging.Logger(__name__)
 
@@ -51,6 +52,7 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     session_data = response.json()
     session_id = session_data["id"]
     context_id = session_data["kernel"]["id"]
+    global_env_vars = get_envs()
 
     logger.debug(f"Created context {context_id}")
 
@@ -64,6 +66,14 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     except ExecutionError as e:
         return PlainTextResponse(
             "Failed to set working directory",
+            status_code=500,
+        )
+
+    try:
+        await ws.set_env_vars(global_env_vars)
+    except ExecutionError as e:
+        return PlainTextResponse(
+            "Failed to set environment variables",
             status_code=500,
         )
 

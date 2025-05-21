@@ -135,6 +135,69 @@ class ContextWebSocket:
 
             yield output.model_dump(exclude_none=True)
 
+    async def set_env_vars(self, env_vars: Dict[StrictStr, str]):
+        env_commands = []
+
+        for k, v in env_vars.items():
+            if self.language == "python":
+                env_commands.append(f"os.environ['{k}'] = '{v}'")
+            elif self.language in ["javascript", "typescript"]:
+                env_commands.append(f"process.env['{k}'] = '{v}'")
+            elif self.language == "deno":
+                env_commands.append(f"Deno.env.set('{k}', '{v}')")
+            elif self.language == "r":
+                env_commands.append(f"Sys.setenv('{k}' = '{v}')")
+            elif self.language == "java":
+                env_commands.append(f"System.setProperty('{k}', '{v}')")
+            elif self.language == "bash":
+                env_commands.append(f"export {k}='{v}'")
+
+        if env_commands:
+            env_vars_snippet = "\n".join(env_commands)
+            print(f"Setting env vars: {env_vars_snippet}")
+            request = self._get_execute_request(str(uuid.uuid4()), env_vars_snippet, False)
+            await self._ws.send(request)
+
+    async def reset_env_vars(self, env_vars: Dict[StrictStr, str]):
+        global_env_vars = get_envs()
+
+        # Create a dict of vars to reset and a list of vars to remove
+        vars_to_reset = {}
+        vars_to_remove = []
+
+        for key in env_vars:
+            if key in global_env_vars:
+                vars_to_reset[key] = global_env_vars[key]
+            else:
+                vars_to_remove.append(key)
+
+        # Reset vars that exist in global env vars
+        if vars_to_reset:
+            await self.set_env_vars(vars_to_reset)
+
+        # Remove vars that don't exist in global env vars
+        if vars_to_remove:
+            remove_commands = []
+            for key in vars_to_remove:
+                if self.language == "python":
+                    remove_commands.append(f"del os.environ['{key}']")
+                elif self.language in ["javascript", "typescript"]:
+                    remove_commands.append(f"delete process.env['{key}']")
+                elif self.language == "deno":
+                    remove_commands.append(f"Deno.env.delete('{key}')")
+                elif self.language == "r":
+                    remove_commands.append(f"Sys.unsetenv('{key}')")
+                elif self.language == "java":
+                    remove_commands.append(f"System.clearProperty('{key}')")
+                elif self.language == "bash":
+                    remove_commands.append(f"unset {key}")
+            
+            if remove_commands:
+                remove_snippet = "\n".join(remove_commands)
+                print(f"Removing env vars: {remove_snippet}")
+                request = self._get_execute_request(str(uuid.uuid4()), remove_snippet, False)
+                await self._ws.send(request)
+
     async def change_current_directory(
         self, path: Union[str, StrictStr], language: str
     ):
@@ -178,31 +241,10 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
-        global_env_vars = get_envs()
-        env_vars = {**global_env_vars, **env_vars} if env_vars else global_env_vars
         async with self._lock:
+            # set env vars (will override global env vars)
             if env_vars:
-                vars_to_set = {**global_env_vars, **env_vars}
-                env_vars_snippet = ""
-
-                if self.language == "python":
-                    env_vars_snippet = f"os.environ.set_envs_for_execution({vars_to_set})\n"
-                elif self.language in ["javascript", "typescript"]:
-                    env_vars_snippet = "\n".join([f"process.env['{k}'] = '{v}';" for k, v in vars_to_set.items()])
-                elif self.language == "deno":
-                    env_vars_snippet = "\n".join([f"Deno.env.set('{k}', '{v}');" for k, v in vars_to_set.items()])
-                elif self.language == "r":
-                    env_vars_snippet = "\n".join([f"Sys.setenv('{k}' = '{v}')" for k, v in vars_to_set.items()])
-                elif self.language == "java":
-                    env_vars_snippet = "\n".join([f"System.setProperty('{k}', '{v}');" for k, v in vars_to_set.items()])
-                elif self.language == "bash":
-                    env_vars_snippet = "\n".join([f"export {k}='{v}'" for k, v in vars_to_set.items()])
-                else:
-                    raise Exception(f"Unsupported language: {self.language}")
-
-                print(f"Setting env vars: {env_vars_snippet}")
-                request = self._get_execute_request(str(uuid.uuid4()), env_vars_snippet, False)
-                await self._ws.send(request)
+                await self.set_env_vars(env_vars)
 
             if self.language == "typescript":
                 logger.info("Compiling TypeScript: %s", code)
@@ -241,6 +283,10 @@ class ContextWebSocket:
                 yield item
 
             del self._executions[message_id]
+
+            # reset env vars to their previous values, if they were set globally or remove them
+            if env_vars:
+                await self.reset_env_vars(env_vars)
 
     async def _receive_message(self):
         if not self._ws:
