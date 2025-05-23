@@ -21,3 +21,8 @@ async def test_ts_kernel_errors(async_sandbox: AsyncSandbox):
     )
     assert execution.error is not None
     assert execution.error.name == "TypeScriptCompilerError"
+
+
+async def test_ruby_kernel(async_sandbox: AsyncSandbox):
+    execution = await async_sandbox.run_code("puts 'Hello, World!'", language="ruby")
+    assert execution.logs.stdout == ["Hello, World!\n"]
