@@ -28,7 +28,7 @@ RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
 RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Javascript Kernel
-RUN npm install -g --unsafe-perm ijavascript
+RUN npm install -g --unsafe-perm git+https://github.com/e2b-dev/ijavascript.git
 RUN ijsinstall --install=global
 
 ## TypeScript compiler
