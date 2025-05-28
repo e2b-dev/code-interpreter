@@ -31,10 +31,6 @@ RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 RUN npm install -g --unsafe-perm git+https://github.com/e2b-dev/ijavascript.git
 RUN ijsinstall --install=global
 
-## TypeScript compiler
-RUN npm install -g @swc/cli @swc/core
-COPY .ts.swcrc $SERVER_PATH/.ts.swcrc
-
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
