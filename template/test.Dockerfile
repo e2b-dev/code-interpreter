@@ -1,11 +1,19 @@
 FROM python:3.12
 
+ENV HOME=/home/user
+
 ENV JAVA_HOME=/opt/java/openjdk
 COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq sudo fonts-noto-cjk
+
+# Create new user with root privileges while keeping root user
+RUN useradd -m -s /bin/bash user && \
+  echo 'user ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers && \
+  echo 'user:password' | chpasswd && \
+  usermod -aG sudo user
 
 # Install Node.js 20.x from NodeSource
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
@@ -14,13 +22,13 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
 ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_DISABLE_PIP_VERSION_CHECK=1 \
   PIP_NO_CACHE_DIR=1 \
-  JUPYTER_CONFIG_PATH="/root/.jupyter" \
-  IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server"
+  JUPYTER_CONFIG_PATH="$HOME/.jupyter" \
+  IPYTHON_CONFIG_PATH="$HOME/.ipython" \
+  SERVER_PATH="$HOME/.server"
 
 # Install Jupyter
 COPY ./template/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
+RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3"
 
 # Javascript Kernel
 RUN npm install -g --unsafe-perm git+https://github.com/e2b-dev/ijavascript.git
@@ -29,8 +37,12 @@ RUN ijsinstall --install=global
 # Deno Kernel
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
-RUN deno jupyter --unstable --install
-COPY ./template/deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+RUN deno jupyter --unstable --install && \
+    mkdir -p /usr/local/share/jupyter/kernels/deno && \
+    mv $HOME/.local/share/jupyter/kernels/deno/* /usr/local/share/jupyter/kernels/deno/ && \
+    rmdir $HOME/.local/share/jupyter/kernels/deno
+
+COPY ./template/deno.json /usr/local/share/jupyter/kernels/deno/kernel.json
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
@@ -42,7 +54,7 @@ RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requiremen
 COPY ./template/server $SERVER_PATH
 
 # Copy matplotlibrc
-COPY ./template/matplotlibrc /root/.config/matplotlib/matplotlibrc
+COPY ./template/matplotlibrc $HOME/.config/matplotlib/matplotlibrc
 
 # Copy Jupyter configuration
 COPY ./template/start-up.sh $JUPYTER_CONFIG_PATH/
@@ -57,7 +69,12 @@ RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
 COPY ./template/startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
 
 # Setup entrypoint for local development
-WORKDIR /home/user
+WORKDIR $HOME
 COPY ./chart_data_extractor ./chart_data_extractor
 RUN pip install -e ./chart_data_extractor
+
+# Change ownership of all files to user
+RUN chown -R user:user $HOME
+
+USER user
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
