@@ -327,7 +327,7 @@ class ContextWebSocket:
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                logger.debug(f"Execution {parent_msg_ig} received stdout")
+                logger.debug(f"Execution {parent_msg_ig} received stdout: {data['content']['text']}")
                 await queue.put(
                     Stdout(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
@@ -335,7 +335,7 @@ class ContextWebSocket:
                 )
 
             elif data["content"]["name"] == "stderr":
-                logger.debug(f"Execution {parent_msg_ig} received stderr")
+                logger.debug(f"Execution {parent_msg_ig} received stderr: {data['content']['text']}")
                 await queue.put(
                     Stderr(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
