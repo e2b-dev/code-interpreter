@@ -48,7 +48,7 @@ jobs:
         id: build-template
         run: |
           rm -f e2b.toml
-          e2b template build --team "460355b3-4f64-48f9-9a16-4442817f79f5" --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile" | tee build_output.txt
+          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile" | tee build_output.txt
           TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
