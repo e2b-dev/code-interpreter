@@ -1,0 +1,35 @@
+name: Cleanup Build Template
+
+on:
+  workflow_call:
+    secrets:
+      E2B_ACCESS_TOKEN:
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+      E2B_CI_TEMPLATE:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    name: Cleanup Build Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install E2B CLI
+        run: npm install -g @e2b/cli
+
+      - name: Cleanup E2B template
+        id: cleanup-template
+        run: |
+          e2b template delete --team "460355b3-4f64-48f9-9a16-4442817f79f5" ${{ inputs.E2B_CI_TEMPLATE }}
+        env:
+          E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
