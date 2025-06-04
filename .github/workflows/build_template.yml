@@ -6,7 +6,9 @@ on:
       E2B_API_KEY:
         required: true
       E2B_DOMAIN:
-        required: true
+        required: false
+      E2B_TEMPLATE_CONFIG:
+        required: false
 
 permissions:
   contents: read
@@ -54,8 +56,9 @@ jobs:
         run: npm install -g @e2b/cli
 
       - name: Build E2B template
-        run: e2b template build --config e2b.test.toml
+        run: e2b template build --config ${{ secrets.E2B_TEMPLATE_CONFIG }}
         working-directory: ./template
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_TEMPLATE_CONFIG: ${{ secrets.E2B_TEMPLATE_CONFIG }}

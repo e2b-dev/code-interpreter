@@ -19,6 +19,8 @@ jobs:
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+      E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
+      E2B_TEMPLATE_CONFIG: ${{ secrets.E2B_TEMPLATE_CONFIG }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
     secrets:
@@ -29,8 +31,10 @@ jobs:
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+      E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+      E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}

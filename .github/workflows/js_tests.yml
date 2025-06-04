@@ -6,7 +6,9 @@ on:
       E2B_API_KEY:
         required: true
       E2B_DOMAIN:
-        required: true
+        required: false
+      E2B_TEMPLATE_CONFIG:
+        required: false
 
 permissions:
   contents: read
