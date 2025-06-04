@@ -13,9 +13,6 @@ on:
       E2B_DOMAIN:
         required: false
         type: string
-      E2B_TEMPLATE_CONFIG:
-        required: true
-        type: string
 
 permissions:
   contents: read

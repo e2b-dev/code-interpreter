@@ -22,7 +22,6 @@ jobs:
       E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-      E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
     needs: build-template
@@ -41,5 +40,14 @@ jobs:
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
+  # cleanup-build-template:
+  #   uses: ./.github/workflows/cleanup_build_template.yml
+  #   needs: [build-template, js-sdk, python-sdk]
+  #   if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+  #   secrets:
+  #     E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+  #     E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
+  #   inputs:
+  #     E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml
