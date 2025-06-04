@@ -45,7 +45,7 @@ jobs:
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
-    inputs:
+    with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   charts-tests:
