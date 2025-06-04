@@ -62,4 +62,5 @@ jobs:
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
 
       - name: Output template ID
-        run: echo "Template ID: ${{ steps.build-template.outputs.template_id }}"
+        run: |
+          echo "Template ID: ${{ steps.build-template.outputs.template_id }}"
