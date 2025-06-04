@@ -48,7 +48,5 @@ jobs:
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
-    env:
-      DEBUG: "true"
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml
