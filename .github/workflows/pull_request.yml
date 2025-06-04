@@ -18,9 +18,7 @@ jobs:
     uses: ./.github/workflows/build_template.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-    with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-      E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
       E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
