@@ -56,6 +56,8 @@ jobs:
           TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
           echo "Captured Template ID: $TEMPLATE_ID"
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+          echo "GITHUB_OUTPUT contents:"
+          cat $GITHUB_OUTPUT
         working-directory: ./template
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
@@ -63,4 +65,5 @@ jobs:
 
       - name: Output template ID
         run: |
-          echo "Template ID: ${{ steps.build-template.outputs.template_id }}"
+          echo "Template ID from step output: ${{ steps.build-template.outputs.template_id }}"
+          echo "Template ID from job output: ${{ needs.build.outputs.template_id }}"
