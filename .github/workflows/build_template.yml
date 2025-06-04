@@ -42,6 +42,8 @@ jobs:
           push: false
           platforms: linux/amd64
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
