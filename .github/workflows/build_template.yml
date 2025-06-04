@@ -50,9 +50,8 @@ jobs:
         run: npm install -g @e2b/cli
 
       - name: Build E2B template
-        run: e2b template build --config ${{ secrets.E2B_TEMPLATE_CONFIG }}
+        run: e2b template build --config ${{ inputs.E2B_TEMPLATE_CONFIG }}
         working-directory: ./template
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
-          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-          E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
