@@ -8,8 +8,10 @@ on:
     inputs:
       E2B_DOMAIN:
         required: false
+        type: string
       E2B_CI_TEMPLATE:
         required: false
+        type: string
 
 permissions:
   contents: read
