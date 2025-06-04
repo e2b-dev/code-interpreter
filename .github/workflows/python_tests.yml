@@ -5,9 +5,10 @@ on:
     secrets:
       E2B_API_KEY:
         required: true
+    inputs:
       E2B_DOMAIN:
         required: false
-      E2B_TEMPLATE:
+      E2B_CI_TEMPLATE:
         required: false
 
 permissions:
@@ -48,4 +49,4 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
-          E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
+          E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}

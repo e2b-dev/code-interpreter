@@ -3,7 +3,7 @@ import { test as base } from 'vitest'
 
 const timeoutMs = 60_000
 
-const template = process.env.E2B_TEMPLATE || 'code-interpreter-v1'
+const template = process.env.E2B_CI_TEMPLATE || 'code-interpreter-v1'
 
 interface SandboxFixture {
   sandbox: Sandbox

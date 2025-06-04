@@ -11,7 +11,7 @@ timeout = 60
 
 @pytest.fixture()
 def template():
-    return os.getenv("E2B_TEMPLATE", "code-interpreter-v1")
+    return os.getenv("E2B_CI_TEMPLATE", "code-interpreter-v1")
 
 
 @pytest.fixture()
