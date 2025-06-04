@@ -14,7 +14,7 @@ on:
     outputs:
       template_id:
         description: "The ID of the built template"
-        value: ${{ steps.build-template.outputs.template_id }}
+        value: ${{ jobs.build.outputs.template_id }}
 
 permissions:
   contents: read
