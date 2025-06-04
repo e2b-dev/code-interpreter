@@ -19,6 +19,8 @@ jobs:
   build:
     name: Build Docker Image and Template
     runs-on: ubuntu-latest
+    outputs:
+      template_id: ${{ steps.build-template.outputs.template_id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,6 +52,7 @@ jobs:
           rm -f e2b.toml
           e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile" | tee build_output.txt
           TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
+          echo "Captured Template ID: $TEMPLATE_ID"
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
         env:
