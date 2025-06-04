@@ -49,16 +49,12 @@ jobs:
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
 
-      - name: Remove existing e2b.toml
-        working-directory: ./template
-        run: rm ./e2b.toml
-
       - name: Build E2B template
         id: build-template
         run: |
-          OUTPUT=$(e2b template build --team "460355b3-4f64-48f9-9a16-4442817f79f5" --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile")
-          echo "build_output=$OUTPUT" >> $GITHUB_OUTPUT
-          TEMPLATE_ID=$(echo "$OUTPUT" | grep -o '✅ Building sandbox template [a-z0-9]*' | cut -d' ' -f5)
+          rm -f e2b.toml && e2b template build --team "460355b3-4f64-48f9-9a16-4442817f79f5" --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile" 2>&1 | tee build_output.txt
+          echo "build_output=$(cat build_output.txt)" >> $GITHUB_OUTPUT
+          TEMPLATE_ID=$(cat build_output.txt | grep -o 'Requested build for the sandbox template [a-z0-9]*' | cut -d' ' -f6)
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
         env:
