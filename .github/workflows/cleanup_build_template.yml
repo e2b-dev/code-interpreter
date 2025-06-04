@@ -27,7 +27,7 @@ jobs:
       - name: Cleanup E2B template
         id: cleanup-template
         run: |
-          e2b template delete ${{ inputs.E2B_CI_TEMPLATE }}
+          e2b template delete "${{ inputs.E2B_CI_TEMPLATE }}"
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
