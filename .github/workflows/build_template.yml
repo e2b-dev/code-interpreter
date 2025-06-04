@@ -50,7 +50,8 @@ jobs:
         run: npm install -g @e2b/cli
 
       - name: Remove existing e2b.toml
-        run: rm -f e2b.toml
+        working-directory: ./template
+        run: rm ./e2b.toml
 
       - name: Build E2B template
         id: build-template
