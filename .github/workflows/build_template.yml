@@ -50,8 +50,16 @@ jobs:
         run: npm install -g @e2b/cli
 
       - name: Build E2B template
-        run: e2b template build --config ${{ inputs.E2B_TEMPLATE_CONFIG }}
+        id: build-template
+        run: |
+          OUTPUT=$(e2b template build --team "460355b3-4f64-48f9-9a16-4442817f79f5" --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile")
+          echo "build_output=$OUTPUT" >> $GITHUB_OUTPUT
+          TEMPLATE_ID=$(echo "$OUTPUT" | grep -o '✅ Building sandbox template [a-z0-9]*' | cut -d' ' -f5)
+          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
+
+      - name: Output template ID
+        run: echo "Template ID: ${{ steps.build-template.outputs.template_id }}"

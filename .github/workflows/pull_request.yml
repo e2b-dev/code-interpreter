@@ -31,7 +31,7 @@ jobs:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-      E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
+      E2B_CI_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
     needs: build-template
@@ -40,6 +40,6 @@ jobs:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-      E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
+      E2B_CI_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml
