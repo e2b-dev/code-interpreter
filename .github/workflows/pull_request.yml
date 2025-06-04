@@ -18,6 +18,8 @@ jobs:
     uses: ./.github/workflows/build_template.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+    with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
   js-sdk:
