@@ -64,4 +64,4 @@ jobs:
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-          E2B_TEMPLATE_CONFIG: ${{ secrets.E2B_TEMPLATE_CONFIG }}
+          E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
