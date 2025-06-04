@@ -23,11 +23,13 @@ jobs:
       E2B_TEMPLATE_CONFIG: ${{ secrets.E2B_TEMPLATE_CONFIG }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
+    needs: build-template
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
+    needs: build-template
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
