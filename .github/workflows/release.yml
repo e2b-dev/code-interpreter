@@ -18,7 +18,7 @@ jobs:
       release: ${{ steps.version.outputs.release }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -60,7 +60,7 @@ jobs:
       template: ${{ steps.template.outputs.release }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -117,7 +117,7 @@ jobs:
       version: ${{ steps.output_version.outputs.version }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -177,7 +177,7 @@ jobs:
       (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -220,7 +220,7 @@ jobs:
       (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Install E2B CLI
@@ -268,7 +268,7 @@ jobs:
           private-key: ${{ secrets.VERSION_BUMPER_SECRET }}
 
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
