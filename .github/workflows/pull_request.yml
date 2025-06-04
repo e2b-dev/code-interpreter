@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/build_template.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-    inputs:
+    with:
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
       E2B_TEMPLATE_CONFIG: ${{ vars.E2B_TEMPLATE_CONFIG }}
@@ -28,7 +28,7 @@ jobs:
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-    inputs:
+    with:
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
   python-sdk:
@@ -37,7 +37,7 @@ jobs:
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-    inputs:
+    with:
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
       E2B_CI_TEMPLATE: ${{ vars.E2B_CI_TEMPLATE }}
   charts-tests:
