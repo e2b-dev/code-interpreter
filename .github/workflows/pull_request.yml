@@ -14,13 +14,23 @@ on:
       - main
 
 jobs:
+  build-template:
+    uses: ./.github/workflows/build_template.yml
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+      E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+      E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+      E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+      E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
