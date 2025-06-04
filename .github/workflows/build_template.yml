@@ -53,8 +53,8 @@ jobs:
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
 
-      - name: Build e2b
-        run: e2b template build
+      - name: Build E2B template
+        run: e2b template build --config e2b.test.toml
         working-directory: ./template
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
