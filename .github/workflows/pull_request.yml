@@ -24,6 +24,7 @@ jobs:
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
     needs: build-template
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
@@ -31,6 +32,7 @@ jobs:
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
     needs: build-template
+    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
       E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
