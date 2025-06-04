@@ -7,7 +7,7 @@ on:
         required: true
       E2B_DOMAIN:
         required: false
-      E2B_TEMPLATE_CONFIG:
+      E2B_TEMPLATE:
         required: false
 
 permissions:
@@ -54,6 +54,7 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
@@ -65,6 +66,7 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
 
       - name: Install Deno
         uses: denoland/setup-deno@v1
@@ -76,3 +78,4 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_TEMPLATE: ${{ secrets.E2B_TEMPLATE }}
