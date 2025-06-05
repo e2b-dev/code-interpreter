@@ -56,8 +56,8 @@ jobs:
         run: |
           rm -f e2b.toml
           echo "FROM e2bdev/code-interpreter-test:latest" > test.Dockerfile
-          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "test.Dockerfile" | tee build_output.txt
-          TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
+          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "test.Dockerfile"
+          TEMPLATE_ID=$(grep "template_id" e2b.toml | cut -d '"' -f 2)
           echo "Captured Template ID: $TEMPLATE_ID"
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
