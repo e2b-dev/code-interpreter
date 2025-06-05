@@ -9,7 +9,7 @@ on:
       E2B_DOMAIN:
         required: false
         type: string
-      E2B_TEST_TEMPLATE:
+      E2B_TESTS_TEMPLATE:
         required: true
         type: string
 
@@ -27,7 +27,7 @@ jobs:
       - name: Cleanup E2B template
         id: cleanup-template
         run: |
-          e2b template delete "${{ inputs.E2B_TEST_TEMPLATE }}"
+          e2b template delete "${{ inputs.E2B_TESTS_TEMPLATE }}"
         env:
           E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
