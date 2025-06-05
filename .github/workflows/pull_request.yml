@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/build_test_template.yml
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      E2B_ACCESS_TOKEN: ${{ secrets.E2B_TEST_ACCESS_TOKEN }}
+      E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
   js-sdk:
@@ -44,7 +44,7 @@ jobs:
     needs: [build-template, js-sdk, python-sdk]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
-      E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
+      E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_TEST_TEMPLATE: ${{ needs.build-template.outputs.template_id }}

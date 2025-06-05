@@ -3,7 +3,7 @@ name: Build Template
 on:
   workflow_call:
     secrets:
-      E2B_TEST_ACCESS_TOKEN:
+      E2B_TESTS_ACCESS_TOKEN:
         required: true
       DOCKERHUB_USERNAME:
         required: true
@@ -62,7 +62,7 @@ jobs:
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
         env:
-          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TEST_ACCESS_TOKEN }}
+          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
 
       - name: Output template ID

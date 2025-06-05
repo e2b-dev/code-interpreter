@@ -56,7 +56,7 @@ jobs:
         run: pnpm test
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-          E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
           E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}
 
       - name: Install Bun
@@ -68,7 +68,7 @@ jobs:
         run: pnpm test:bun
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-          E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
           E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}
 
       - name: Install Deno
@@ -80,5 +80,5 @@ jobs:
         run: pnpm test:deno
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
-          E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
           E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}
