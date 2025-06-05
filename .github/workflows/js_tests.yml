@@ -9,7 +9,7 @@ on:
       E2B_DOMAIN:
         required: false
         type: string
-      E2B_CI_TEMPLATE:
+      E2B_TEST_TEMPLATE:
         required: false
         type: string
 
@@ -57,19 +57,19 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
-          E2B_CI_TEMPLATE: ${{ inputs.E2B_CI_TEMPLATE }}
+          E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
-          version: 1.1.x
+          bun-version: 1.1.x
 
       - name: Run Bun tests
         run: pnpm test:bun
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
-          E2B_CI_TEMPLATE: ${{ inputs.E2B_CI_TEMPLATE }}
+          E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}
 
       - name: Install Deno
         uses: denoland/setup-deno@v1
@@ -81,4 +81,4 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ secrets.E2B_DOMAIN }}
-          E2B_CI_TEMPLATE: ${{ inputs.E2B_CI_TEMPLATE }}
+          E2B_TEST_TEMPLATE: ${{ inputs.E2B_TEST_TEMPLATE }}

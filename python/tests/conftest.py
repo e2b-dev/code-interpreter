@@ -9,9 +9,10 @@ from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 timeout = 60
 
+
 @pytest.fixture()
 def template():
-    return os.getenv("E2B_CI_TEMPLATE", "code-interpreter-v1")
+    return os.getenv("E2B_TEST_TEMPLATE", "code-interpreter-v1")
 
 
 @pytest.fixture()
@@ -32,13 +33,13 @@ def sandbox(template, debug):
 
 @pytest_asyncio.fixture
 async def async_sandbox(template, debug):
-    sandbox = await AsyncSandbox.create(template, timeout=timeout)
+    async_sandbox = await AsyncSandbox.create(template, timeout=timeout)
 
     try:
-        yield sandbox
+        yield async_sandbox
     finally:
         try:
-            await sandbox.kill()
+            await async_sandbox.kill()
         except:
             if not debug:
                 warning(
