@@ -43,10 +43,11 @@ jobs:
         with:
           context: ./template
           push: false
+          load: true
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: e2bdev/code-interpreter-test:latest
+          tags: code-interpreter-test:latest
 
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
@@ -55,7 +56,7 @@ jobs:
         id: build-template
         run: |
           rm -f e2b.toml
-          echo "FROM e2bdev/code-interpreter-test:latest" > test.Dockerfile
+          echo "FROM code-interpreter-test:latest" > test.Dockerfile
           e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "test.Dockerfile"
           TEMPLATE_ID=$(grep "template_id" e2b.toml | cut -d '"' -f 2)
           echo "Captured Template ID: $TEMPLATE_ID"
