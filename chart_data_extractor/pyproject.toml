@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "e2b-charts"
-version = "0.0.3"
+version = "0.0.4"
 description = "Package for extracting data for E2B Code Interpreter"
 authors = ["e2b <hello@e2b.dev>"]
 license = "MIT"
