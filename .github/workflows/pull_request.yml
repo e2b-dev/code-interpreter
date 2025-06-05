@@ -17,7 +17,6 @@ jobs:
   build-template:
     uses: ./.github/workflows/build_test_template.yml
     secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}

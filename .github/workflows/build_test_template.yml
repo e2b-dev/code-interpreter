@@ -5,8 +5,6 @@ on:
     secrets:
       E2B_TESTS_ACCESS_TOKEN:
         required: true
-      DOCKERHUB_USERNAME:
-        required: true
     inputs:
       E2B_DOMAIN:
         required: false
@@ -40,12 +38,12 @@ jobs:
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
       - name: Build Docker image
+        id: docker-build
         uses: docker/build-push-action@v6
         with:
           context: ./template
           push: false
           platforms: linux/amd64
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -56,7 +54,8 @@ jobs:
         id: build-template
         run: |
           rm -f e2b.toml
-          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "e2b.Dockerfile" | tee build_output.txt
+          echo "FROM ${{ steps.docker-build.outputs.imageid }}" > test.Dockerfile
+          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "test.Dockerfile" | tee build_output.txt
           TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
           echo "Captured Template ID: $TEMPLATE_ID"
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
