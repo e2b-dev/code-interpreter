@@ -46,6 +46,7 @@ jobs:
           platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          tags: e2bdev/code-interpreter-test:latest
 
       - name: Install E2B CLI
         run: npm install -g @e2b/cli
@@ -54,7 +55,7 @@ jobs:
         id: build-template
         run: |
           rm -f e2b.toml
-          echo "FROM ${{ steps.docker-build.outputs.imageid }}" > test.Dockerfile
+          echo "FROM e2bdev/code-interpreter-test:latest" > test.Dockerfile
           e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "test.Dockerfile" | tee build_output.txt
           TEMPLATE_ID=$(grep "Requested build for the sandbox template" build_output.txt | awk '{print $NF}')
           echo "Captured Template ID: $TEMPLATE_ID"
