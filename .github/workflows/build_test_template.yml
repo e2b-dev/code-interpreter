@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Docker Image and Template
+    name: Build E2B Template
     runs-on: ubuntu-latest
     outputs:
       template_id: ${{ steps.build-template.outputs.template_id }}
