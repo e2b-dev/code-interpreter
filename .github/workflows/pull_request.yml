@@ -23,7 +23,6 @@ jobs:
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
     needs: build-template
-    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
@@ -32,7 +31,6 @@ jobs:
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
     needs: build-template
-    if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
@@ -40,7 +38,7 @@ jobs:
       E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   cleanup-build-template:
     uses: ./.github/workflows/cleanup_build_template.yml
-    needs: [build-template, js-sdk, python-sdk]
+    needs: [build-template]
     if: always() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
     secrets:
       E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
