@@ -158,7 +158,7 @@ class ContextWebSocket:
 
         if env_commands:
             env_vars_snippet = "\n".join(env_commands)
-            print(f"Setting env vars: {env_vars_snippet}")
+            logger.info(f"Setting env vars: {env_vars_snippet} for {self.language}")
             request = self._get_execute_request(message_id, env_vars_snippet, True)
             await self._ws.send(request)
 
@@ -207,7 +207,7 @@ class ContextWebSocket:
             
             if remove_commands:
                 remove_snippet = "\n".join(remove_commands)
-                print(f"Removing env vars: {remove_snippet}")
+                logger.info(f"Removing env vars: {remove_snippet} for {self.language}")
                 request = self._get_execute_request(message_id, remove_snippet, True)
                 await self._ws.send(request)
 
