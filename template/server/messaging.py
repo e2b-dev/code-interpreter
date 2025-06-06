@@ -148,7 +148,7 @@ class ContextWebSocket:
             elif self.language == "deno":
                 env_commands.append(f"Deno.env.set('{k}', '{v}')")
             elif self.language == "r":
-                env_commands.append(f"Sys.setenv('{k}' = '{v}')")
+                env_commands.append(f'Sys.setenv({k} = "{v}")')
             elif self.language == "java":
                 env_commands.append(f'System.setProperty("{k}", "{v}")')
             elif self.language == "bash":

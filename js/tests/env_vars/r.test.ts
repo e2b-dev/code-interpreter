@@ -14,7 +14,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (R)', async () => {
       language: 'r',
     })
 
-    expect(result.results[0]?.text.trim()).toEqual('supertest')
+    expect(result.results[0]?.text.trim()).toEqual(`[1] "supertest"`)
   } finally {
     await sandbox.kill()
   }
@@ -23,6 +23,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (R)', async () => {
 sandboxTest('env vars per execution (R)', async ({ sandbox }) => {
   const result = await sandbox.runCode('Sys.getenv("FOO")', {
     envs: { FOO: 'bar' },
+    language: 'r',
   })
 
   const result_empty = await sandbox.runCode(
@@ -32,8 +33,8 @@ sandboxTest('env vars per execution (R)', async ({ sandbox }) => {
     }
   )
 
-  expect(result.results[0]?.text.trim()).toEqual('bar')
-  expect(result_empty.results[0]?.text.trim()).toEqual('default')
+  expect(result.results[0]?.text.trim()).toEqual(`[1] "bar"`)
+  expect(result_empty.results[0]?.text.trim()).toEqual(`[1] "default"`)
 })
 
 sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
@@ -47,7 +48,7 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
       envs: { TEST_ENV_VAR: 'overwrite' },
     })
 
-    expect(result.results[0]?.text.trim()).toEqual('overwrite')
+    expect(result.results[0]?.text.trim()).toEqual(`[1] "overwrite"`)
   } finally {
     await sandbox.kill()
   }

@@ -9,7 +9,7 @@ def test_env_vars_on_sandbox():
             "Sys.getenv('TEST_ENV_VAR')",
             language="r"
         )
-        assert result.results[0].text.strip() == "supertest"
+        assert result.results[0].text.strip() == '[1] "supertest"'
     finally:
         sandbox.kill()
 
@@ -27,8 +27,8 @@ def test_env_vars_per_execution():
             language="r"
         )
         
-        assert result.results[0].text.strip() == "bar"
-        assert result_empty.results[0].text.strip() == "default"
+        assert result.results[0].text.strip() == '[1] "bar"'
+        assert result_empty.results[0].text.strip() == '[1] "default"'
     finally:
         sandbox.kill()
 
@@ -41,6 +41,6 @@ def test_env_vars_overwrite():
             language="r",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
-        assert result.results[0].text.strip() == "overwrite"
+        assert result.results[0].text.strip() == '[1] "overwrite"'
     finally:
         sandbox.kill()
