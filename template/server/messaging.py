@@ -167,7 +167,7 @@ class ContextWebSocket:
                     raise ExecutionError(f"Error during execution: {item}")
 
     async def reset_env_vars(self, env_vars: Dict[StrictStr, str]):
-        global_env_vars = get_envs()
+        global_env_vars = await get_envs()
 
         # Create a dict of vars to reset and a list of vars to remove
         vars_to_reset = {}

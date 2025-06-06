@@ -52,7 +52,7 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     session_data = response.json()
     session_id = session_data["id"]
     context_id = session_data["kernel"]["id"]
-    global_env_vars = get_envs()
+    global_env_vars = await get_envs()
 
     logger.debug(f"Created context {context_id}")
 
