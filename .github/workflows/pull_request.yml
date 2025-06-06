@@ -14,13 +14,36 @@ on:
       - main
 
 jobs:
+  build-template:
+    uses: ./.github/workflows/build_test_template.yml
+    secrets:
+      E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
   js-sdk:
     uses: ./.github/workflows/js_tests.yml
+    needs: build-template
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   python-sdk:
     uses: ./.github/workflows/python_tests.yml
+    needs: build-template
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
+  cleanup-build-template:
+    uses: ./.github/workflows/cleanup_build_template.yml
+    needs: [build-template, js-sdk, python-sdk]
+    if: always() && !contains(needs.build-template.result, 'failure') && !contains(needs.build-template.result, 'cancelled')
+    secrets:
+      E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   charts-tests:
     uses: ./.github/workflows/charts_tests.yml

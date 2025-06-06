@@ -1,0 +1,55 @@
+name: Build Template
+
+on:
+  workflow_call:
+    secrets:
+      E2B_TESTS_ACCESS_TOKEN:
+        required: true
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+    outputs:
+      template_id:
+        description: "The ID of the built template"
+        value: ${{ jobs.build.outputs.template_id }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build E2B Template
+    runs-on: ubuntu-latest
+    outputs:
+      template_id: ${{ steps.build-template.outputs.template_id }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set package version
+        working-directory: ./template
+        run: |
+          VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
+          echo "Version: $VERSION"
+          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
+
+      - name: Install E2B CLI
+        run: npm install -g @e2b/cli
+
+      - name: Build E2B template
+        id: build-template
+        run: |
+          rm -f e2b.toml
+          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "Dockerfile"
+          TEMPLATE_ID=$(grep "template_id" e2b.toml | cut -d '"' -f 2)
+          echo "Captured Template ID: $TEMPLATE_ID"
+          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+        working-directory: ./template
+        env:
+          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
+
+      - name: Output template ID
+        run: |
+          echo "Template ID from step output: ${{ steps.build-template.outputs.template_id }}"

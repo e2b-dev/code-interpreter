@@ -11,8 +11,13 @@ timeout = 60
 
 
 @pytest.fixture()
-def sandbox(debug):
-    sandbox = Sandbox(timeout=timeout)
+def template():
+    return os.getenv("E2B_TESTS_TEMPLATE", "code-interpreter-v1")
+
+
+@pytest.fixture()
+def sandbox(template, debug):
+    sandbox = Sandbox(template, timeout=timeout)
 
     try:
         yield sandbox
@@ -27,14 +32,14 @@ def sandbox(debug):
 
 
 @pytest_asyncio.fixture
-async def async_sandbox(debug):
-    sandbox = await AsyncSandbox.create(timeout=timeout)
+async def async_sandbox(template, debug):
+    async_sandbox = await AsyncSandbox.create(template, timeout=timeout)
 
     try:
-        yield sandbox
+        yield async_sandbox
     finally:
         try:
-            await sandbox.kill()
+            await async_sandbox.kill()
         except:
             if not debug:
                 warning(
