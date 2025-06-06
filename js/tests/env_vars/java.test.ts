@@ -11,7 +11,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (java)', async () => {
 
   try {
     const result = await sandbox.runCode(
-      `System.out.println(System.getenv("TEST_ENV_VAR"))`,
+      `System.getProperty("TEST_ENV_VAR")`,
       {
         language: 'java',
       }
@@ -25,7 +25,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (java)', async () => {
 
 sandboxTest('env vars per execution (java)', async ({ sandbox }) => {
   const result = await sandbox.runCode(
-    `System.out.println(System.getenv("FOO"))`,
+    `System.getProperty("FOO")`,
     {
       envs: { FOO: 'bar' },
       language: 'java',
@@ -33,7 +33,7 @@ sandboxTest('env vars per execution (java)', async ({ sandbox }) => {
   )
 
   const result_empty = await sandbox.runCode(
-    `System.out.println(System.getenv("FOO") != null ? System.getenv("FOO") : "default")`,
+    `System.getProperty("FOO", "default")`,
     {
       language: 'java',
     }
@@ -50,7 +50,7 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
 
   try {
     const result = await sandbox.runCode(
-      `System.out.println(System.getenv("TEST_ENV_VAR"))`,
+      `System.getProperty("TEST_ENV_VAR")`,
       {
         language: 'java',
         envs: { TEST_ENV_VAR: 'overwrite' },

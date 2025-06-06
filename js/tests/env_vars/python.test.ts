@@ -11,7 +11,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (python)', async () => {
 
   try {
     const result = await sandbox.runCode(
-      `import os; x = os.getenv('TEST_ENV_VAR'); x`,
+      `import os; os.getenv('TEST_ENV_VAR')`,
       {
         language: 'python',
       }
@@ -26,6 +26,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (python)', async () => {
 sandboxTest('env vars per execution (python)', async ({ sandbox }) => {
   const result = await sandbox.runCode("import os; os.getenv('FOO')", {
     envs: { FOO: 'bar' },
+    language: 'python',
   })
 
   const result_empty = await sandbox.runCode(
@@ -46,7 +47,7 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
 
   try {
     const result = await sandbox.runCode(
-      `import os; x = os.getenv('TEST_ENV_VAR'); x`,
+      `import os; os.getenv('TEST_ENV_VAR')`,
       {
         language: 'python',
         envs: { TEST_ENV_VAR: 'overwrite' },

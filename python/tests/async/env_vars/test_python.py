@@ -6,7 +6,7 @@ async def test_env_vars_on_sandbox():
     sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
-            "import os; x = os.getenv('TEST_ENV_VAR'); x",
+            "import os; os.getenv('TEST_ENV_VAR')",
             language="python"
         )
         assert result.text is not None
@@ -19,7 +19,8 @@ async def test_env_vars_per_execution():
     try:
         result = await sandbox.run_code(
             "import os; os.getenv('FOO')",
-            envs={"FOO": "bar"}
+            envs={"FOO": "bar"},
+            language="python"
         )
         
         result_empty = await sandbox.run_code(
@@ -39,7 +40,7 @@ async def test_env_vars_overwrite():
     sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
-            "import os; x = os.getenv('TEST_ENV_VAR'); x",
+            "import os; os.getenv('TEST_ENV_VAR')",
             language="python",
             envs={"TEST_ENV_VAR": "overwrite"}
         )

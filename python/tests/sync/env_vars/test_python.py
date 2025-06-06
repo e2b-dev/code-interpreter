@@ -6,7 +6,7 @@ def test_env_vars_on_sandbox():
     sandbox = Sandbox(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = sandbox.run_code(
-            "import os; x = os.getenv('TEST_ENV_VAR'); x",
+            "import os; os.getenv('TEST_ENV_VAR')",
             language="python"
         )
         assert result.results[0].text.strip() == "supertest"
@@ -18,7 +18,8 @@ def test_env_vars_per_execution():
     try:
         result = sandbox.run_code(
             "import os; os.getenv('FOO')",
-            envs={"FOO": "bar"}
+            envs={"FOO": "bar"},
+            language="python"
         )
         
         result_empty = sandbox.run_code(
@@ -36,7 +37,7 @@ def test_env_vars_overwrite():
     sandbox = Sandbox(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = sandbox.run_code(
-            "import os; x = os.getenv('TEST_ENV_VAR'); x",
+            "import os; os.getenv('TEST_ENV_VAR')",
             language="python",
             envs={"TEST_ENV_VAR": "overwrite"}
         )

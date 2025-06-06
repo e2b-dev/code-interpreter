@@ -6,7 +6,7 @@ async def test_env_vars_on_sandbox():
     sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
-            "String x = System.getenv(\"TEST_ENV_VAR\"); x",
+            'System.getProperty("TEST_ENV_VAR")',
             language="java"
         )
         assert result.text is not None
@@ -18,13 +18,13 @@ async def test_env_vars_per_execution():
     sandbox = await AsyncSandbox.create()
     try:
         result = await sandbox.run_code(
-            "System.getenv(\"FOO\")",
+            'System.getProperty("FOO")',
             envs={"FOO": "bar"},
             language="java"
         )
         
         result_empty = await sandbox.run_code(
-            "String value = System.getenv(\"FOO\"); value != null ? value : \"default\"",
+            'System.getProperty("FOO", "default")',
             language="java"
         )
         
@@ -40,7 +40,7 @@ async def test_env_vars_overwrite():
     sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
-            "String x = System.getenv(\"TEST_ENV_VAR\"); x",
+            'System.getProperty("TEST_ENV_VAR")',
             language="java",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
