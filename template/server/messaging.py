@@ -142,7 +142,7 @@ class ContextWebSocket:
         env_commands = []
         for k, v in env_vars.items():
             if self.language == "python":
-                env_commands.append(f"import os; os.environ['{k}'] = '{v}'")
+                env_commands.append(f"%env {k}={v}")
             elif self.language in ["javascript", "typescript"]:
                 env_commands.append(f"process.env['{k}'] = '{v}'")
             elif self.language == "deno":
@@ -191,7 +191,7 @@ class ContextWebSocket:
             remove_commands = []
             for key in vars_to_remove:
                 if self.language == "python":
-                    remove_commands.append(f"import os; del os.environ['{key}']")
+                    remove_commands.append(f"%env -u {key}")
                 elif self.language in ["javascript", "typescript"]:
                     remove_commands.append(f"delete process.env['{key}']")
                 elif self.language == "deno":
