@@ -3,6 +3,8 @@ import { test as base } from 'vitest'
 
 const timeoutMs = 60_000
 
+const template = process.env.E2B_TESTS_TEMPLATE || 'code-interpreter-v1'
+
 interface SandboxFixture {
   sandbox: Sandbox
 }
@@ -10,7 +12,9 @@ interface SandboxFixture {
 export const sandboxTest = base.extend<SandboxFixture>({
   sandbox: [
     async ({}, use) => {
-      const sandbox = await Sandbox.create({ timeoutMs })
+      const sandbox = await Sandbox.create(template, {
+        timeoutMs,
+      })
       try {
         await use(sandbox)
       } finally {

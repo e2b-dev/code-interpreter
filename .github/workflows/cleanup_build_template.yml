@@ -1,0 +1,33 @@
+name: Cleanup Build Template
+
+on:
+  workflow_call:
+    secrets:
+      E2B_TESTS_ACCESS_TOKEN:
+        required: true
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+      E2B_TESTS_TEMPLATE:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  cleanup:
+    name: Cleanup Build Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install E2B CLI
+        run: npm install -g @e2b/cli
+
+      - name: Cleanup E2B template
+        id: cleanup-template
+        run: |
+          e2b template delete -y "${{ inputs.E2B_TESTS_TEMPLATE }}"
+        env:
+          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}

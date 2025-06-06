@@ -5,6 +5,13 @@ on:
     secrets:
       E2B_API_KEY:
         required: true
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+      E2B_TESTS_TEMPLATE:
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -18,7 +25,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install pnpm
         uses: pnpm/action-setup@v3
@@ -49,16 +56,20 @@ jobs:
         run: pnpm test
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
-          version: 1.1.x
+          bun-version: 1.2.15
 
       - name: Run Bun tests
         run: pnpm test:bun
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
 
       - name: Install Deno
         uses: denoland/setup-deno@v1
@@ -69,3 +80,5 @@ jobs:
         run: pnpm test:deno
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
