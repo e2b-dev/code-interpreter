@@ -135,6 +135,86 @@ class ContextWebSocket:
 
             yield output.model_dump(exclude_none=True)
 
+    async def set_env_vars(self, env_vars: Dict[StrictStr, str]):
+        message_id = str(uuid.uuid4())
+        self._executions[message_id] = Execution(in_background=True)
+
+        env_commands = []
+        for k, v in env_vars.items():
+            if self.language == "python":
+                env_commands.append(f"import os; os.environ['{k}'] = '{v}'")
+            elif self.language in ["javascript", "typescript"]:
+                env_commands.append(f"process.env['{k}'] = '{v}'")
+            elif self.language == "deno":
+                env_commands.append(f"Deno.env.set('{k}', '{v}')")
+            elif self.language == "r":
+                env_commands.append(f'Sys.setenv({k} = "{v}")')
+            elif self.language == "java":
+                env_commands.append(f'System.setProperty("{k}", "{v}")')
+            elif self.language == "bash":
+                env_commands.append(f"export {k}='{v}'")
+            else:
+                return
+
+        if env_commands:
+            env_vars_snippet = "\n".join(env_commands)
+            logger.info(f"Setting env vars: {env_vars_snippet} for {self.language}")
+            request = self._get_execute_request(message_id, env_vars_snippet, True)
+            await self._ws.send(request)
+
+            async for item in self._wait_for_result(message_id):
+                if item["type"] == "error":
+                    raise ExecutionError(f"Error during execution: {item}")
+
+    async def reset_env_vars(self, env_vars: Dict[StrictStr, str]):
+        global_env_vars = await get_envs()
+
+        # Create a dict of vars to reset and a list of vars to remove
+        vars_to_reset = {}
+        vars_to_remove = []
+
+        for key in env_vars:
+            if key in global_env_vars:
+                vars_to_reset[key] = global_env_vars[key]
+            else:
+                vars_to_remove.append(key)
+
+        # Reset vars that exist in global env vars
+        if vars_to_reset:
+            await self.set_env_vars(vars_to_reset)
+
+        # Remove vars that don't exist in global env vars
+        if vars_to_remove:
+            message_id = str(uuid.uuid4())
+            self._executions[message_id] = Execution(in_background=True)
+
+            remove_commands = []
+            for key in vars_to_remove:
+                if self.language == "python":
+                    remove_commands.append(f"import os; del os.environ['{key}']")
+                elif self.language in ["javascript", "typescript"]:
+                    remove_commands.append(f"delete process.env['{key}']")
+                elif self.language == "deno":
+                    remove_commands.append(f"Deno.env.delete('{key}')")
+                elif self.language == "r":
+                    remove_commands.append(f"Sys.unsetenv('{key}')")
+                elif self.language == "java":
+                    remove_commands.append(f'System.clearProperty("{key}")')
+                elif self.language == "bash":
+                    remove_commands.append(f"unset {key}")
+                else:
+                    return
+            
+            if remove_commands:
+                remove_snippet = "\n".join(remove_commands)
+                logger.info(f"Removing env vars: {remove_snippet} for {self.language}")
+                request = self._get_execute_request(message_id, remove_snippet, True)
+                await self._ws.send(request)
+
+                async for item in self._wait_for_result(message_id):
+                    if item["type"] == "error":
+                        raise ExecutionError(f"Error during execution: {item}")
+
     async def change_current_directory(
         self, path: Union[str, StrictStr], language: str
     ):
@@ -178,26 +258,10 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
-        global_env_vars = get_envs()
-        env_vars = {**global_env_vars, **env_vars} if env_vars else global_env_vars
         async with self._lock:
+            # set env vars (will override global env vars)
             if env_vars:
-                vars_to_set = {**global_env_vars, **env_vars}
-
-                # if there is an indent in the code, we need to add the env vars at the beginning of the code
-                lines = code.split("\n")
-                indent = 0
-                for i, line in enumerate(lines):
-                    if line.strip() != "":
-                        indent = len(line) - len(line.lstrip())
-                        break
-
-                if self.language == "python":
-                    code = (
-                        indent * " "
-                        + f"os.environ.set_envs_for_execution({vars_to_set})\n"
-                        + code
-                    )
+                await self.set_env_vars(env_vars)
 
             logger.info(code)
             request = self._get_execute_request(message_id, code, False)
@@ -210,6 +274,10 @@ class ContextWebSocket:
                 yield item
 
             del self._executions[message_id]
+
+            # reset env vars to their previous values, if they were set globally or remove them
+            if env_vars:
+                await self.reset_env_vars(env_vars)
 
     async def _receive_message(self):
         if not self._ws:
@@ -276,7 +344,7 @@ class ContextWebSocket:
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                logger.debug(f"Execution {parent_msg_ig} received stdout")
+                logger.debug(f"Execution {parent_msg_ig} received stdout: {data['content']['text']}")
                 await queue.put(
                     Stdout(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
@@ -284,7 +352,7 @@ class ContextWebSocket:
                 )
 
             elif data["content"]["name"] == "stderr":
-                logger.debug(f"Execution {parent_msg_ig} received stderr")
+                logger.debug(f"Execution {parent_msg_ig} received stderr: {data['content']['text']}")
                 await queue.put(
                     Stderr(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
