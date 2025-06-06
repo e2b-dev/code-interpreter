@@ -41,6 +41,11 @@ def test_env_vars_overwrite():
             language="deno",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
+        result_global_default = sandbox.run_code(
+            "const x = Deno.env.get('TEST_ENV_VAR'); x",
+            language="deno"
+        )
         assert result.results[0].text.strip() == "overwrite"
+        assert result_global_default.results[0].text.strip() == "supertest"
     finally:
         sandbox.kill()

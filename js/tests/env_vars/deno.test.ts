@@ -54,7 +54,15 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
       }
     )
 
+    const result_global_default = await sandbox.runCode(
+      `Deno.env.get('TEST_ENV_VAR')`,
+      {
+        language: 'deno',
+      }
+    )
+
     expect(result.results[0]?.text.trim()).toEqual('overwrite')
+    expect(result_global_default.results[0]?.text.trim()).toEqual('supertest')
   } finally {
     await sandbox.kill()
   }

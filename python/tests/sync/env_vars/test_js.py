@@ -41,6 +41,11 @@ def test_env_vars_overwrite():
             language="javascript",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
+        result_global_default = sandbox.run_code(
+            "process.env.TEST_ENV_VAR",
+            language="javascript"
+        )
         assert result.results[0].text.strip() == "overwrite"
+        assert result_global_default.results[0].text.strip() == "supertest"
     finally:
         sandbox.kill()

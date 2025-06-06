@@ -40,7 +40,13 @@ async def test_env_vars_overwrite():
             language="r",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
+        result_global_default = await sandbox.run_code(
+            'Sys.getenv("TEST_ENV_VAR")',
+            language="r"
+        )
         assert result.text is not None
         assert result.text.strip() == '[1] "overwrite"'
+        assert result_global_default.text is not None
+        assert result_global_default.text.strip() == "supertest"
     finally:
         await sandbox.kill()

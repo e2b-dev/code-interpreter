@@ -37,6 +37,11 @@ def test_env_vars_overwrite():
             language="bash",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
+        result_global_default = sandbox.run_code(
+            "echo $TEST_ENV_VAR",
+            language="bash"
+        )
         assert result.logs.stdout[0] == "overwrite\n"
+        assert result_global_default.logs.stdout[0] == "supertest\n"
     finally:
         sandbox.kill()

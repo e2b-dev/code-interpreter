@@ -48,7 +48,12 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
       envs: { TEST_ENV_VAR: 'overwrite' },
     })
 
+    const result_global_default = await sandbox.runCode(`Sys.getenv("TEST_ENV_VAR")`, {
+      language: 'r',
+    })
+
     expect(result.results[0]?.text.trim()).toEqual(`[1] "overwrite"`)
+    expect(result_global_default.results[0]?.text.trim()).toEqual(`[1] "supertest"`)
   } finally {
     await sandbox.kill()
   }
