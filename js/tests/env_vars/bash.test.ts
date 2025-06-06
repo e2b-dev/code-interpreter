@@ -17,7 +17,7 @@ sandboxTest.skipIf(isDebug)('env vars on sandbox (bash)', async () => {
       }
     )
 
-    expect(result.results[0]?.text.trim()).toEqual('supertest')
+    expect(result.logs.stdout[0]).toEqual('supertest\n')
   } finally {
     await sandbox.kill()
   }
@@ -36,8 +36,8 @@ sandboxTest('env vars per execution (bash)', async ({ sandbox }) => {
     }
   )
 
-  expect(result.results[0]?.text.trim()).toEqual('bar')
-  expect(result_empty.results[0]?.text.trim()).toEqual('default')
+  expect(result.logs.stdout[0]).toEqual('bar\n')
+  expect(result_empty.logs.stdout[0]).toEqual('default\n')
 })
 
 sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
@@ -54,7 +54,7 @@ sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
       }
     )
 
-    expect(result.results[0]?.text.trim()).toEqual('overwrite')
+    expect(result.logs.stdout[0]).toEqual('overwrite\n')
   } finally {
     await sandbox.kill()
   }

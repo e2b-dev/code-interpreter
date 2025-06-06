@@ -14,26 +14,22 @@ async def test_env_vars_on_sandbox():
     finally:
         await sandbox.kill()
 
-async def test_env_vars_per_execution():
-    sandbox = await AsyncSandbox.create()
-    try:
-        result = await sandbox.run_code(
-            "Deno.env.get('FOO')",
-            envs={"FOO": "bar"},
-            language="deno"
-        )
-        
-        result_empty = await sandbox.run_code(
-            "Deno.env.get('FOO') || 'default'",
-            language="deno"
-        )
-        
-        assert result.text is not None
-        assert result.text.strip() == "bar"
-        assert result_empty.text is not None
-        assert result_empty.text.strip() == "default"
-    finally:
-        await sandbox.kill()
+async def test_env_vars_per_execution(sandbox: AsyncSandbox):
+    result = await sandbox.run_code(
+        "Deno.env.get('FOO')",
+        envs={"FOO": "bar"},
+        language="deno"
+    )
+    
+    result_empty = await sandbox.run_code(
+        "Deno.env.get('FOO') || 'default'",
+        language="deno"
+    )
+    
+    assert result.text is not None
+    assert result.text.strip() == "bar"
+    assert result_empty.text is not None
+    assert result_empty.text.strip() == "default"
 
 @pytest.mark.skip_debug()
 async def test_env_vars_overwrite():

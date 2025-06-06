@@ -9,28 +9,24 @@ def test_env_vars_on_sandbox():
             "echo $TEST_ENV_VAR",
             language="bash"
         )
-        assert result.results[0].text.strip() == "supertest"
+        assert result.logs.stdout[0] == "supertest\n"
     finally:
         sandbox.kill()
 
-def test_env_vars_per_execution():
-    sandbox = Sandbox()
-    try:
-        result = sandbox.run_code(
-            "echo $FOO",
-            envs={"FOO": "bar"},
-            language="bash"
-        )
-        
-        result_empty = sandbox.run_code(
-            "echo ${FOO:-default}",
-            language="bash"
-        )
-        
-        assert result.results[0].text.strip() == "bar"
-        assert result_empty.results[0].text.strip() == "default"
-    finally:
-        sandbox.kill()
+def test_env_vars_per_execution(sandbox: Sandbox):
+    result = sandbox.run_code(
+        "echo $FOO",
+        envs={"FOO": "bar"},
+        language="bash"
+    )
+    
+    result_empty = sandbox.run_code(
+        "echo ${FOO:-default}",
+        language="bash"
+    )
+    
+    assert result.logs.stdout[0] == "bar\n"
+    assert result_empty.logs.stdout[0] == "default\n"
 
 @pytest.mark.skip_debug()
 def test_env_vars_overwrite():
@@ -41,6 +37,6 @@ def test_env_vars_overwrite():
             language="bash",
             envs={"TEST_ENV_VAR": "overwrite"}
         )
-        assert result.results[0].text.strip() == "overwrite"
+        assert result.logs.stdout[0] == "overwrite\n"
     finally:
         sandbox.kill()
