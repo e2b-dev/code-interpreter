@@ -13,10 +13,12 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   JUPYTER_CONFIG_PATH="/root/.jupyter" \
   IPYTHON_CONFIG_PATH="/root/.ipython" \
   SERVER_PATH="/root/.server" \
-  R_VERSION=4.4.2
+  R_VERSION=4.4.2 \
+  RUBY_VERSION=3.4.3
 
 ENV R_HOME=/opt/R/${R_VERSION} \
-    JAVA_HOME=/opt/java/openjdk
+    JAVA_HOME=/opt/java/openjdk \
+    RUBY_HOME=/opt/ruby/${RUBY_VERSION}
 
 # Install Jupyter
 COPY ./requirements.txt requirements.txt
@@ -73,6 +75,17 @@ RUN ln -s ${JAVA_HOME}/bin/java /usr/bin/java
 RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
     unzip ijava-1.3.0.zip && \
     python install.py --sys-prefix
+
+# Install Ruby using ruby-build
+RUN git clone https://github.com/rbenv/ruby-build.git ~/.ruby-build
+RUN ~/.ruby-build/bin/ruby-build ${RUBY_VERSION} ${RUBY_HOME}
+ENV PATH="${RUBY_HOME}/bin:${PATH}" 
+ENV PATH="/root/.local/share/gem/ruby/${RUBY_VERSION%.*}.0/bin:${PATH}"
+
+# Install IRuby
+RUN gem install --user-install rubygems-requirements-system && \
+    gem install --user-install iruby && \
+    iruby register --force
 
 # Setup entrypoint for local development
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh

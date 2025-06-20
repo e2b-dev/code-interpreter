@@ -16,7 +16,10 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_NO_CACHE_DIR=1 \
   JUPYTER_CONFIG_PATH="/root/.jupyter" \
   IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server"
+  SERVER_PATH="/root/.server" \
+  RUBY_VERSION=3.4.3
+
+ENV RUBY_HOME=/opt/ruby/${RUBY_VERSION}
 
 # Install Jupyter
 COPY ./template/requirements.txt requirements.txt
@@ -31,6 +34,17 @@ COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
 COPY ./template/deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+
+# Install Ruby using ruby-build
+RUN git clone https://github.com/rbenv/ruby-build.git ~/.ruby-build
+RUN ~/.ruby-build/bin/ruby-build ${RUBY_VERSION} ${RUBY_HOME}
+ENV PATH="${RUBY_HOME}/bin:${PATH}" 
+ENV PATH="/root/.local/share/gem/ruby/${RUBY_VERSION%.*}.0/bin:${PATH}"
+
+# Install IRuby
+RUN gem install --user-install rubygems-requirements-system && \
+    gem install --user-install iruby && \
+    iruby register --force
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
