@@ -25,6 +25,7 @@ numba==0.61.2
 opencv-python==4.11.0.86
 openpyxl==3.1.5
 plotly==6.0.1
+kaleido==1.0.0
 pytest==8.3.5
 python-docx==1.1.2
 pytz==2025.2
