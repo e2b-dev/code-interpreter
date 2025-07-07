@@ -4,8 +4,8 @@ import { isDebug, sandboxTest } from '../setup'
 import { Sandbox } from '../../src'
 
 // R Env Vars
-sandboxTest.skipIf(isDebug)('env vars on sandbox (R)', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars on sandbox (R)', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 
@@ -37,8 +37,8 @@ sandboxTest('env vars per execution (R)', async ({ sandbox }) => {
   expect(result_empty.results[0]?.text.trim()).toEqual(`[1] "default"`)
 })
 
-sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars overwrite', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 

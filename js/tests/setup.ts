@@ -7,6 +7,7 @@ const template = process.env.E2B_TESTS_TEMPLATE || 'code-interpreter-v1'
 
 interface SandboxFixture {
   sandbox: Sandbox
+  template: string
 }
 
 export const sandboxTest = base.extend<SandboxFixture>({
@@ -31,6 +32,7 @@ export const sandboxTest = base.extend<SandboxFixture>({
     },
     { auto: true },
   ],
+  template
 })
 
 export const isDebug = process.env.E2B_DEBUG !== undefined

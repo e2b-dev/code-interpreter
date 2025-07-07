@@ -2,8 +2,8 @@ import pytest
 from e2b_code_interpreter import Sandbox
 
 @pytest.mark.skip_debug()
-def test_env_vars_on_sandbox():
-    sandbox = Sandbox(envs={"TEST_ENV_VAR": "supertest"})
+def test_env_vars_on_sandbox(template):
+    sandbox = Sandbox(template=template, envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = sandbox.run_code(
             "Sys.getenv('TEST_ENV_VAR')",
@@ -33,8 +33,8 @@ def test_env_vars_per_execution():
         sandbox.kill()
 
 @pytest.mark.skip_debug()
-def test_env_vars_overwrite():
-    sandbox = Sandbox(envs={"TEST_ENV_VAR": "supertest"})
+def test_env_vars_overwrite(template):
+    sandbox = Sandbox(template=template, envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = sandbox.run_code(
             "Sys.getenv('TEST_ENV_VAR')",

@@ -4,8 +4,8 @@ import { isDebug, sandboxTest } from '../setup'
 import { Sandbox } from '../../src'
 
 // Java Env Vars
-sandboxTest.skipIf(isDebug)('env vars on sandbox (java)', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars on sandbox (java)', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 
@@ -43,8 +43,8 @@ sandboxTest('env vars per execution (java)', async ({ sandbox }) => {
   expect(result_empty.results[0]?.text.trim()).toEqual('default')
 })
 
-sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars overwrite', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 

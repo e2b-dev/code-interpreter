@@ -2,8 +2,8 @@ import pytest
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 @pytest.mark.skip_debug()
-async def test_env_vars_on_sandbox():
-    sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
+async def test_env_vars_on_sandbox(template):
+    sandbox = await AsyncSandbox.create(template=template, envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
             "process.env.TEST_ENV_VAR",
@@ -32,8 +32,8 @@ async def test_env_vars_per_execution(sandbox: AsyncSandbox):
     assert result_empty.text.strip() == "default"
 
 @pytest.mark.skip_debug()
-async def test_env_vars_overwrite():
-    sandbox = await AsyncSandbox.create(envs={"TEST_ENV_VAR": "supertest"})
+async def test_env_vars_overwrite(template):
+    sandbox = await AsyncSandbox.create(template=template, envs={"TEST_ENV_VAR": "supertest"})
     try:
         result = await sandbox.run_code(
             "process.env.TEST_ENV_VAR",

@@ -4,8 +4,8 @@ import { isDebug, sandboxTest } from '../setup'
 import { Sandbox } from '../../src'
 
 // Bash Env Vars
-sandboxTest.skipIf(isDebug)('env vars on sandbox (bash)', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars on sandbox (bash)', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 
@@ -40,8 +40,8 @@ sandboxTest('env vars per execution (bash)', async ({ sandbox }) => {
   expect(result_empty.logs.stdout[0]).toEqual('default\n')
 })
 
-sandboxTest.skipIf(isDebug)('env vars overwrite', async () => {
-  const sandbox = await Sandbox.create({
+sandboxTest.skipIf(isDebug)('env vars overwrite', async ({ template }) => {
+  const sandbox = await Sandbox.create(template, {
     envs: { TEST_ENV_VAR: 'supertest' },
   })
 
