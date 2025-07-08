@@ -1,18 +1,18 @@
 # This is a config for E2B sandbox template.
-# You can use template ID (nlhz8vlwyupq845jsdg9) or template name (code-interpreter-v1) to create a sandbox:
+# You can use template ID (n1vc02i7rx9xg0lao9nx) or template name (code-interpreter-v1beta1) to create a sandbox:
 
 # Python SDK
 # from e2b import Sandbox, AsyncSandbox
-# sandbox = Sandbox("code-interpreter-v1") # Sync sandbox
-# sandbox = await AsyncSandbox.create("code-interpreter-v1") # Async sandbox
+# sandbox = Sandbox("code-interpreter-v1beta1") # Sync sandbox
+# sandbox = await AsyncSandbox.create("code-interpreter-v1beta1") # Async sandbox
 
 # JS SDK
 # import { Sandbox } from 'e2b'
-# const sandbox = await Sandbox.create('code-interpreter-v1')
+# const sandbox = await Sandbox.create('code-interpreter-v1beta1')
 
 team_id = "460355b3-4f64-48f9-9a16-4442817f79f5"
 memory_mb = 1_024
-start_cmd = "/root/.jupyter/start-up.sh"
-dockerfile = "e2b.Dockerfile"
-template_name = "code-interpreter-v1"
-template_id = "nlhz8vlwyupq845jsdg9"
+start_cmd = "sudo -u user /home/user/.jupyter/start-up.sh"
+dockerfile = "Dockerfile"
+template_name = "code-interpreter-v1beta1"
+template_id = "n1vc02i7rx9xg0lao9nx"

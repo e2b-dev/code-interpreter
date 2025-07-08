@@ -11,11 +11,12 @@ from messaging import ContextWebSocket
 
 logger = logging.Logger(__name__)
 
-def get_kernel_for_language(language: str) -> str:
-    if language == "typescript":
-        return "javascript"
-
-    return language
+def get_user_cwd(user: str, cwd: Optional[str]) -> str:
+    if not cwd:
+        if user == "root":
+            return "/root"
+        return "/home/user"
+    return cwd
 
 def normalize_language(language: Optional[str]) -> str:
     if not language:
@@ -32,14 +33,23 @@ def normalize_language(language: Optional[str]) -> str:
     return language
 
 
-async def create_context(client, websockets: dict, language: str, cwd: str) -> Context:
+def get_kernel_name(language: str, user: str) -> str:
+    if language == "typescript":
+        language = "javascript"
+  
+    if user == "root":
+        return language+"_root"
+    return language
+
+
+async def create_context(client, websockets: dict, language: str, cwd: str, user: str) -> Context:
     data = {
         "path": str(uuid.uuid4()),
-        "kernel": {"name": get_kernel_for_language(language)},
+        "kernel": {"name": get_kernel_name(language, user)}, # replace with root kernel when user is root
         "type": "notebook",
         "name": str(uuid.uuid4()),
     }
-    logger.debug(f"Creating new {language} context")
+    logger.debug(f"Creating new {language} context for user {user}")
 
     response = await client.post(f"{JUPYTER_BASE_URL}/api/sessions", json=data)
 
@@ -67,4 +77,4 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
             status_code=500,
         )
 
-    return Context(language=language, id=context_id, cwd=cwd)
+    return Context(language=language, id=context_id, cwd=cwd, user=user)
