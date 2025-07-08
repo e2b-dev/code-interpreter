@@ -9,12 +9,12 @@ def test_env_vars_on_sandbox(template):
             'System.getProperty("TEST_ENV_VAR")',
             language="java"
         )
-        assert result.results[0].text.strip() == "supertest"
+        assert result.text is not None
+        assert result.text.strip() == "supertest"
     finally:
         sandbox.kill()
 
-def test_env_vars_per_execution():
-    sandbox = Sandbox()
+def test_env_vars_per_execution(sandbox: Sandbox):
     try:
         result = sandbox.run_code(
             'System.getProperty("FOO")',
@@ -27,8 +27,10 @@ def test_env_vars_per_execution():
             language="java"
         )
         
-        assert result.results[0].text.strip() == "bar"
-        assert result_empty.results[0].text.strip() == "default"
+        assert result.text is not None
+        assert result.text.strip() == "bar"
+        assert result_empty.text is not None
+        assert result_empty.text.strip() == "default"
     finally:
         sandbox.kill()
 
@@ -45,7 +47,9 @@ def test_env_vars_overwrite(template):
             'System.getProperty("TEST_ENV_VAR")',
             language="java"
         )
-        assert result.results[0].text.strip() == "overwrite"
-        assert result_global_default.results[0].text.strip() == "supertest"
+        assert result.text is not None
+        assert result.text.strip() == "overwrite"
+        assert result_global_default.text is not None
+        assert result_global_default.text.strip() == "supertest"
     finally:
         sandbox.kill()
