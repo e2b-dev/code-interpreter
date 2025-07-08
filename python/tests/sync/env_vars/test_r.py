@@ -9,8 +9,8 @@ def test_env_vars_on_sandbox(template):
             "Sys.getenv('TEST_ENV_VAR')",
             language="r"
         )
-        assert result.text is not None
-        assert result.text.strip() == '[1] "supertest"'
+        assert result.results[0].text is not None
+        assert result.results[0].text.strip() == '[1] "supertest"'
     finally:
         sandbox.kill()
 
@@ -27,10 +27,10 @@ def test_env_vars_per_execution(sandbox: Sandbox):
             language="r"
         )
         
-        assert result.text is not None
-        assert result.text.strip() == '[1] "bar"'
-        assert result_empty.text is not None
-        assert result_empty.text.strip() == '[1] "default"'
+        assert result.results[0].text is not None
+        assert result.results[0].text.strip() == '[1] "bar"'
+        assert result_empty.results[0].text is not None
+        assert result_empty.results[0].text.strip() == '[1] "default"'
     finally:
         sandbox.kill()
 
@@ -47,9 +47,9 @@ def test_env_vars_overwrite(template):
             "Sys.getenv('TEST_ENV_VAR')",
             language="r"
         )
-        assert result.text is not None
-        assert result.text.strip() == '[1] "overwrite"'
-        assert result_global_default.text is not None
-        assert result_global_default.text.strip() == '[1] "supertest"'
+        assert result.results[0].text is not None
+        assert result.results[0].text.strip() == '[1] "overwrite"'
+        assert result_global_default.results[0].text is not None
+        assert result_global_default.results[0].text.strip() == '[1] "supertest"'
     finally:
         sandbox.kill()
