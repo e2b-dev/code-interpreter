@@ -47,6 +47,6 @@ async def test_env_vars_overwrite(template):
         assert result.results[0].text is not None
         assert result.results[0].text.strip() == '[1] "overwrite"'
         assert result_global_default.results[0].text is not None
-        assert result_global_default.results[0].text.strip() == "supertest"
+        assert result_global_default.results[0].text.strip() == '[1] "supertest"'
     finally:
         await sandbox.kill()
