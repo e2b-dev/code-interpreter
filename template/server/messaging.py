@@ -150,7 +150,7 @@ class ContextWebSocket:
             elif self.language == "r":
                 env_commands.append(f'Sys.setenv({k} = "{v}")')
             elif self.language == "java":
-                env_commands.append(f'System.setProperty("{k}", "{v}")')
+                env_commands.append(f'System.setProperty("{k}", "{v}");')
             elif self.language == "bash":
                 env_commands.append(f"export {k}='{v}'")
             else:
@@ -199,7 +199,7 @@ class ContextWebSocket:
                 elif self.language == "r":
                     remove_commands.append(f"Sys.unsetenv('{key}')")
                 elif self.language == "java":
-                    remove_commands.append(f'System.clearProperty("{key}")')
+                    remove_commands.append(f'System.clearProperty("{key}");')
                 elif self.language == "bash":
                     remove_commands.append(f"unset {key}")
                 else:
@@ -232,9 +232,10 @@ class ContextWebSocket:
             )
         elif language == "r":
             request = self._get_execute_request(message_id, f"setwd('{path}')", True)
+        # This does not actually change the working directory, but sets the user.dir property
         elif language == "java":
             request = self._get_execute_request(
-                message_id, f"System.setProperty('user.dir', '{path}')", True
+                message_id, f'System.setProperty("user.dir", "{path}");', True
             )
         else:
             return
