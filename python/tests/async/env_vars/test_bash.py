@@ -13,14 +13,14 @@ async def test_env_vars_on_sandbox(template):
     finally:
         await sandbox.kill()
 
-async def test_env_vars_per_execution(sandbox: AsyncSandbox):
-    result = await sandbox.run_code(
+async def test_env_vars_per_execution(async_sandbox: AsyncSandbox):
+    result = await async_sandbox.run_code(
         "echo $FOO",
         envs={"FOO": "bar"},
         language="bash"
     )
     
-    result_empty = await sandbox.run_code(
+    result_empty = await async_sandbox.run_code(
         "echo ${FOO:-default}",
         language="bash"
     )
