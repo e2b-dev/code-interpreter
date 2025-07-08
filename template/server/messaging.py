@@ -3,10 +3,8 @@ import json
 import logging
 import uuid
 import asyncio
-import subprocess
 
 from asyncio import Queue
-from envs import get_envs
 from typing import (
     Dict,
     Optional,
@@ -49,20 +47,20 @@ class Execution:
 class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
+    global_env_vars: Optional[Dict[StrictStr, str]] = None
 
     def __init__(
         self,
         context_id: str,
         session_id: str,
         language: str,
-        cwd: str,
+        cwd: str
     ):
         self.language = language
         self.cwd = cwd
         self.context_id = context_id
         self.url = f"ws://localhost:8888/api/kernels/{context_id}/channels"
         self.session_id = session_id
-
         self._executions: Dict[str, Execution] = {}
         self._lock = asyncio.Lock()
 
@@ -167,15 +165,13 @@ class ContextWebSocket:
                     raise ExecutionError(f"Error during execution: {item}")
 
     async def reset_env_vars(self, env_vars: Dict[StrictStr, str]):
-        global_env_vars = await get_envs()
-
         # Create a dict of vars to reset and a list of vars to remove
         vars_to_reset = {}
         vars_to_remove = []
 
         for key in env_vars:
-            if key in global_env_vars:
-                vars_to_reset[key] = global_env_vars[key]
+            if self.global_env_vars and key in self.global_env_vars:
+                vars_to_reset[key] = self.global_env_vars[key]
             else:
                 vars_to_remove.append(key)
 
