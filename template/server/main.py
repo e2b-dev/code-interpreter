@@ -17,6 +17,7 @@ from contexts import create_context, normalize_language
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
+from envs import get_envs
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.Logger(__name__)
@@ -34,31 +35,22 @@ async def lifespan(app: FastAPI):
     global client
     client = httpx.AsyncClient()
 
-    with open("/root/.jupyter/kernel_id") as file:
-        default_context_id = file.read().strip()
+    try:
+        default_context = await create_context(client, websockets, "python", "/home/user")
+        default_websockets["python"] = default_context.id
+        websockets["default"] = websockets[default_context.id]
 
-    default_ws = ContextWebSocket(
-        default_context_id,
-        str(uuid.uuid4()),
-        "python",
-        "/home/user",
-    )
-    default_websockets["python"] = default_context_id
-    websockets["default"] = default_ws
-    websockets[default_context_id] = default_ws
+        logger.info("Connected to default runtime")
+        yield
 
-    logger.info("Connecting to default runtime")
-    await default_ws.connect()
+        # Will cleanup after application shuts down
+        for ws in websockets.values():
+            await ws.close()
 
-    websockets["default"] = default_ws
-
-    logger.info("Connected to default runtime")
-    yield
-
-    for ws in websockets.values():
-        await ws.close()
-
-    await client.aclose()
+        await client.aclose()
+    except Exception as e:
+        logger.error(f"Failed to initialize default context: {e}")
+        raise
 
 
 app = FastAPI(lifespan=lifespan)
@@ -112,6 +104,11 @@ async def post_execute(request: ExecutionRequest):
             f"Context {request.context_id} not found",
             status_code=404,
         )
+
+    # set global env vars if not set on first execution
+    if not ws.global_env_vars:
+        ws.global_env_vars = await get_envs()
+        await ws.set_env_vars(ws.global_env_vars)
 
     return StreamingListJsonResponse(
         ws.execute(
