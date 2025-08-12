@@ -57,7 +57,7 @@ app = FastAPI(lifespan=lifespan)
 
 logger.info("Starting Code Interpreter server")
 
-
+@app.get("/")
 @app.get("/health")
 async def get_health():
     return "OK"

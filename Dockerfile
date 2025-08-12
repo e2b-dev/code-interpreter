@@ -1,9 +1,5 @@
 FROM python:3.12
 
-ENV JAVA_HOME=/opt/java/openjdk
-COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
-
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
   build-essential curl git util-linux jq sudo fonts-noto-cjk
 
@@ -16,11 +12,20 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   PIP_NO_CACHE_DIR=1 \
   JUPYTER_CONFIG_PATH="/root/.jupyter" \
   IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server"
+  SERVER_PATH="/root/.server" \
+  R_VERSION=4.4.2
+
+ENV R_HOME=/opt/R/${R_VERSION} \
+    JAVA_HOME=/opt/java/openjdk
 
 # Install Jupyter
-COPY ./template/requirements.txt requirements.txt
+COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
+
+# R Kernel
+RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
+RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
+RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
 # Javascript Kernel
 RUN npm install -g --unsafe-perm git+https://github.com/e2b-dev/ijavascript.git
@@ -30,34 +35,44 @@ RUN ijsinstall --install=global
 COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
 RUN chmod +x /usr/bin/deno
 RUN deno jupyter --unstable --install
-COPY ./template/deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+COPY ./deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
+
+# Bash Kernel
+RUN pip install bash_kernel
+RUN python -m bash_kernel.install
 
 # Create separate virtual environment for server
 RUN python -m venv $SERVER_PATH/.venv
 
 # Copy server and its requirements
 RUN mkdir -p $SERVER_PATH/
-COPY ./template/server/requirements.txt $SERVER_PATH
+COPY ./server/requirements.txt $SERVER_PATH
 RUN $SERVER_PATH/.venv/bin/pip install --no-cache-dir -r $SERVER_PATH/requirements.txt
-COPY ./template/server $SERVER_PATH
+COPY ./server $SERVER_PATH
 
 # Copy matplotlibrc
-COPY ./template/matplotlibrc /root/.config/matplotlib/matplotlibrc
+COPY matplotlibrc /root/.config/matplotlib/.matplotlibrc
 
 # Copy Jupyter configuration
-COPY ./template/start-up.sh $JUPYTER_CONFIG_PATH/
+COPY ./start-up.sh $JUPYTER_CONFIG_PATH/
 RUN chmod +x $JUPYTER_CONFIG_PATH/start-up.sh
 
-COPY ./template/jupyter_server_config.py $JUPYTER_CONFIG_PATH/
+COPY ./jupyter_server_config.py $JUPYTER_CONFIG_PATH/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default
-COPY ./template/ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
+COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
-COPY ./template/startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
+COPY startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
+
+
+COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
+RUN ln -s ${JAVA_HOME}/bin/java /usr/bin/java
+
+# Java Kernel
+RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
+    unzip ijava-1.3.0.zip && \
+    python install.py --sys-prefix
 
 # Setup entrypoint for local development
-WORKDIR /home/user
-COPY ./chart_data_extractor ./chart_data_extractor
-RUN pip install -e ./chart_data_extractor
 ENTRYPOINT $JUPYTER_CONFIG_PATH/start-up.sh
