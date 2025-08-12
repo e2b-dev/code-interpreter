@@ -7,20 +7,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-ins
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y nodejs
 
-ENV PIP_DEFAULT_TIMEOUT=100 \
-  PIP_DISABLE_PIP_VERSION_CHECK=1 \
-  PIP_NO_CACHE_DIR=1 \
-  JUPYTER_CONFIG_PATH="/root/.jupyter" \
-  IPYTHON_CONFIG_PATH="/root/.ipython" \
-  SERVER_PATH="/root/.server" \
-  R_VERSION=4.4.2
-
-ENV R_HOME=/opt/R/${R_VERSION} \
-    JAVA_HOME=/opt/java/openjdk
+ENV PIP_DEFAULT_TIMEOUT=100
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
+ENV JUPYTER_CONFIG_PATH=/root/.jupyter
+ENV IPYTHON_CONFIG_PATH=/root/.ipython
+ENV SERVER_PATH=/root/.server
+ENV R_VERSION=4.4.2
+ENV R_HOME=/opt/R/4.4.2
+ENV JAVA_HOME=/opt/java/openjdk
 
 # Install Jupyter
-COPY ./requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
+COPY ./requirements.txt /root/requirements.txt
+RUN pip install --no-cache-dir -r /root/requirements.txt && ipython kernel install --name "python3" --user
 
 # R Kernel
 RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
@@ -32,8 +31,7 @@ RUN npm install -g --unsafe-perm git+https://github.com/e2b-dev/ijavascript.git
 RUN ijsinstall --install=global
 
 # Deno Kernel
-COPY --from=denoland/deno:bin-2.0.4 /deno /usr/bin/deno
-RUN chmod +x /usr/bin/deno
+RUN curl -fsSL https://deno.land/x/install/install.sh | DENO_INSTALL=/usr/local sh
 RUN deno jupyter --unstable --install
 COPY ./deno.json /root/.local/share/jupyter/kernels/deno/kernel.json
 
@@ -63,13 +61,11 @@ RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default
 COPY ipython_kernel_config.py $IPYTHON_CONFIG_PATH/profile_default/
 
 RUN mkdir -p $IPYTHON_CONFIG_PATH/profile_default/startup
-COPY startup_scripts/* $IPYTHON_CONFIG_PATH/profile_default/startup
+COPY startup_scripts/ $IPYTHON_CONFIG_PATH/profile_default/startup
 
-
-COPY --from=eclipse-temurin:11-jdk $JAVA_HOME $JAVA_HOME
-RUN ln -s ${JAVA_HOME}/bin/java /usr/bin/java
 
 # Java Kernel
+RUN apt-get update && apt-get install -y default-jdk
 RUN wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip && \
     unzip ijava-1.3.0.zip && \
     python install.py --sys-prefix
