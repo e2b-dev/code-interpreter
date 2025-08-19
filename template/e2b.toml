@@ -3,7 +3,7 @@
 
 # Python SDK
 # from e2b import Sandbox, AsyncSandbox
-# sandbox = Sandbox("code-interpreter-v1") # Sync sandbox
+# sandbox = Sandbox.create("code-interpreter-v1") # Sync sandbox
 # sandbox = await AsyncSandbox.create("code-interpreter-v1") # Async sandbox
 
 # JS SDK

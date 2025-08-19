@@ -41,13 +41,13 @@ class Sandbox(BaseSandbox):
 
     Check docs [here](https://e2b.dev/docs).
 
-    Use the `Sandbox()` to create a new sandbox.
+    Use the `Sandbox.create()` to create a new sandbox.
 
     Example:
     ```python
     from e2b_code_interpreter import Sandbox
 
-    sandbox = Sandbox()
+    sandbox = Sandbox.create()
     ```
     """
 
@@ -185,7 +185,7 @@ class Sandbox(BaseSandbox):
             )
 
         timeout = None if timeout == 0 else (timeout or DEFAULT_TIMEOUT)
-        request_timeout = request_timeout or self._connection_config.request_timeout
+        request_timeout = request_timeout or self.connection_config.request_timeout
         context_id = context.id if context else None
 
         try:
@@ -249,7 +249,7 @@ class Sandbox(BaseSandbox):
             response = self._client.post(
                 f"{self._jupyter_url}/contexts",
                 json=data,
-                timeout=request_timeout or self._connection_config.request_timeout,
+                timeout=request_timeout or self.connection_config.request_timeout,
             )
 
             err = extract_exception(response)

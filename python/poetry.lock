@@ -363,14 +363,14 @@ test = ["black", "pytest"]
 
 [[package]]
 name = "e2b"
-version = "1.5.5"
+version = "2.0.0rc2"
 description = "E2B SDK that give agents cloud environments"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "e2b-1.5.5-py3-none-any.whl", hash = "sha256:cd6343193f5b941af33504d422cb39c02515a23a5c94c9ef9fdebeb140fb382e"},
-    {file = "e2b-1.5.5.tar.gz", hash = "sha256:541dd0bd8b3ff8aa1f56a2719333d5b8e0465c30df7ebd93e2776cc15672503a"},
+    {file = "e2b-2.0.0rc2-py3-none-any.whl", hash = "sha256:0eeb5dc5bfac806b1c348fc5fc45f94202637f4e6cb3b9746421975da72e976f"},
+    {file = "e2b-2.0.0rc2.tar.gz", hash = "sha256:5a816ed81fe3106814ab5e9e7e87eca7e8b8066064978c64055ac5e724530982"},
 ]
 
 [package.dependencies]
@@ -378,7 +378,7 @@ attrs = ">=23.2.0"
 httpcore = ">=1.0.5,<2.0.0"
 httpx = ">=0.27.0,<1.0.0"
 packaging = ">=24.1"
-protobuf = ">=5.29.4,<6.0.0"
+protobuf = ">=4.21.0"
 python-dateutil = ">=2.8.2"
 typing-extensions = ">=4.1.0"
 
@@ -1193,4 +1193,4 @@ tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "166eb5f8bc1132d916fa088a8b99eb4611498215fcf720e5abe4681b2ab71958"
+content-hash = "d27e8b566988db57127b204d3d19b9a07281ec91f7693c4b6613eeda60a980b6"

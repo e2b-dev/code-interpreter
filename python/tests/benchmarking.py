@@ -14,7 +14,7 @@ second_exec_time = 0
 for i in range(iterations):
     print("Iteration:", i + 1)
     start_time = time.time()
-    sandbox = Sandbox()
+    sandbox = Sandbox.create()
     create_sandbox_time += time.time() - start_time
 
     start_time = time.time()

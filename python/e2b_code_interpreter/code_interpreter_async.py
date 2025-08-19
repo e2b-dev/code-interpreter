@@ -6,7 +6,6 @@ from httpx import AsyncClient
 
 from e2b import (
     AsyncSandbox as BaseAsyncSandbox,
-    ConnectionConfig,
     InvalidArgumentException,
 )
 
@@ -189,7 +188,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             )
 
         timeout = None if timeout == 0 else (timeout or DEFAULT_TIMEOUT)
-        request_timeout = request_timeout or self._connection_config.request_timeout
+        request_timeout = request_timeout or self.connection_config.request_timeout
         context_id = context.id if context else None
 
         try:
@@ -254,7 +253,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             response = await self._client.post(
                 f"{self._jupyter_url}/contexts",
                 json=data,
-                timeout=request_timeout or self._connection_config.request_timeout,
+                timeout=request_timeout or self.connection_config.request_timeout,
             )
 
             err = await aextract_exception(response)
