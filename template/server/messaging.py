@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 import asyncio
+import textwrap
 
 from asyncio import Queue
 from typing import (
@@ -177,6 +178,32 @@ class ContextWebSocket:
         
         return "\n".join(cleanup_commands)
 
+    def _get_code_indentation(self, code: str) -> str:
+        """Get the indentation from the first non-empty line of code."""
+        if not code or not code.strip():
+            return ""
+        
+        lines = code.split('\n')
+        for line in lines:
+            if line.strip():  # First non-empty line
+                return line[:len(line) - len(line.lstrip())]
+        
+        return ""
+
+    def _indent_code_with_level(self, code: str, indent_level: str) -> str:
+        """Apply the given indentation level to each line of code."""
+        if not code or not indent_level:
+            return code
+        
+        lines = code.split('\n')
+        indented_lines = []
+        
+        for line in lines:
+            if line.strip():  # Non-empty lines
+                indented_lines.append(indent_level + line)
+        
+        return '\n'.join(indented_lines)
+
     async def _cleanup_env_vars(self, env_vars: Dict[StrictStr, str]):
         """Clean up environment variables in a separate execution request."""
         message_id = str(uuid.uuid4())
@@ -258,6 +285,9 @@ class ContextWebSocket:
             raise Exception("WebSocket not connected")
 
         async with self._lock:
+            # Get the indentation level from the code
+            code_indent = self._get_code_indentation(code)
+            
             # Build the complete code snippet with env vars
             complete_code = code
 
@@ -265,14 +295,18 @@ class ContextWebSocket:
                 self.global_env_vars = await get_envs()
 
             if not self.global_env_vars_set and self.global_env_vars:
-                complete_code = f"{self._set_env_vars_code(self.global_env_vars)}\n{complete_code}"
+                env_setup_code = self._set_env_vars_code(self.global_env_vars)
+                if env_setup_code:
+                    indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
+                    complete_code = f"{indented_env_code}\n{complete_code}"
                 self.global_env_vars_set = True
             
             if env_vars:
                 # Add env var setup at the beginning
                 env_setup_code = self._set_env_vars_code(env_vars)
                 if env_setup_code:
-                    complete_code = f"{env_setup_code}\n{complete_code}"
+                    indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
+                    complete_code = f"{indented_env_code}\n{complete_code}"
 
             logger.info(f"Executing complete code: {complete_code}")
             request = self._get_execute_request(message_id, complete_code, False)
@@ -448,7 +482,8 @@ class ContextWebSocket:
         if self._ws is not None:
             await self._ws.close()
 
-        self._receive_task.cancel()
+        if self._receive_task is not None:
+            self._receive_task.cancel()
 
         for execution in self._executions.values():
             execution.queue.put_nowait(UnexpectedEndOfExecution())
