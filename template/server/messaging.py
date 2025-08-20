@@ -281,8 +281,6 @@ class ContextWebSocket:
         env_vars: Dict[StrictStr, str] = None,
     ):
         message_id = str(uuid.uuid4())
-        logger.debug(f"Sending code for the execution ({message_id}): {code}")
-
         self._executions[message_id] = Execution()
 
         if self._ws is None:
@@ -313,7 +311,7 @@ class ContextWebSocket:
                 if env_setup_code:
                     indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
                     complete_code = f"{indented_env_code}\n{complete_code}"
-                self.global_env_vars_set = True
+                self._global_env_vars_set = True
             
             if env_vars:
                 # Add env var setup at the beginning
@@ -322,7 +320,7 @@ class ContextWebSocket:
                     indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
                     complete_code = f"{indented_env_code}\n{complete_code}"
 
-            logger.info(f"Executing complete code: {complete_code}")
+            logger.info(f"Sending code for the execution ({message_id}): {complete_code}")
             request = self._get_execute_request(message_id, complete_code, False)
 
             # Send the code for execution
