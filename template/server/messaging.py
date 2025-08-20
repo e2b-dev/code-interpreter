@@ -302,23 +302,21 @@ class ContextWebSocket:
             
             # Build the complete code snippet with env vars
             complete_code = code
+            env_var_snippets = []
 
             if not self._global_env_vars:
                 self._global_env_vars = await get_envs()
 
             if not self._global_env_vars_set and self._global_env_vars:
-                env_setup_code = self._set_env_vars_code(self._global_env_vars)
-                if env_setup_code:
-                    indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
-                    complete_code = f"{indented_env_code}\n{complete_code}"
+                env_var_snippets.append(self._set_env_vars_code(self._global_env_vars))
                 self._global_env_vars_set = True
             
             if env_vars:
-                # Add env var setup at the beginning
-                env_setup_code = self._set_env_vars_code(env_vars)
-                if env_setup_code:
-                    indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
-                    complete_code = f"{indented_env_code}\n{complete_code}"
+                env_var_snippets.append(self._set_env_vars_code(env_vars))
+
+            if env_var_snippets:
+                indented_env_code = self._indent_code_with_level("\n".join(env_var_snippets), code_indent)
+                complete_code = f"{indented_env_code}\n{complete_code}"
 
             logger.info(f"Sending code for the execution ({message_id}): {complete_code}")
             request = self._get_execute_request(message_id, complete_code, False)
