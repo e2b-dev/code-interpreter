@@ -1,7 +1,7 @@
 FROM python:3.12
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends \
-  build-essential curl git util-linux jq sudo fonts-noto-cjk
+  build-essential curl git util-linux jq sudo fonts-noto-cjk r-base
 
 # Install Node.js 20.x from NodeSource
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
@@ -13,17 +13,13 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   JUPYTER_CONFIG_PATH="/root/.jupyter" \
   IPYTHON_CONFIG_PATH="/root/.ipython" \
   SERVER_PATH="/root/.server" \
-  R_VERSION=4.4.2
-
-ENV R_HOME=/opt/R/${R_VERSION} \
-    JAVA_HOME=/opt/java/openjdk
+  JAVA_HOME=/opt/java/openjdk
 
 # Install Jupyter
 COPY ./requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt && ipython kernel install --name "python3" --user
 
 # R Kernel
-RUN curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-${R_VERSION}_1_amd64.deb && sudo apt-get update && sudo apt-get install -y ./r-${R_VERSION}_1_amd64.deb && ln -s ${R_HOME}/bin/R /usr/bin/R
 RUN R -e "install.packages('IRkernel', repos='https://cloud.r-project.org')"
 RUN R -e "IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')"
 
