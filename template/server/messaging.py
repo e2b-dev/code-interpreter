@@ -221,9 +221,6 @@ class ContextWebSocket:
                         logger.error(f"Error during env var cleanup: {item}")
         finally:
             del self._executions[message_id]
-            # Clear the task reference when cleanup is complete
-            if self._cleanup_task and self._cleanup_task.done():
-                self._cleanup_task = None
 
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
