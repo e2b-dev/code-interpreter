@@ -3,7 +3,6 @@ import json
 import logging
 import uuid
 import asyncio
-import textwrap
 
 from asyncio import Queue
 from typing import (
@@ -51,6 +50,7 @@ class ContextWebSocket:
     _receive_task: Optional[asyncio.Task] = None
     global_env_vars: Optional[Dict[StrictStr, str]] = None
     global_env_vars_set = False
+    _cleanup_task: Optional[asyncio.Task] = None
 
     def __init__(
         self,
@@ -209,17 +209,21 @@ class ContextWebSocket:
         message_id = str(uuid.uuid4())
         self._executions[message_id] = Execution(in_background=True)
 
-        cleanup_code = self._reset_env_vars_code(env_vars)
-        if cleanup_code:
-            logger.info(f"Cleaning up env vars: {cleanup_code}")
-            request = self._get_execute_request(message_id, cleanup_code, True)
-            await self._ws.send(request)
+        try:
+            cleanup_code = self._reset_env_vars_code(env_vars)
+            if cleanup_code:
+                logger.info(f"Cleaning up env vars: {cleanup_code}")
+                request = self._get_execute_request(message_id, cleanup_code, True)
+                await self._ws.send(request)
 
-            async for item in self._wait_for_result(message_id):
-                if item["type"] == "error":
-                    logger.error(f"Error during env var cleanup: {item}")
-
-        del self._executions[message_id]
+                async for item in self._wait_for_result(message_id):
+                    if item["type"] == "error":
+                        logger.error(f"Error during env var cleanup: {item}")
+        finally:
+            del self._executions[message_id]
+            # Clear the task reference when cleanup is complete
+            if self._cleanup_task and self._cleanup_task.done():
+                self._cleanup_task = None
 
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
@@ -285,6 +289,16 @@ class ContextWebSocket:
             raise Exception("WebSocket not connected")
 
         async with self._lock:
+            # Wait for any pending cleanup task to complete
+            if self._cleanup_task and not self._cleanup_task.done():
+                logger.debug("Waiting for pending cleanup task to complete")
+                try:
+                    await self._cleanup_task
+                except Exception as e:
+                    logger.warning(f"Cleanup task failed: {e}")
+                finally:
+                    self._cleanup_task = None
+            
             # Get the indentation level from the code
             code_indent = self._get_code_indentation(code)
             
@@ -320,9 +334,9 @@ class ContextWebSocket:
 
             del self._executions[message_id]
 
-        # Clean up env vars in a separate request after the main code has run (outside the lock)
-        if env_vars:
-            asyncio.create_task(self._cleanup_env_vars(env_vars))
+            # Clean up env vars in a separate request after the main code has run
+            if env_vars:
+                self._cleanup_task = asyncio.create_task(self._cleanup_env_vars(env_vars))
 
     async def _receive_message(self):
         if not self._ws:
@@ -484,6 +498,14 @@ class ContextWebSocket:
 
         if self._receive_task is not None:
             self._receive_task.cancel()
+
+        # Cancel any pending cleanup task
+        if self._cleanup_task and not self._cleanup_task.done():
+            self._cleanup_task.cancel()
+            try:
+                await self._cleanup_task
+            except asyncio.CancelledError:
+                pass
 
         for execution in self._executions.values():
             execution.queue.put_nowait(UnexpectedEndOfExecution())
