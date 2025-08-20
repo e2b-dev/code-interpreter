@@ -114,47 +114,49 @@ class ContextWebSocket:
             }
         )
 
-    def _get_env_var_command(self, key: str, value: str, action: str = "set") -> str:
-        """Get environment variable command for the current language."""
-        if action == "set":
-            if self.language == "python":
-                return f"import os; os.environ['{key}'] = '{value}'"
-            elif self.language in ["javascript", "typescript"]:
-                return f"process.env['{key}'] = '{value}'"
-            elif self.language == "deno":
-                return f"Deno.env.set('{key}', '{value}')"
-            elif self.language == "r":
-                return f'Sys.setenv({key} = "{value}")'
-            elif self.language == "java":
-                return f'System.setProperty("{key}", "{value}");'
-            elif self.language == "bash":
-                return f"export {key}='{value}'"
-        elif action == "delete":
-            if self.language == "python":
-                return f"import os; del os.environ['{key}']"
-            elif self.language in ["javascript", "typescript"]:
-                return f"delete process.env['{key}']"
-            elif self.language == "deno":
-                return f"Deno.env.delete('{key}')"
-            elif self.language == "r":
-                return f"Sys.unsetenv('{key}')"
-            elif self.language == "java":
-                return f'System.clearProperty("{key}");'
-            elif self.language == "bash":
-                return f"unset {key}"
+    def _set_env_var_snippet(self, key: str, value: str) -> str:
+        """Get environment variable set command for the current language."""
+        if self.language == "python":
+            return f"import os; os.environ['{key}'] = '{value}'"
+        elif self.language in ["javascript", "typescript"]:
+            return f"process.env['{key}'] = '{value}'"
+        elif self.language == "deno":
+            return f"Deno.env.set('{key}', '{value}')"
+        elif self.language == "r":
+            return f'Sys.setenv({key} = "{value}")'
+        elif self.language == "java":
+            return f'System.setProperty("{key}", "{value}");'
+        elif self.language == "bash":
+            return f"export {key}='{value}'"
         return ""
 
-    def _build_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
+    def _delete_env_var_snippet(self, key: str) -> str:
+        """Get environment variable delete command for the current language."""
+        if self.language == "python":
+            return f"import os; del os.environ['{key}']"
+        elif self.language in ["javascript", "typescript"]:
+            return f"delete process.env['{key}']"
+        elif self.language == "deno":
+            return f"Deno.env.delete('{key}')"
+        elif self.language == "r":
+            return f"Sys.unsetenv('{key}')"
+        elif self.language == "java":
+            return f'System.clearProperty("{key}");'
+        elif self.language == "bash":
+            return f"unset {key}"
+        return ""
+
+    def _set_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
         """Build environment variable code for the current language."""
         env_commands = []
         for k, v in env_vars.items():
-            command = self._get_env_var_command(k, v, "set")
+            command = self._set_env_var_snippet(k, v)
             if command:
                 env_commands.append(command)
         
         return "\n".join(env_commands)
 
-    def _build_env_vars_cleanup_code(self, env_vars: Dict[StrictStr, str]) -> str:
+    def _reset_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
         """Build environment variable cleanup code for the current language."""
         cleanup_commands = []
         
@@ -163,10 +165,10 @@ class ContextWebSocket:
             if self.global_env_vars and key in self.global_env_vars:
                 # Reset to global value
                 value = self.global_env_vars[key]
-                command = self._get_env_var_command(key, value, "set")
+                command = self._set_env_var_snippet(key, value)
             else:
                 # Remove the variable
-                command = self._get_env_var_command(key, "", "delete")
+                command = self._delete_env_var_snippet(key)
             
             if command:
                 cleanup_commands.append(command)
@@ -242,12 +244,12 @@ class ContextWebSocket:
             
             if env_vars:
                 # Add env var setup at the beginning
-                env_setup_code = self._build_env_vars_code(env_vars)
+                env_setup_code = self._set_env_vars_code(env_vars)
                 if env_setup_code:
                     complete_code = f"{env_setup_code}\n{complete_code}"
                 
                 # Add env var cleanup at the end
-                env_cleanup_code = self._build_env_vars_cleanup_code(env_vars)
+                env_cleanup_code = self._reset_env_vars_code(env_vars)
                 if env_cleanup_code:
                     complete_code = f"{complete_code}\n{env_cleanup_code}"
 
