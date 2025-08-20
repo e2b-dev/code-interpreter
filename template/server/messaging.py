@@ -48,8 +48,8 @@ class Execution:
 class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
-    global_env_vars: Optional[Dict[StrictStr, str]] = None
-    global_env_vars_set = False
+    _global_env_vars: Optional[Dict[StrictStr, str]] = None
+    _global_env_vars_set = False
     _cleanup_task: Optional[asyncio.Task] = None
 
     def __init__(
@@ -165,9 +165,9 @@ class ContextWebSocket:
         
         for key in env_vars:
             # Check if this var exists in global env vars
-            if self.global_env_vars and key in self.global_env_vars:
+            if self._global_env_vars and key in self._global_env_vars:
                 # Reset to global value
-                value = self.global_env_vars[key]
+                value = self._global_env_vars[key]
                 command = self._set_env_var_snippet(key, value)
             else:
                 # Remove the variable
@@ -305,11 +305,11 @@ class ContextWebSocket:
             # Build the complete code snippet with env vars
             complete_code = code
 
-            if not self.global_env_vars:
-                self.global_env_vars = await get_envs()
+            if not self._global_env_vars:
+                self._global_env_vars = await get_envs()
 
-            if not self.global_env_vars_set and self.global_env_vars:
-                env_setup_code = self._set_env_vars_code(self.global_env_vars)
+            if not self._global_env_vars_set and self._global_env_vars:
+                env_setup_code = self._set_env_vars_code(self._global_env_vars)
                 if env_setup_code:
                     indented_env_code = self._indent_code_with_level(env_setup_code, code_indent)
                     complete_code = f"{indented_env_code}\n{complete_code}"
