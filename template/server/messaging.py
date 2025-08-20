@@ -265,7 +265,7 @@ class ContextWebSocket:
                 self.global_env_vars = await get_envs()
 
             if not self.global_env_vars_set and self.global_env_vars:
-                complete_code = self._set_env_vars_code(self.global_env_vars)
+                complete_code = f"{self._set_env_vars_code(self.global_env_vars)}\n{complete_code}"
                 self.global_env_vars_set = True
             
             if env_vars:
