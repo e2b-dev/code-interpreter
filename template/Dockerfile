@@ -13,10 +13,8 @@ ENV PIP_DEFAULT_TIMEOUT=100 \
   JUPYTER_CONFIG_PATH="/root/.jupyter" \
   IPYTHON_CONFIG_PATH="/root/.ipython" \
   SERVER_PATH="/root/.server" \
-  R_VERSION=4.4.2
 
-ENV R_HOME=/opt/R/${R_VERSION} \
-    JAVA_HOME=/opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
 
 # Install Jupyter
 COPY ./requirements.txt requirements.txt
