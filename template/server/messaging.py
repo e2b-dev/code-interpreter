@@ -23,6 +23,7 @@ from api.models.output import (
     UnexpectedEndOfExecution,
 )
 from errors import ExecutionError
+from envs import get_envs
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
     global_env_vars: Optional[Dict[StrictStr, str]] = None
+    global_env_vars_set = False
 
     def __init__(
         self,
@@ -175,6 +177,23 @@ class ContextWebSocket:
         
         return "\n".join(cleanup_commands)
 
+    async def _cleanup_env_vars(self, env_vars: Dict[StrictStr, str]):
+        """Clean up environment variables in a separate execution request."""
+        message_id = str(uuid.uuid4())
+        self._executions[message_id] = Execution(in_background=True)
+
+        cleanup_code = self._reset_env_vars_code(env_vars)
+        if cleanup_code:
+            logger.info(f"Cleaning up env vars: {cleanup_code}")
+            request = self._get_execute_request(message_id, cleanup_code, True)
+            await self._ws.send(request)
+
+            async for item in self._wait_for_result(message_id):
+                if item["type"] == "error":
+                    logger.error(f"Error during env var cleanup: {item}")
+
+        del self._executions[message_id]
+
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
 
@@ -241,17 +260,19 @@ class ContextWebSocket:
         async with self._lock:
             # Build the complete code snippet with env vars
             complete_code = code
+
+            if not self.global_env_vars:
+                self.global_env_vars = await get_envs()
+
+            if not self.global_env_vars_set and self.global_env_vars:
+                complete_code = self._set_env_vars_code(self.global_env_vars)
+                self.global_env_vars_set = True
             
             if env_vars:
                 # Add env var setup at the beginning
                 env_setup_code = self._set_env_vars_code(env_vars)
                 if env_setup_code:
                     complete_code = f"{env_setup_code}\n{complete_code}"
-                
-                # Add env var cleanup at the end
-                env_cleanup_code = self._reset_env_vars_code(env_vars)
-                if env_cleanup_code:
-                    complete_code = f"{complete_code}\n{env_cleanup_code}"
 
             logger.info(f"Executing complete code: {complete_code}")
             request = self._get_execute_request(message_id, complete_code, False)
@@ -264,6 +285,10 @@ class ContextWebSocket:
                 yield item
 
             del self._executions[message_id]
+
+        # Clean up env vars in a separate request after the main code has run (outside the lock)
+        if env_vars:
+            asyncio.create_task(self._cleanup_env_vars(env_vars))
 
     async def _receive_message(self):
         if not self._ws:
