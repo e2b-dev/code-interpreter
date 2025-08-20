@@ -201,6 +201,8 @@ class ContextWebSocket:
         for line in lines:
             if line.strip():  # Non-empty lines
                 indented_lines.append(indent_level + line)
+            else:
+                indented_lines.append(line)
         
         return '\n'.join(indented_lines)
 
@@ -301,10 +303,10 @@ class ContextWebSocket:
             complete_code = code
             env_var_snippets = []
 
-            if not self._global_env_vars:
+            if self._global_env_vars is None:
                 self._global_env_vars = await get_envs()
 
-            if not self._global_env_vars_set and self._global_env_vars:
+            if not self._global_env_vars_set:
                 env_var_snippets.append(self._set_env_vars_code(self._global_env_vars))
                 self._global_env_vars_set = True
             
