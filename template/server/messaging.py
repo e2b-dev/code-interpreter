@@ -114,6 +114,65 @@ class ContextWebSocket:
             }
         )
 
+    def _get_env_var_command(self, key: str, value: str, action: str = "set") -> str:
+        """Get environment variable command for the current language."""
+        if action == "set":
+            if self.language == "python":
+                return f"import os; os.environ['{key}'] = '{value}'"
+            elif self.language in ["javascript", "typescript"]:
+                return f"process.env['{key}'] = '{value}'"
+            elif self.language == "deno":
+                return f"Deno.env.set('{key}', '{value}')"
+            elif self.language == "r":
+                return f'Sys.setenv({key} = "{value}")'
+            elif self.language == "java":
+                return f'System.setProperty("{key}", "{value}");'
+            elif self.language == "bash":
+                return f"export {key}='{value}'"
+        elif action == "delete":
+            if self.language == "python":
+                return f"import os; del os.environ['{key}']"
+            elif self.language in ["javascript", "typescript"]:
+                return f"delete process.env['{key}']"
+            elif self.language == "deno":
+                return f"Deno.env.delete('{key}')"
+            elif self.language == "r":
+                return f"Sys.unsetenv('{key}')"
+            elif self.language == "java":
+                return f'System.clearProperty("{key}");'
+            elif self.language == "bash":
+                return f"unset {key}"
+        return ""
+
+    def _build_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
+        """Build environment variable code for the current language."""
+        env_commands = []
+        for k, v in env_vars.items():
+            command = self._get_env_var_command(k, v, "set")
+            if command:
+                env_commands.append(command)
+        
+        return "\n".join(env_commands)
+
+    def _build_env_vars_cleanup_code(self, env_vars: Dict[StrictStr, str]) -> str:
+        """Build environment variable cleanup code for the current language."""
+        cleanup_commands = []
+        
+        for key in env_vars:
+            # Check if this var exists in global env vars
+            if self.global_env_vars and key in self.global_env_vars:
+                # Reset to global value
+                value = self.global_env_vars[key]
+                command = self._get_env_var_command(key, value, "set")
+            else:
+                # Remove the variable
+                command = self._get_env_var_command(key, "", "delete")
+            
+            if command:
+                cleanup_commands.append(command)
+        
+        return "\n".join(cleanup_commands)
+
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
 
@@ -132,84 +191,6 @@ class ContextWebSocket:
                 break
 
             yield output.model_dump(exclude_none=True)
-
-    async def set_env_vars(self, env_vars: Dict[StrictStr, str]):
-        message_id = str(uuid.uuid4())
-        self._executions[message_id] = Execution(in_background=True)
-
-        env_commands = []
-        for k, v in env_vars.items():
-            if self.language == "python":
-                env_commands.append(f"import os; os.environ['{k}'] = '{v}'")
-            elif self.language in ["javascript", "typescript"]:
-                env_commands.append(f"process.env['{k}'] = '{v}'")
-            elif self.language == "deno":
-                env_commands.append(f"Deno.env.set('{k}', '{v}')")
-            elif self.language == "r":
-                env_commands.append(f'Sys.setenv({k} = "{v}")')
-            elif self.language == "java":
-                env_commands.append(f'System.setProperty("{k}", "{v}");')
-            elif self.language == "bash":
-                env_commands.append(f"export {k}='{v}'")
-            else:
-                return
-
-        if env_commands:
-            env_vars_snippet = "\n".join(env_commands)
-            logger.info(f"Setting env vars: {env_vars_snippet} for {self.language}")
-            request = self._get_execute_request(message_id, env_vars_snippet, True)
-            await self._ws.send(request)
-
-            async for item in self._wait_for_result(message_id):
-                if item["type"] == "error":
-                    raise ExecutionError(f"Error during execution: {item}")
-
-    async def reset_env_vars(self, env_vars: Dict[StrictStr, str]):
-        # Create a dict of vars to reset and a list of vars to remove
-        vars_to_reset = {}
-        vars_to_remove = []
-
-        for key in env_vars:
-            if self.global_env_vars and key in self.global_env_vars:
-                vars_to_reset[key] = self.global_env_vars[key]
-            else:
-                vars_to_remove.append(key)
-
-        # Reset vars that exist in global env vars
-        if vars_to_reset:
-            await self.set_env_vars(vars_to_reset)
-
-        # Remove vars that don't exist in global env vars
-        if vars_to_remove:
-            message_id = str(uuid.uuid4())
-            self._executions[message_id] = Execution(in_background=True)
-
-            remove_commands = []
-            for key in vars_to_remove:
-                if self.language == "python":
-                    remove_commands.append(f"import os; del os.environ['{key}']")
-                elif self.language in ["javascript", "typescript"]:
-                    remove_commands.append(f"delete process.env['{key}']")
-                elif self.language == "deno":
-                    remove_commands.append(f"Deno.env.delete('{key}')")
-                elif self.language == "r":
-                    remove_commands.append(f"Sys.unsetenv('{key}')")
-                elif self.language == "java":
-                    remove_commands.append(f'System.clearProperty("{key}");')
-                elif self.language == "bash":
-                    remove_commands.append(f"unset {key}")
-                else:
-                    return
-            
-            if remove_commands:
-                remove_snippet = "\n".join(remove_commands)
-                logger.info(f"Removing env vars: {remove_snippet} for {self.language}")
-                request = self._get_execute_request(message_id, remove_snippet, True)
-                await self._ws.send(request)
-
-                async for item in self._wait_for_result(message_id):
-                    if item["type"] == "error":
-                        raise ExecutionError(f"Error during execution: {item}")
 
     async def change_current_directory(
         self, path: Union[str, StrictStr], language: str
@@ -256,12 +237,22 @@ class ContextWebSocket:
             raise Exception("WebSocket not connected")
 
         async with self._lock:
-            # set env vars (will override global env vars)
+            # Build the complete code snippet with env vars
+            complete_code = code
+            
             if env_vars:
-                await self.set_env_vars(env_vars)
+                # Add env var setup at the beginning
+                env_setup_code = self._build_env_vars_code(env_vars)
+                if env_setup_code:
+                    complete_code = f"{env_setup_code}\n{complete_code}"
+                
+                # Add env var cleanup at the end
+                env_cleanup_code = self._build_env_vars_cleanup_code(env_vars)
+                if env_cleanup_code:
+                    complete_code = f"{complete_code}\n{env_cleanup_code}"
 
-            logger.info(code)
-            request = self._get_execute_request(message_id, code, False)
+            logger.info(f"Executing complete code: {complete_code}")
+            request = self._get_execute_request(message_id, complete_code, False)
 
             # Send the code for execution
             await self._ws.send(request)
@@ -271,10 +262,6 @@ class ContextWebSocket:
                 yield item
 
             del self._executions[message_id]
-
-            # reset env vars to their previous values, if they were set globally or remove them
-            if env_vars:
-                await self.reset_env_vars(env_vars)
 
     async def _receive_message(self):
         if not self._ws:
