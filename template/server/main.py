@@ -108,11 +108,6 @@ async def post_execute(request: ExecutionRequest):
             status_code=404,
         )
 
-    # set global env vars if not set on first execution
-    if not ws.global_env_vars:
-        ws.global_env_vars = await get_envs()
-        await ws.set_env_vars(ws.global_env_vars)
-
     return StreamingListJsonResponse(
         ws.execute(
             request.code,

@@ -17,7 +17,7 @@ def template():
 
 @pytest.fixture()
 def sandbox(template, debug):
-    sandbox = Sandbox(template, timeout=timeout)
+    sandbox = Sandbox(template, timeout=timeout, debug=debug)
 
     try:
         yield sandbox
@@ -33,7 +33,7 @@ def sandbox(template, debug):
 
 @pytest_asyncio.fixture
 async def async_sandbox(template, debug):
-    async_sandbox = await AsyncSandbox.create(template, timeout=timeout)
+    async_sandbox = await AsyncSandbox.create(template, timeout=timeout, debug=debug)
 
     try:
         yield async_sandbox
