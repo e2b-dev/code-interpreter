@@ -17,7 +17,6 @@ from contexts import create_context, normalize_language
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
-from envs import get_envs
 
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.Logger(__name__)
@@ -36,11 +35,15 @@ async def lifespan(app: FastAPI):
     client = httpx.AsyncClient()
 
     try:
-        python_context = await create_context(client, websockets, "python", "/home/user")
+        python_context = await create_context(
+            client, websockets, "python", "/home/user"
+        )
         default_websockets["python"] = python_context.id
         websockets["default"] = websockets[python_context.id]
 
-        javascript_context = await create_context(client, websockets, "javascript", "/home/user")
+        javascript_context = await create_context(
+            client, websockets, "javascript", "/home/user"
+        )
         default_websockets["javascript"] = javascript_context.id
 
         logger.info("Connected to default runtime")
@@ -112,6 +115,7 @@ async def post_execute(request: ExecutionRequest):
         ws.execute(
             request.code,
             env_vars=request.env_vars,
+            access_token=request.headers.get("X-Access-Token", None),
         )
     )
 
