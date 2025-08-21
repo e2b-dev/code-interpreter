@@ -49,7 +49,6 @@ class ContextWebSocket:
     _ws: Optional[WebSocketClientProtocol] = None
     _receive_task: Optional[asyncio.Task] = None
     _global_env_vars: Optional[Dict[StrictStr, str]] = None
-    _global_env_vars_set = False
     _cleanup_task: Optional[asyncio.Task] = None
 
     def __init__(
@@ -301,20 +300,19 @@ class ContextWebSocket:
             
             # Build the complete code snippet with env vars
             complete_code = code
-            env_var_snippets = []
+            
+            global_env_vars_snippet = ""
+            env_vars_snippet = ""
 
             if self._global_env_vars is None:
                 self._global_env_vars = await get_envs()
-
-            if not self._global_env_vars_set:
-                env_var_snippets.append(self._set_env_vars_code(self._global_env_vars))
-                self._global_env_vars_set = True
+                global_env_vars_snippet = self._set_env_vars_code(self._global_env_vars)
             
             if env_vars:
-                env_var_snippets.append(self._set_env_vars_code(env_vars))
+                env_vars_snippet = self._set_env_vars_code(env_vars)
 
-            if env_var_snippets:
-                indented_env_code = self._indent_code_with_level("\n".join(env_var_snippets), code_indent)
+            if global_env_vars_snippet or env_vars_snippet:
+                indented_env_code = self._indent_code_with_level(f"{global_env_vars_snippet}\n{env_vars_snippet}", code_indent)
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
             logger.info(f"Sending code for the execution ({message_id}): {complete_code}")
