@@ -1,12 +1,11 @@
 import logging
 import sys
-import uuid
 import httpx
 
 from typing import Dict, Union, Literal, Set
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 
 from api.models.context import Context
@@ -70,18 +69,18 @@ async def get_health():
 
 
 @app.post("/execute")
-async def post_execute(request: ExecutionRequest):
-    logger.info(f"Executing code: {request.code}")
+async def post_execute(request: Request, exec_request: ExecutionRequest):
+    logger.info(f"Executing code: {exec_request.code}")
 
-    if request.context_id and request.language:
+    if exec_request.context_id and exec_request.language:
         return PlainTextResponse(
             "Only one of context_id or language can be provided",
             status_code=400,
         )
 
     context_id = None
-    if request.language:
-        language = normalize_language(request.language)
+    if exec_request.language:
+        language = normalize_language(exec_request.language)
 
         async with await default_websockets.get_lock(language):
             context_id = default_websockets.get(language)
@@ -97,8 +96,8 @@ async def post_execute(request: ExecutionRequest):
                 context_id = context.id
                 default_websockets[language] = context_id
 
-    elif request.context_id:
-        context_id = request.context_id
+    elif exec_request.context_id:
+        context_id = exec_request.context_id
 
     if context_id:
         ws = websockets.get(context_id, None)
@@ -107,14 +106,14 @@ async def post_execute(request: ExecutionRequest):
 
     if not ws:
         return PlainTextResponse(
-            f"Context {request.context_id} not found",
+            f"Context {exec_request.context_id} not found",
             status_code=404,
         )
 
     return StreamingListJsonResponse(
         ws.execute(
-            request.code,
-            env_vars=request.env_vars,
+            exec_request.code,
+            env_vars=exec_request.env_vars,
             access_token=request.headers.get("X-Access-Token", None),
         )
     )

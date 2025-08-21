@@ -11,7 +11,10 @@ async def get_envs(access_token: Optional[str]) -> dict:
     if LOCAL:
         return {"E2B_TEST_VARIABLE": "true"}
     async with httpx.AsyncClient() as client:
+        headers = {}
         if access_token:
-            client.headers["X-Access-Token"] = f"{access_token}"
-        response = await client.get(f"http://localhost:{ENVD_PORT}/envs")
+            headers["X-Access-Token"] = f"{access_token}"
+        response = await client.get(
+            f"http://localhost:{ENVD_PORT}/envs", headers=headers
+        )
         return response.json()
