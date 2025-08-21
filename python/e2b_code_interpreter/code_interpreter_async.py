@@ -201,6 +201,7 @@ class AsyncSandbox(BaseAsyncSandbox):
                     "language": language,
                     "env_vars": envs,
                 },
+                headers={"X-Access-Token": self._envd_access_token},
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
 
@@ -252,6 +253,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             response = await self._client.post(
                 f"{self._jupyter_url}/contexts",
+                headers={"X-Access-Token": self._envd_access_token},
                 json=data,
                 timeout=request_timeout or self.connection_config.request_timeout,
             )

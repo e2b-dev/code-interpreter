@@ -1,7 +1,18 @@
 import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
 
-import { Result, Execution, OutputMessage, parseOutput, extractError, ExecutionError } from './messaging'
-import { formatExecutionTimeoutError, formatRequestTimeoutError, readLines } from "./utils";
+import {
+  Result,
+  Execution,
+  OutputMessage,
+  parseOutput,
+  extractError,
+  ExecutionError,
+} from './messaging'
+import {
+  formatExecutionTimeoutError,
+  formatRequestTimeoutError,
+  readLines,
+} from './utils'
 import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
 
 /**
@@ -29,37 +40,37 @@ export interface RunCodeOpts {
   /**
    * Callback for handling stdout messages.
    */
-  onStdout?: (output: OutputMessage) => (Promise<any> | any),
+  onStdout?: (output: OutputMessage) => Promise<any> | any
   /**
    * Callback for handling stderr messages.
    */
-  onStderr?: (output: OutputMessage) => (Promise<any> | any),
+  onStderr?: (output: OutputMessage) => Promise<any> | any
   /**
    * Callback for handling the final execution result.
    */
-  onResult?: (data: Result) => (Promise<any> | any),
+  onResult?: (data: Result) => Promise<any> | any
   /**
    * Callback for handling the `ExecutionError` object.
    */
-  onError?: (error: ExecutionError) => (Promise<any> | any),
+  onError?: (error: ExecutionError) => Promise<any> | any
   /**
    * Custom environment variables for code execution.
-   * 
+   *
    * @default {}
    */
-  envs?: Record<string, string>,
+  envs?: Record<string, string>
   /**
    * Timeout for the code execution in **milliseconds**.
-   * 
+   *
    * @default 60_000 // 60 seconds
    */
-  timeoutMs?: number,
+  timeoutMs?: number
   /**
    * Timeout for the request in **milliseconds**.
-   * 
+   *
    * @default 30_000 // 30 seconds
    */
-  requestTimeoutMs?: number,
+  requestTimeoutMs?: number
 }
 
 /**
@@ -68,22 +79,22 @@ export interface RunCodeOpts {
 export interface CreateCodeContextOpts {
   /**
    * Working directory for the context.
-   * 
+   *
    * @default /home/user
    */
-  cwd?: string,
+  cwd?: string
   /**
    * Language for the context.
-   * 
+   *
    * @default python
    */
-  language?: string,
+  language?: string
   /**
    * Timeout for the request in **milliseconds**.
-   * 
+   *
    * @default 30_000 // 30 seconds
    */
-  requestTimeoutMs?: number,
+  requestTimeoutMs?: number
 }
 
 /**
@@ -108,18 +119,19 @@ export interface CreateCodeContextOpts {
  * ```
  */
 export class Sandbox extends BaseSandbox {
-  protected static override readonly defaultTemplate: string = 'code-interpreter-v1'
+  protected static override readonly defaultTemplate: string =
+    'code-interpreter-v1'
 
   /**
    * Run the code as Python.
-   * 
+   *
    * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
-   * 
+   *
    * You can reference previously defined variables, imports, and functions in the code.
    *
    * @param code code to execute.
    * @param opts options for executing the code.
-   * 
+   *
    * @returns `Execution` result object.
    */
   async runCode(
@@ -127,23 +139,23 @@ export class Sandbox extends BaseSandbox {
     opts?: RunCodeOpts & {
       /**
        * Language to use for code execution.
-       * 
+       *
        * If not defined, the default Python context is used.
        */
-      language?: 'python',
-    },
+      language?: 'python'
+    }
   ): Promise<Execution>
   /**
    * Run the code for the specified language.
-   * 
+   *
    * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
    * If no language is specified, Python is used.
-   * 
+   *
    * You can reference previously defined variables, imports, and functions in the code.
    *
    * @param code code to execute.
    * @param opts options for executing the code.
-   * 
+   *
    * @returns `Execution` result object.
    */
   async runCode(
@@ -151,22 +163,22 @@ export class Sandbox extends BaseSandbox {
     opts?: RunCodeOpts & {
       /**
        * Language to use for code execution.
-       * 
+       *
        * If not defined, the default Python context is used.
        */
-      language?: string,
-    },
+      language?: string
+    }
   ): Promise<Execution>
   /**
    * Runs the code in the specified context, if not specified, the default context is used.
-   * 
+   *
    * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
-   * 
+   *
    * You can reference previously defined variables, imports, and functions in the code.
    *
    * @param code code to execute.
    * @param opts options for executing the code
-   * 
+   *
    * @returns `Execution` result object
    */
   async runCode(
@@ -175,27 +187,31 @@ export class Sandbox extends BaseSandbox {
       /**
        * Context to run the code in.
        */
-      context?: Context,
-    },
+      context?: Context
+    }
   ): Promise<Execution>
   async runCode(
     code: string,
     opts?: RunCodeOpts & {
-      language?: string,
-      context?: Context,
-    },
+      language?: string
+      context?: Context
+    }
   ): Promise<Execution> {
     if (opts?.context && opts?.language) {
-      throw new InvalidArgumentError("You can provide context or language, but not both at the same time.")
+      throw new InvalidArgumentError(
+        'You can provide context or language, but not both at the same time.'
+      )
     }
 
     const controller = new AbortController()
 
-    const requestTimeout = opts?.requestTimeoutMs ?? this.connectionConfig.requestTimeoutMs
+    const requestTimeout =
+      opts?.requestTimeoutMs ?? this.connectionConfig.requestTimeoutMs
 
-    const reqTimer = requestTimeout ? setTimeout(() => {
-      controller.abort()
-    }, requestTimeout)
+    const reqTimer = requestTimeout
+      ? setTimeout(() => {
+          controller.abort()
+        }, requestTimeout)
       : undefined
 
     try {
@@ -203,6 +219,7 @@ export class Sandbox extends BaseSandbox {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...this.connectionConfig.headers,
         },
         body: JSON.stringify({
           code,
@@ -220,7 +237,9 @@ export class Sandbox extends BaseSandbox {
       }
 
       if (!res.body) {
-        throw new Error(`Not response body: ${res.statusText} ${await res?.text()}`)
+        throw new Error(
+          `Not response body: ${res.statusText} ${await res?.text()}`
+        )
       }
 
       clearTimeout(reqTimer)
@@ -229,16 +248,22 @@ export class Sandbox extends BaseSandbox {
 
       const bodyTimer = bodyTimeout
         ? setTimeout(() => {
-          controller.abort()
-        }, bodyTimeout)
+            controller.abort()
+          }, bodyTimeout)
         : undefined
 
       const execution = new Execution()
 
-
       try {
         for await (const chunk of readLines(res.body)) {
-          await parseOutput(execution, chunk, opts?.onStdout, opts?.onStderr, opts?.onResult, opts?.onError)
+          await parseOutput(
+            execution,
+            chunk,
+            opts?.onStdout,
+            opts?.onStderr,
+            opts?.onResult,
+            opts?.onError
+          )
         }
       } catch (error) {
         throw formatExecutionTimeoutError(error)
@@ -256,7 +281,7 @@ export class Sandbox extends BaseSandbox {
    * Creates a new context to run code in.
    *
    * @param opts options for creating the context.
-   * 
+   *
    * @returns context object.
    */
   async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
@@ -265,6 +290,7 @@ export class Sandbox extends BaseSandbox {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...this.connectionConfig.headers,
         },
         body: JSON.stringify({
           language: opts?.language,
@@ -286,6 +312,8 @@ export class Sandbox extends BaseSandbox {
   }
 
   protected get jupyterUrl(): string {
-    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(JUPYTER_PORT)}`
+    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(
+      JUPYTER_PORT
+    )}`
   }
 }
