@@ -27,6 +27,7 @@ from envs import get_envs
 
 logger = logging.getLogger(__name__)
 
+
 class Execution:
     def __init__(self, in_background: bool = False):
         self.queue = Queue[
@@ -51,13 +52,7 @@ class ContextWebSocket:
     _global_env_vars: Optional[Dict[StrictStr, str]] = None
     _cleanup_task: Optional[asyncio.Task] = None
 
-    def __init__(
-        self,
-        context_id: str,
-        session_id: str,
-        language: str,
-        cwd: str
-    ):
+    def __init__(self, context_id: str, session_id: str, language: str, cwd: str):
         self.language = language
         self.cwd = cwd
         self.context_id = context_id
@@ -155,13 +150,13 @@ class ContextWebSocket:
             command = self._set_env_var_snippet(k, v)
             if command:
                 env_commands.append(command)
-        
+
         return "\n".join(env_commands)
 
     def _reset_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
         """Build environment variable cleanup code for the current language."""
         cleanup_commands = []
-        
+
         for key in env_vars:
             # Check if this var exists in global env vars
             if self._global_env_vars and key in self._global_env_vars:
@@ -171,39 +166,39 @@ class ContextWebSocket:
             else:
                 # Remove the variable
                 command = self._delete_env_var_snippet(key)
-            
+
             if command:
                 cleanup_commands.append(command)
-        
+
         return "\n".join(cleanup_commands)
 
     def _get_code_indentation(self, code: str) -> str:
         """Get the indentation from the first non-empty line of code."""
         if not code or not code.strip():
             return ""
-        
-        lines = code.split('\n')
+
+        lines = code.split("\n")
         for line in lines:
             if line.strip():  # First non-empty line
-                return line[:len(line) - len(line.lstrip())]
-        
+                return line[: len(line) - len(line.lstrip())]
+
         return ""
 
     def _indent_code_with_level(self, code: str, indent_level: str) -> str:
         """Apply the given indentation level to each line of code."""
         if not code or not indent_level:
             return code
-        
-        lines = code.split('\n')
+
+        lines = code.split("\n")
         indented_lines = []
-        
+
         for line in lines:
             if line.strip():  # Non-empty lines
                 indented_lines.append(indent_level + line)
             else:
                 indented_lines.append(line)
-        
-        return '\n'.join(indented_lines)
+
+        return "\n".join(indented_lines)
 
     async def _cleanup_env_vars(self, env_vars: Dict[StrictStr, str]):
         """Clean up environment variables in a separate execution request."""
@@ -276,7 +271,8 @@ class ContextWebSocket:
     async def execute(
         self,
         code: Union[str, StrictStr],
-        env_vars: Dict[StrictStr, str] = None,
+        env_vars: Dict[StrictStr, str],
+        access_token: str,
     ):
         message_id = str(uuid.uuid4())
         self._executions[message_id] = Execution()
@@ -294,28 +290,32 @@ class ContextWebSocket:
                     logger.warning(f"Cleanup task failed: {e}")
                 finally:
                     self._cleanup_task = None
-            
+
             # Get the indentation level from the code
             code_indent = self._get_code_indentation(code)
-            
+
             # Build the complete code snippet with env vars
             complete_code = code
-            
+
             global_env_vars_snippet = ""
             env_vars_snippet = ""
 
             if self._global_env_vars is None:
-                self._global_env_vars = await get_envs()
+                self._global_env_vars = await get_envs(access_token=access_token)
                 global_env_vars_snippet = self._set_env_vars_code(self._global_env_vars)
-            
+
             if env_vars:
                 env_vars_snippet = self._set_env_vars_code(env_vars)
 
             if global_env_vars_snippet or env_vars_snippet:
-                indented_env_code = self._indent_code_with_level(f"{global_env_vars_snippet}\n{env_vars_snippet}", code_indent)
+                indented_env_code = self._indent_code_with_level(
+                    f"{global_env_vars_snippet}\n{env_vars_snippet}", code_indent
+                )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
-            logger.info(f"Sending code for the execution ({message_id}): {complete_code}")
+            logger.info(
+                f"Sending code for the execution ({message_id}): {complete_code}"
+            )
             request = self._get_execute_request(message_id, complete_code, False)
 
             # Send the code for execution
@@ -329,7 +329,9 @@ class ContextWebSocket:
 
             # Clean up env vars in a separate request after the main code has run
             if env_vars:
-                self._cleanup_task = asyncio.create_task(self._cleanup_env_vars(env_vars))
+                self._cleanup_task = asyncio.create_task(
+                    self._cleanup_env_vars(env_vars)
+                )
 
     async def _receive_message(self):
         if not self._ws:
@@ -396,7 +398,9 @@ class ContextWebSocket:
 
         elif data["msg_type"] == "stream":
             if data["content"]["name"] == "stdout":
-                logger.debug(f"Execution {parent_msg_ig} received stdout: {data['content']['text']}")
+                logger.debug(
+                    f"Execution {parent_msg_ig} received stdout: {data['content']['text']}"
+                )
                 await queue.put(
                     Stdout(
                         text=data["content"]["text"], timestamp=data["header"]["date"]
@@ -404,7 +408,9 @@ class ContextWebSocket:
                 )
 
             elif data["content"]["name"] == "stderr":
-                logger.debug(f"Execution {parent_msg_ig} received stderr: {data['content']['text']}")
+                logger.debug(
+                    f"Execution {parent_msg_ig} received stderr: {data['content']['text']}"
+                )
                 await queue.put(
                     Stderr(
                         text=data["content"]["text"], timestamp=data["header"]["date"]

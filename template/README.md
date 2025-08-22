@@ -24,12 +24,12 @@ If you want to customize the Code Interprerter sandbox (e.g.: add a preinstalled
    **Python**
    ```python
    from e2b_code_interpreter import Sandbox
-   sandbox = Sandbox(template="your-custom-sandbox-name")
+   sandbox = Sandbox.create(template="your-custom-sandbox-name")
    execution = sandbox.run_code("print('hello')")
    sandbox.kill()
 
    # Or you can use `with` which handles closing the sandbox for you
-   with Sandbox(template="your-custom-sandbox-name") as sandbox:
+   with Sandbox.create(template="your-custom-sandbox-name") as sandbox:
        execution = sandbox.run_code("print('hello')")
    ```
    

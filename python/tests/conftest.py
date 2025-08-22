@@ -17,7 +17,7 @@ def template():
 
 @pytest.fixture()
 def sandbox(template, debug):
-    sandbox = Sandbox(template, timeout=timeout, debug=debug)
+    sandbox = Sandbox.create(template, timeout=timeout, debug=debug)
 
     try:
         yield sandbox

@@ -14,7 +14,7 @@ python = "^3.9"
 
 httpx = ">=0.20.0, <1.0.0"
 attrs = ">=21.3.0"
-e2b = "^1.5.4"
+e2b = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
