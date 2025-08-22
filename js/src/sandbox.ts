@@ -214,13 +214,17 @@ export class Sandbox extends BaseSandbox {
         }, requestTimeout)
       : undefined
 
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    }
+    if (this.envdAccessToken) {
+      headers['X-Access-Token'] = this.envdAccessToken
+    }
+
     try {
       const res = await fetch(`${this.jupyterUrl}/execute`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-        },
+        headers,
         body: JSON.stringify({
           code,
           context_id: opts?.context?.id,
