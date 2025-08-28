@@ -12,6 +12,10 @@ on:
       E2B_TESTS_TEMPLATE:
         required: false
         type: string
+      E2B_TESTS_BENCHMARK_ITERATIONS_COUNT:
+        required: false
+        type: number
+        default: 20
 
 permissions:
   contents: read
@@ -49,7 +53,7 @@ jobs:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
           E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
-
+          E2B_TESTS_BENCHMARK_ITERATIONS_COUNT: ${{ inputs.E2B_TESTS_BENCHMARK_ITERATIONS_COUNT }}
       - name: Upload performance plot artifact
         uses: actions/upload-artifact@v4
         if: always()
