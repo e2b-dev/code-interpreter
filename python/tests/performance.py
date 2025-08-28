@@ -17,7 +17,7 @@ for i in range(iterations_count):
     print(f"\n--- Iteration {i + 1}/{iterations_count} ---")
 
     start_time = time.time()
-    sbx = Sandbox(template)
+    sbx = Sandbox.create(template=template)
     end_time = time.time()
     sandbox_creation_time = (end_time - start_time) * 1000
     sandbox_creation_times.append(sandbox_creation_time)
