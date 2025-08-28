@@ -159,7 +159,7 @@ def create_performance_plot(
         "Second Code\nRun",
     ]
 
-    box_plot = ax2.boxplot(all_metrics, labels=metric_names, patch_artist=True)
+    box_plot = ax2.boxplot(all_metrics, tick_labels=metric_names, patch_artist=True)
     colors = ["lightblue", "lightgreen", "lightcoral", "plum"]
     for patch, color in zip(box_plot["boxes"], colors):
         patch.set_facecolor(color)

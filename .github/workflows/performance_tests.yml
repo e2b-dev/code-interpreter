@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 jobs:
-  publish:
+  performance-tests:
     defaults:
       run:
         working-directory: ./python
@@ -49,3 +49,11 @@ jobs:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
           E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
+
+      - name: Upload performance plot artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-plot-${{ github.run_number }}
+          path: tests/performance_plot.png
+          retention-days: 30
