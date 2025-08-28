@@ -4,7 +4,7 @@ import os
 import statistics
 import matplotlib.pyplot as plt
 
-iterations_count = int(os.getenv("E2B_TESTS_PERF_ITERATIONS_COUNT", 20))
+iterations_count = int(os.getenv("E2B_TESTS_BENCHMARK_ITERATIONS_COUNT", 20))
 template = os.getenv("E2B_TESTS_TEMPLATE", "code-interpreter-v1")
 
 # Lists to store metrics for each iteration
