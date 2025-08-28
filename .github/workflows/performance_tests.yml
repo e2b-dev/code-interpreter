@@ -55,5 +55,5 @@ jobs:
         if: always()
         with:
           name: performance-plot-${{ github.run_number }}
-          path: tests/performance_plot.png
+          path: ./python/tests/performance_plot.png
           retention-days: 30
