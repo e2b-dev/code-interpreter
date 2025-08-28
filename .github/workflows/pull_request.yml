@@ -36,6 +36,14 @@ jobs:
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
+  performance-tests:
+    uses: ./.github/workflows/performance_tests.yml
+    needs: build-template
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   cleanup-build-template:
     uses: ./.github/workflows/cleanup_build_template.yml
     needs: [build-template, js-sdk, python-sdk]
