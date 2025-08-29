@@ -1,0 +1,63 @@
+name: Performance tests
+
+on:
+  workflow_call:
+    secrets:
+      E2B_API_KEY:
+        required: true
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+      E2B_TESTS_TEMPLATE:
+        required: false
+        type: string
+      E2B_TESTS_BENCHMARK_ITERATIONS_COUNT:
+        required: false
+        type: number
+        default: 20
+
+permissions:
+  contents: read
+
+jobs:
+  performance-tests:
+    defaults:
+      run:
+        working-directory: ./python
+    name: Performance tests
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.5.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run performance tests
+        run: poetry run python tests/performance.py
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
+          E2B_TESTS_BENCHMARK_ITERATIONS_COUNT: ${{ inputs.E2B_TESTS_BENCHMARK_ITERATIONS_COUNT }}
+      - name: Upload performance plot artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-plot-${{ github.run_number }}
+          path: ./python/performance_plot.png
+          retention-days: 30
