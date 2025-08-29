@@ -83,7 +83,7 @@ def create_performance_plot(
     second_code_run_times,
 ):
     """Create and save a performance visualization plot."""
-    print(f"\nGenerating performance plot...")
+    print("\nGenerating performance plot...")
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
 
     # Plot 1: All metrics over iterations
@@ -140,7 +140,7 @@ def create_performance_plot(
     )
     ax1.legend()
     ax1.grid(True, alpha=0.3)
-    
+
     # Set x-axis to show each iteration step
     ax1.set_xticks(iterations)
     ax1.set_xlim(0.5, iterations_count + 0.5)
@@ -187,7 +187,7 @@ Second Code Run: {statistics.mean(second_code_run_times):.1f}ms avg"""
     )
 
     # Save the plot
-    plot_filename = f"performance_plot.png"
+    plot_filename = "performance_plot.png"
     plt.savefig(plot_filename, dpi=300, bbox_inches="tight")
     print(f"Performance plot saved as: {plot_filename}")
 

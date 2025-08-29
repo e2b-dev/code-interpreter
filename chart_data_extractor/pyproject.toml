@@ -20,6 +20,8 @@ pydantic = "^2.8.2"
 pytest = "^7.4.0"
 python-dotenv = "^1.0.0"
 pytest-dotenv = "^0.5.2"
+ruff = "^0.11.12"
+
 
 [build-system]
 requires = ["poetry-core"]
@@ -27,3 +29,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/e2b-dev/code-interpreter/issues"
+
+[tool.ruff.lint]
+ignore = ["F401", "F403"]

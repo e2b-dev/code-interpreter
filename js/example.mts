@@ -1,38 +1,35 @@
-import dotenv from 'dotenv'
+import { config } from 'dotenv'
 
 import { Sandbox } from './dist'
 
-dotenv.config()
+function log(...args: any[]) {
+  console.log(...args)
+}
 
-const code = `
-import matplotlib.pyplot as plt
-import numpy as np
+config()
 
-x = np.linspace(0, 20, 100)
-y = np.sin(x)
+const sbx = await Sandbox.create('bwyvo5fk343pbvxst536')
+log('ℹ️ sandbox created', sbx.sandboxId)
 
-plt.plot(x, y)
-plt.show()
+await sbx.runCode('x = 1')
+log('Sandbox code executed')
 
-x = np.linspace(0, 10, 100)
-plt.plot(x, y)
-plt.show()
+const sandboxId = await sbx.betaPause()
+log('Sandbox paused', sandboxId)
 
-import pandas
-pandas.DataFrame({"a": [1, 2, 3]})
-`
+// Resume the sandbox from the same state
+const sameSbx = await Sandbox.connect(sbx.sandboxId)
+log('Sandbox resumed', sameSbx.sandboxId)
 
-const sandbox = await Sandbox.create()
-console.log(sandbox.sandboxId)
+const execution = await sameSbx.runCode('x+=1; x')
+// Output result
+log(execution.text)
+log(execution.error)
+if (execution.text !== '2') {
+  log('Test failed:', 'Failed to resume sandbox')
+  throw new Error('Failed to resume sandbox')
+}
+log('Sandbox resumed successfully')
 
-const execution = await sandbox.runCode(code, {
-  onStdout(msg) {
-    console.log('stdout', msg)
-  },
-  onStderr(msg) {
-    console.log('stderr', msg)
-  },
-})
-console.log(execution.results[0].formats())
-console.log(execution.results[0].data)
-console.log(execution.results.length)
+await sbx.kill()
+log('Sandbox deleted')

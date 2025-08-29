@@ -11,20 +11,19 @@ export enum ChartType {
   UNKNOWN = 'unknown',
 }
 
-
 /**
  * Ax scale types
  */
 export enum ScaleType {
-  LINEAR = "linear",
-  DATETIME = "datetime",
-  CATEGORICAL = "categorical",
-  LOG = "log",
-  SYMLOG = "symlog",
-  LOGIT = "logit",
-  FUNCTION = "function",
-  FUNCTIONLOG = "functionlog",
-  ASINH = "asinh",
+  LINEAR = 'linear',
+  DATETIME = 'datetime',
+  CATEGORICAL = 'categorical',
+  LOG = 'log',
+  SYMLOG = 'symlog',
+  LOGIT = 'logit',
+  FUNCTION = 'function',
+  FUNCTIONLOG = 'functionlog',
+  ASINH = 'asinh',
 }
 
 /**
@@ -127,13 +126,14 @@ export function deserializeChart(data: any): Chart {
       return { ...data } as PieChart
     case ChartType.BOX_AND_WHISKER:
       return { ...data } as BoxAndWhiskerChart
-    case ChartType.SUPERCHART:
-      const charts = data.data.map((g: any) => deserializeChart(g))
+    case ChartType.SUPERCHART: {
+      const charts: Chart[] = data.data.map((g: any) => deserializeChart(g))
       delete data.data
       return {
         ...data,
         data: charts,
       } as SuperChart
+    }
     default:
       return { ...data, type: ChartType.UNKNOWN } as Chart
   }

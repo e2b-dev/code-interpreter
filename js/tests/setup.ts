@@ -12,6 +12,7 @@ interface SandboxFixture {
 
 export const sandboxTest = base.extend<SandboxFixture>({
   sandbox: [
+    // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
       const sandbox = await Sandbox.create(template, {
         timeoutMs,
@@ -32,7 +33,7 @@ export const sandboxTest = base.extend<SandboxFixture>({
     },
     { auto: true },
   ],
-  template
+  template,
 })
 
 export const isDebug = process.env.E2B_DEBUG !== undefined

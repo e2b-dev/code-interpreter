@@ -122,6 +122,12 @@ export class Sandbox extends BaseSandbox {
   protected static override readonly defaultTemplate: string =
     'code-interpreter-v1'
 
+  protected get jupyterUrl(): string {
+    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(
+      JUPYTER_PORT
+    )}`
+  }
+
   /**
    * Run the code as Python.
    *
@@ -313,11 +319,5 @@ export class Sandbox extends BaseSandbox {
     } catch (error) {
       throw formatRequestTimeoutError(error)
     }
-  }
-
-  protected get jupyterUrl(): string {
-    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(
-      JUPYTER_PORT
-    )}`
   }
 }

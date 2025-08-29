@@ -4,13 +4,20 @@
   "scripts": {
     "version": "changeset version && pnpm run -r postVersion",
     "publish": "changeset publish && pnpm run -r postPublish",
-    "rm-node-modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +"
+    "rm-node-modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
+    "lint": "pnpm --if-present --recursive run lint",
+    "format": "pnpm --if-present --recursive run format"
   },
-  "packageManager": "pnpm@8.7.6",
+  "packageManager": "pnpm@9.15.5",
   "devDependencies": {
     "@changesets/cli": "^2.27.12",
     "@changesets/read": "^0.6.2",
-    "changeset": "^0.2.6"
+    "changeset": "^0.2.6",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "eslint": "^8.57.1",
+    "eslint-plugin-unused-imports": "^3.0.0",
+    "@stylistic/eslint-plugin-ts": "^1.6.2"
   },
   "engines": {
     "pnpm": ">=9.0.0 <10"

@@ -46,18 +46,18 @@ plt.show()
   expect(chart.y_unit).toBe('Hz')
 
   expect(chart.x_ticks.every((tick: number) => typeof tick === 'string')).toBe(
-    true,
+    true
   )
   expect(new Date(chart.x_ticks[0])).toBeInstanceOf(Date)
   expect(chart.y_ticks.every((tick: number) => typeof tick === 'number')).toBe(
-    true,
+    true
   )
 
   expect(
-    chart.y_tick_labels.every((label: string) => typeof label === 'string'),
+    chart.y_tick_labels.every((label: string) => typeof label === 'string')
   ).toBe(true)
   expect(
-    chart.x_tick_labels.every((label: string) => typeof label === 'string'),
+    chart.x_tick_labels.every((label: string) => typeof label === 'string')
   ).toBe(true)
 
   const lines = chart.elements
@@ -70,11 +70,11 @@ plt.show()
   expect(
     firstLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'string' && typeof point[1] === 'number',
-    ),
+        typeof point[0] === 'string' && typeof point[1] === 'number'
+    )
   ).toBe(true)
   expect(new Date(firstLine.points[0][0])).toEqual(
-    new Date('2023-09-01T00:00:00.000Z'),
+    new Date('2023-09-01T00:00:00.000Z')
   )
 
   expect(secondLine.label).toBe('cos(x)')
@@ -82,7 +82,7 @@ plt.show()
   expect(
     secondLine.points.every(
       (point: [number, number]) =>
-        typeof point[0] === 'string' && typeof point[1] === 'number',
-    ),
+        typeof point[0] === 'string' && typeof point[1] === 'number'
+    )
   ).toBe(true)
 })
