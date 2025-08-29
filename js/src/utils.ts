@@ -2,7 +2,9 @@ import { TimeoutError } from 'e2b'
 
 export function formatRequestTimeoutError(error: unknown) {
   if (error instanceof Error && error.name === 'AbortError') {
-    return new TimeoutError('Request timed out — the \'requestTimeoutMs\' option can be used to increase this timeout')
+    return new TimeoutError(
+      "Request timed out — the 'requestTimeoutMs' option can be used to increase this timeout"
+    )
   }
 
   return error
@@ -10,19 +12,21 @@ export function formatRequestTimeoutError(error: unknown) {
 
 export function formatExecutionTimeoutError(error: unknown) {
   if (error instanceof Error && error.name === 'AbortError') {
-    return new TimeoutError('Execution timed out — the \'timeoutMs\' option can be used to increase this timeout')
+    return new TimeoutError(
+      "Execution timed out — the 'timeoutMs' option can be used to increase this timeout"
+    )
   }
 
   return error
 }
 
 export async function* readLines(stream: ReadableStream<Uint8Array>) {
-  const reader = stream.getReader();
+  const reader = stream.getReader()
   let buffer = ''
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      const { done, value } = await reader.read()
 
       if (value !== undefined) {
         buffer += new TextDecoder().decode(value)

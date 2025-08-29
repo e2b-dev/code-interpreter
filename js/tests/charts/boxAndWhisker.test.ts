@@ -1,6 +1,7 @@
-import { expect } from 'vitest'
+import { expect, expectTypeOf } from 'vitest'
 
 import { sandboxTest } from '../setup'
+import { BarChart } from '../../src'
 
 sandboxTest('box-and-whisker', async ({ sandbox }) => {
   const code = `
@@ -49,7 +50,11 @@ plt.show()
   const bars = chart.elements
   expect(bars.length).toBe(3)
 
-  expect(bars.map((bar) => bar.label)).toEqual(['Class A', 'Class B', 'Class C'])
+  expect(bars.map((bar) => bar.label)).toEqual([
+    'Class A',
+    'Class B',
+    'Class C',
+  ])
   expect(bars.map((bar) => bar.outliers)).toEqual([[], [76], []])
   expect(bars.map((bar) => bar.min)).toEqual([78, 84, 75])
   expect(bars.map((bar) => bar.first_quartile)).toEqual([85, 84.75, 79])

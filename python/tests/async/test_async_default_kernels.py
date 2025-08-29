@@ -7,18 +7,25 @@ async def test_js_kernel(async_sandbox: AsyncSandbox):
     )
     assert execution.logs.stdout == ["Hello, World!\n"]
 
+
 async def test_js_esm_imports(async_sandbox: AsyncSandbox):
-    execution = await async_sandbox.run_code("""
+    execution = await async_sandbox.run_code(
+        """
     import { readFileSync } from 'fs'
     console.log(typeof readFileSync)
-    """, language="js")
+    """,
+        language="js",
+    )
     assert execution.logs.stdout == ["function\n"]
 
 
 async def test_js_top_level_await(async_sandbox: AsyncSandbox):
-    execution = await async_sandbox.run_code("""
+    execution = await async_sandbox.run_code(
+        """
     await Promise.resolve('Hello World!')
-    """, language="js")
+    """,
+        language="js",
+    )
     assert execution.text == "Hello World!"
 
 

@@ -47,7 +47,7 @@ plt.show()
 
 async def create_sbx(sbx, i: int):
     await asyncio.sleep(i * 0.01)
-    return (await sbx.run_code(f"os.getenv('TEST')", envs={"TEST": str(i)})).text
+    return (await sbx.run_code("os.getenv('TEST')", envs={"TEST": str(i)})).text
 
 
 async def run():

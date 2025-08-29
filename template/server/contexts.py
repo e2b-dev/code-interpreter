@@ -11,11 +11,13 @@ from messaging import ContextWebSocket
 
 logger = logging.Logger(__name__)
 
+
 def get_kernel_for_language(language: str) -> str:
     if language == "typescript":
         return "javascript"
 
     return language
+
 
 def normalize_language(language: Optional[str]) -> str:
     if not language:
@@ -61,7 +63,7 @@ async def create_context(client, websockets: dict, language: str, cwd: str) -> C
     logger.info(f"Setting working directory to {cwd}")
     try:
         await ws.change_current_directory(cwd, language)
-    except ExecutionError as e:
+    except ExecutionError:
         return PlainTextResponse(
             "Failed to set working directory",
             status_code=500,
