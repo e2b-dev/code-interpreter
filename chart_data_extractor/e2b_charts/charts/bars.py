@@ -37,7 +37,6 @@ class BarChart(Chart2D):
                 labels = [label.get_text() for label in ax.get_xticklabels()]
                 values = heights
             for label, value in zip(labels, values):
-
                 bar = BarData(label=label, value=value, group=group_label)
                 self.elements.append(bar)
 

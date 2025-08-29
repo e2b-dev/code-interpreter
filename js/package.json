@@ -34,7 +34,9 @@
     "example": "npx tsx example.mts",
     "test:bun": "bun test tests/runtimes/bun --env-file=.env",
     "test:deno": "deno test tests/runtimes/deno/ --allow-net --allow-read --allow-env --unstable-sloppy-imports --trace-leaks",
-    "generate-ref": "./scripts/generate_sdk_ref.sh"
+    "generate-ref": "./scripts/generate_sdk_ref.sh",
+    "lint": "eslint src/ tests/",
+    "format": "prettier --write src/ tests/ example.mts"
   },
   "devDependencies": {
     "@types/node": "^18.18.6",

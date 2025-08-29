@@ -24,7 +24,7 @@ def sandbox(template, debug):
     finally:
         try:
             sandbox.kill()
-        except:
+        except:  # noqa: E722
             if not debug:
                 warning(
                     "Failed to kill sandbox — this is expected if the test runs with local envd."
@@ -40,7 +40,7 @@ async def async_sandbox(template, debug):
     finally:
         try:
             await async_sandbox.kill()
-        except:
+        except:  # noqa: E722
             if not debug:
                 warning(
                     "Failed to kill sandbox — this is expected if the test runs with local envd."

@@ -1,6 +1,4 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import datetime
 
 from e2b_charts import chart_figure_to_chart
 from e2b_charts.charts import LineChart
