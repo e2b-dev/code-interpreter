@@ -12,7 +12,6 @@ sandboxTest('callback results', async ({ sandbox }) => {
   expect(result.results[0].text).toBe('1')
 })
 
-
 sandboxTest('callback error', async ({ sandbox }) => {
   const errors = []
   const result = await sandbox.runCode('xyz', {
@@ -35,9 +34,12 @@ sandboxTest('callback stdout', async ({ sandbox }) => {
 
 sandboxTest('callback stderr', async ({ sandbox }) => {
   const stderr = []
-  const result = await sandbox.runCode('import sys;print("This is an error message", file=sys.stderr)', {
-    onStderr: (err) => stderr.push(err),
-  })
+  const result = await sandbox.runCode(
+    'import sys;print("This is an error message", file=sys.stderr)',
+    {
+      onStderr: (err) => stderr.push(err),
+    }
+  )
 
   expect(stderr.length).toBe(1)
   expect(result.logs.stderr).toEqual(['This is an error message\n'])

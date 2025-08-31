@@ -15,7 +15,7 @@ def _figure_repr_e2b_chart_(self: Figure):
     # Get all Axes objects from the Figure
     try:
         return chart_figure_to_dict(self)
-    except:
+    except:  # noqa: E722
         return {}
 
 

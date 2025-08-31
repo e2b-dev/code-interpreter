@@ -16,5 +16,7 @@ sandboxTest('independence of kernels', async ({ sandbox }) => {
 
 sandboxTest('pass context and language', async ({ sandbox }) => {
   const context = await sandbox.createCodeContext()
-  await expect(sandbox.runCode({context, language: 'python'})).rejects.toThrowError()
+  await expect(
+    sandbox.runCode({ context, language: 'python' })
+  ).rejects.toThrowError()
 })

@@ -35,7 +35,7 @@ export class OutputMessage {
      * Whether the output is an error.
      */
     public readonly error: boolean
-  ) { }
+  ) {}
 
   public toString() {
     return this.line
@@ -60,14 +60,13 @@ export class ExecutionError {
      * The raw traceback of the error.
      **/
     public traceback: string
-  ) { }
+  ) {}
 }
 
 /**
  * Represents a MIME type.
  */
 export type MIMEType = string
-
 
 type E2BData = {
   data: Record<string, unknown>
@@ -185,7 +184,7 @@ export class Result {
           'data',
           'chart',
           'extra',
-          "text"
+          'text',
         ].includes(key)
       ) {
         this.extra[key] = data[key]
@@ -293,7 +292,7 @@ export class Execution {
      * Execution count of the cell.
      */
     public executionCount?: number
-  ) { }
+  ) {}
 
   /**
    * Returns the text representation of the main result of the cell.
@@ -329,7 +328,7 @@ export async function parseOutput(
   const msg = JSON.parse(line)
 
   switch (msg.type) {
-    case 'result':
+    case 'result': {
       const result = new Result(
         { ...msg, type: undefined, is_main_result: undefined },
         msg.is_main_result
@@ -339,6 +338,7 @@ export async function parseOutput(
         await onResult(result)
       }
       break
+    }
     case 'stdout':
       execution.logs.stdout.push(msg.text)
       if (onStdout) {

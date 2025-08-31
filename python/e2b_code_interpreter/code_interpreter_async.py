@@ -204,7 +204,6 @@ class AsyncSandbox(BaseAsyncSandbox):
                 headers={"X-Access-Token": self._envd_access_token},
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
-
                 err = await aextract_exception(response)
                 if err:
                     raise err

@@ -41,7 +41,7 @@ async def test_log_chart(async_sandbox: AsyncSandbox):
     assert chart.x_label == "X-axis"
     assert chart.y_label == "Y-axis (log scale)"
 
-    assert chart.x_unit == None
+    assert chart.x_unit is None
     assert chart.y_unit == "log scale"
 
     assert chart.x_scale == "linear"

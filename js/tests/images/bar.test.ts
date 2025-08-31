@@ -37,9 +37,8 @@ sandboxTest('test image represent', async ({ sandbox }) => {
   expect(image).toBeDefined()
 })
 
-
- sandboxTest('get image on save', async ({ sandbox }) => {
-   const code = `
+sandboxTest('get image on save', async ({ sandbox }) => {
+  const code = `
     import numpy
     from PIL import Image
 
@@ -49,8 +48,8 @@ sandboxTest('test image represent', async ({ sandbox }) => {
     image.save("test.png")
     `
 
-   const execution = await sandbox.runCode(code)
+  const execution = await sandbox.runCode(code)
 
-   const image = execution.results[0].png
-   expect(image).toBeDefined()
- })
+  const image = execution.results[0].png
+  expect(image).toBeDefined()
+})

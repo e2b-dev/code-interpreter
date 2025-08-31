@@ -121,7 +121,7 @@ async def post_execute(request: Request, exec_request: ExecutionRequest):
 
 @app.post("/contexts")
 async def post_contexts(request: CreateContext) -> Context:
-    logger.info(f"Creating a new context")
+    logger.info("Creating a new context")
 
     language = normalize_language(request.language)
     cwd = request.cwd or "/home/user"
@@ -134,7 +134,7 @@ async def post_contexts(request: CreateContext) -> Context:
 
 @app.get("/contexts")
 async def get_contexts() -> Set[Context]:
-    logger.info(f"Listing contexts")
+    logger.info("Listing contexts")
 
     context_ids = websockets.keys()
 
@@ -197,7 +197,7 @@ async def remove_context(context_id: str) -> None:
 
     try:
         await ws.close()
-    except:
+    except:  # noqa: E722
         pass
 
     response = await client.delete(f"{JUPYTER_BASE_URL}/api/kernels/{ws.context_id}")

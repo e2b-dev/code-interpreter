@@ -6,6 +6,13 @@
     "test": "poetry run pytest -n 4 --verbose -x",
     "example": "poetry run python3 example.py",
     "postVersion": "poetry version $(pnpm pkg get version --workspaces=false | tr -d \\\")",
-    "pretest": "poetry install"
+    "pretest": "poetry install",
+    "lint": "poetry run ruff check .",
+    "format": "poetry run ruff format ."
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "@typescript-eslint/parser": "^7.11.0",
+    "eslint": "^8.57.1"
   }
 }
