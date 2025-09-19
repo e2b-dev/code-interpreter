@@ -80,6 +80,62 @@ class ContextWebSocket:
             name="receive_message",
         )
 
+    async def reconnect(self, max_retries: int = 5, retry_delay: float = 0.1):
+        """Reconnect the WebSocket if it's disconnected with retry logic."""
+        logger.info(f"Attempting to reconnect WebSocket {self.context_id}")
+        
+        # Close existing connection if any
+        if self._ws is not None:
+            try:
+                await self._ws.close()
+            except Exception as e:
+                logger.warning(f"Error closing existing WebSocket: {e}")
+        
+        # Cancel existing receive task if any
+        if self._receive_task is not None and not self._receive_task.done():
+            self._receive_task.cancel()
+            try:
+                await self._receive_task
+            except asyncio.CancelledError:
+                pass
+        
+        # Reset WebSocket and task references
+        self._ws = None
+        self._receive_task = None
+        
+        # Attempt to reconnect with fixed delay
+        for attempt in range(max_retries):
+            try:
+                await self.connect()
+                logger.info(f"Successfully reconnected WebSocket {self.context_id} on attempt {attempt + 1}")
+                return True
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    logger.warning(f"Reconnection attempt {attempt + 1} failed: {e}. Retrying in {retry_delay}s...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    logger.error(f"Failed to reconnect WebSocket {self.context_id} after {max_retries} attempts: {e}")
+                    return False
+        
+        return False
+
+    def is_connected(self) -> bool:
+        """Check if the WebSocket is connected and healthy."""
+        return (
+            self._ws is not None 
+            and not self._ws.closed 
+            and self._receive_task is not None 
+            and not self._receive_task.done()
+        )
+
+    async def ensure_connected(self):
+        """Ensure WebSocket is connected, reconnect if necessary."""
+        if not self.is_connected():
+            logger.warning(f"WebSocket {self.context_id} is not connected, attempting to reconnect")
+            success = await self.reconnect()
+            if not success:
+                raise Exception(f"Failed to reconnect WebSocket {self.context_id}")
+
     def _get_execute_request(
         self, msg_id: str, code: Union[str, StrictStr], background: bool
     ) -> str:
@@ -209,11 +265,15 @@ class ContextWebSocket:
             cleanup_code = self._reset_env_vars_code(env_vars)
             if cleanup_code:
                 logger.info(f"Cleaning up env vars: {cleanup_code}")
+                # Ensure WebSocket is connected before sending cleanup request
+                await self.ensure_connected()
                 request = self._get_execute_request(message_id, cleanup_code, True)
+                if self._ws is None:
+                    raise Exception("WebSocket not connected")
                 await self._ws.send(request)
 
                 async for item in self._wait_for_result(message_id):
-                    if item["type"] == "error":
+                    if isinstance(item, dict) and item.get("type") == "error":
                         logger.error(f"Error during env var cleanup: {item}")
         finally:
             del self._executions[message_id]
@@ -242,6 +302,10 @@ class ContextWebSocket:
     ):
         message_id = str(uuid.uuid4())
         self._executions[message_id] = Execution(in_background=True)
+        
+        # Ensure WebSocket is connected before changing directory
+        await self.ensure_connected()
+        
         if language == "python":
             request = self._get_execute_request(message_id, f"%cd {path}", True)
         elif language == "deno":
@@ -262,10 +326,13 @@ class ContextWebSocket:
         else:
             return
 
+        if self._ws is None:
+            raise Exception("WebSocket not connected")
+        
         await self._ws.send(request)
 
         async for item in self._wait_for_result(message_id):
-            if item["type"] == "error":
+            if isinstance(item, dict) and item.get("type") == "error":
                 raise ExecutionError(f"Error during execution: {item}")
 
     async def execute(
@@ -277,8 +344,8 @@ class ContextWebSocket:
         message_id = str(uuid.uuid4())
         self._executions[message_id] = Execution()
 
-        if self._ws is None:
-            raise Exception("WebSocket not connected")
+        # Ensure WebSocket is connected before executing
+        await self.ensure_connected()
 
         async with self._lock:
             # Wait for any pending cleanup task to complete
@@ -319,6 +386,8 @@ class ContextWebSocket:
             request = self._get_execute_request(message_id, complete_code, False)
 
             # Send the code for execution
+            if self._ws is None:
+                raise Exception("WebSocket not connected")
             await self._ws.send(request)
 
             # Stream the results
@@ -343,6 +412,16 @@ class ContextWebSocket:
                 await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
+            # Mark all pending executions as failed due to connection loss
+            for execution in self._executions.values():
+                await execution.queue.put(
+                    Error(
+                        name="ConnectionLost",
+                        value="WebSocket connection was lost during execution",
+                        traceback="",
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
 
     async def _process_message(self, data: dict):
         """
