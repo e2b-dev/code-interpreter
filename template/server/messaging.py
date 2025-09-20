@@ -334,7 +334,7 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
                 return
-            except:
+            except:  # noqa: E722
                 logger.error("Failed to send execution request due to unknown error")
                 await execution.queue.put(
                     Error(
