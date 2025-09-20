@@ -12,6 +12,7 @@ from typing import (
 )
 from pydantic import StrictStr
 from websockets.client import WebSocketClientProtocol, connect
+from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
@@ -275,7 +276,8 @@ class ContextWebSocket:
         access_token: str,
     ):
         message_id = str(uuid.uuid4())
-        self._executions[message_id] = Execution()
+        execution = Execution()
+        self._executions[message_id] = execution
 
         if self._ws is None:
             raise Exception("WebSocket not connected")
@@ -319,7 +321,30 @@ class ContextWebSocket:
             request = self._get_execute_request(message_id, complete_code, False)
 
             # Send the code for execution
-            await self._ws.send(request)
+            try:
+                await self._ws.send(request)
+            except (ConnectionClosedError, WebSocketException) as e:
+                logger.error(f"Failed to send execution request: {e}")
+                await execution.queue.put(
+                    Error(
+                        name="WebSocketError",
+                        value="Failed to send execution request due to connection error",
+                        traceback=str(e),
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
+                return
+            except:
+                logger.error("Failed to send execution request due to unknown error")
+                await execution.queue.put(
+                    Error(
+                        name="WebSocketError",
+                        value="Failed to send execution request due to unknown error",
+                        traceback="",
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
+                return
 
             # Stream the results
             async for item in self._wait_for_result(message_id):
