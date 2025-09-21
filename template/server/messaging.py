@@ -329,7 +329,7 @@ class ContextWebSocket:
                     Error(
                         name="WebSocketError",
                         value="Failed to send execution request due to connection error",
-                        traceback=str(e),
+                        traceback="",
                     )
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
