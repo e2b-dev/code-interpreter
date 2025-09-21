@@ -333,7 +333,6 @@ class ContextWebSocket:
                     )
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
-                return
             except:  # noqa: E722
                 logger.error("Failed to send execution request due to unknown error")
                 await execution.queue.put(
@@ -344,7 +343,6 @@ class ContextWebSocket:
                     )
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
-                return
 
             # Stream the results
             async for item in self._wait_for_result(message_id):
