@@ -361,11 +361,11 @@ class ContextWebSocket:
                         execution = Execution()
                         self._executions[message_id] = execution
             else:
-                logger.error("Failed to send execution request due to unknown error")
+                logger.error("Failed to send execution request")
                 await execution.queue.put(
                     Error(
                         name="WebSocketError",
-                        value="Failed to send execution request due to unknown error",
+                        value="Failed to send execution request",
                         traceback="",
                     )
                 )
