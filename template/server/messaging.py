@@ -71,7 +71,7 @@ class ContextWebSocket:
             await execution.queue.put(
                 Error(
                     name="WebSocketError",
-                    value="Failed to send execution request due to unknown error",
+                    value="The connections was lost, rerun the code to get the results",
                     traceback="",
                 )
             )
