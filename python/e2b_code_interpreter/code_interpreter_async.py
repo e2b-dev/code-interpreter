@@ -191,6 +191,10 @@ class AsyncSandbox(BaseAsyncSandbox):
         request_timeout = request_timeout or self.connection_config.request_timeout
         context_id = context.id if context else None
 
+        headers = {}
+        if self._envd_access_token:
+            headers = {"X-Access-Token": self._envd_access_token}
+
         try:
             async with self._client.stream(
                 "POST",
@@ -201,7 +205,7 @@ class AsyncSandbox(BaseAsyncSandbox):
                     "language": language,
                     "env_vars": envs,
                 },
-                headers={"X-Access-Token": self._envd_access_token},
+                headers=headers,
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
                 err = await aextract_exception(response)
@@ -249,10 +253,14 @@ class AsyncSandbox(BaseAsyncSandbox):
         if cwd:
             data["cwd"] = cwd
 
+        headers = {}
+        if self._envd_access_token:
+            headers = {"X-Access-Token": self._envd_access_token}
+
         try:
             response = await self._client.post(
                 f"{self._jupyter_url}/contexts",
-                headers={"X-Access-Token": self._envd_access_token},
+                headers=headers,
                 json=data,
                 timeout=request_timeout or self.connection_config.request_timeout,
             )
