@@ -349,13 +349,13 @@ class ContextWebSocket:
                     await self._ws.send(request)
                     break
                 except (ConnectionClosedError, WebSocketException) as e:
-                    logger.warning(
-                        f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
-                    )
-                    await self.reconnect()
-
                     # Keep the last result, even if error
                     if i < max_retries - 1:
+                        logger.warning(
+                            f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
+                        )
+                        await self.reconnect()
+
                         del self._executions[message_id]
                         message_id = str(uuid.uuid4())
                         execution = Execution()
