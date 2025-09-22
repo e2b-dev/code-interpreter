@@ -348,7 +348,7 @@ class ContextWebSocket:
                     break
                 except (ConnectionClosedError, WebSocketException) as e:
                     logger.warning(
-                        f"WebSocket connection lost while sending execution request, {i+1}. reconnecting...: {str(e)}"
+                        f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
                     )
                     await self.reconnect()
             else:
