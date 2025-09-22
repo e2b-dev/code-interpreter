@@ -67,7 +67,7 @@ class ContextWebSocket:
 
     async def reconnect(self):
         # The results can be already lost
-        for execution in self._executions.values():
+        for key, execution in self._executions.items():
             await execution.queue.put(
                 Error(
                     name="WebSocketError",
@@ -332,12 +332,14 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
+            message_id = str(uuid.uuid4())
+            execution = Execution()
+            self._executions[message_id] = execution
+
+            max_retries = 3
             # Send the code for execution
-            for i in range(3):
+            for i in range(max_retries):
                 try:
-                    message_id = str(uuid.uuid4())
-                    execution = Execution()
-                    self._executions[message_id] = execution
                     logger.info(
                         f"Sending code for the execution ({message_id}): {complete_code}"
                     )
@@ -351,6 +353,13 @@ class ContextWebSocket:
                         f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
                     )
                     await self.reconnect()
+
+                    # Keep the last result, even if error
+                    if i < max_retries - 1:
+                        del self._executions[message_id]
+                        message_id = str(uuid.uuid4())
+                        execution = Execution()
+                        self._executions[message_id] = execution
             else:
                 logger.error("Failed to send execution request due to unknown error")
                 await execution.queue.put(
