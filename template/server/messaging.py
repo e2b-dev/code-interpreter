@@ -12,7 +12,10 @@ from typing import (
 )
 from pydantic import StrictStr
 from websockets.client import WebSocketClientProtocol, connect
-from websockets.exceptions import ConnectionClosedError, WebSocketException
+from websockets.exceptions import (
+    ConnectionClosedError,
+    WebSocketException,
+)
 
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
@@ -62,6 +65,23 @@ class ContextWebSocket:
         self._executions: Dict[str, Execution] = {}
         self._lock = asyncio.Lock()
 
+    async def reconnect(self):
+        # The results can be already lost
+        for execution in self._executions.values():
+            await execution.queue.put(
+                Error(
+                    name="WebSocketError",
+                    value="Failed to send execution request due to unknown error",
+                    traceback="",
+                )
+            )
+            await execution.queue.put(UnexpectedEndOfExecution())
+
+        if self._ws is not None:
+            await self._ws.close(reason="Reconnecting")
+
+        await self.connect()
+
     async def connect(self):
         logger.debug(f"WebSocket connecting to {self.url}")
 
@@ -70,6 +90,7 @@ class ContextWebSocket:
 
         self._ws = await connect(
             self.url,
+            ping_timeout=30,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
@@ -275,10 +296,6 @@ class ContextWebSocket:
         env_vars: Dict[StrictStr, str],
         access_token: str,
     ):
-        message_id = str(uuid.uuid4())
-        execution = Execution()
-        self._executions[message_id] = execution
-
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
@@ -315,25 +332,26 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
-            logger.info(
-                f"Sending code for the execution ({message_id}): {complete_code}"
-            )
-            request = self._get_execute_request(message_id, complete_code, False)
-
             # Send the code for execution
-            try:
-                await self._ws.send(request)
-            except (ConnectionClosedError, WebSocketException) as e:
-                logger.error(f"Failed to send execution request: {e}")
-                await execution.queue.put(
-                    Error(
-                        name="WebSocketError",
-                        value="Failed to send execution request due to connection error",
-                        traceback="",
+            for i in range(3):
+                try:
+                    message_id = str(uuid.uuid4())
+                    execution = Execution()
+                    self._executions[message_id] = execution
+                    logger.info(
+                        f"Sending code for the execution ({message_id}): {complete_code}"
                     )
-                )
-                await execution.queue.put(UnexpectedEndOfExecution())
-            except:  # noqa: E722
+                    request = self._get_execute_request(
+                        message_id, complete_code, False
+                    )
+                    await self._ws.send(request)
+                    break
+                except (ConnectionClosedError, WebSocketException) as e:
+                    logger.warning(
+                        f"WebSocket connection lost while sending execution request, {i+1}. reconnecting...: {str(e)}"
+                    )
+                    await self.reconnect()
+            else:
                 logger.error("Failed to send execution request due to unknown error")
                 await execution.queue.put(
                     Error(
@@ -366,6 +384,7 @@ class ContextWebSocket:
                 await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
+            await self.reconnect()
 
     async def _process_message(self, data: dict):
         """
