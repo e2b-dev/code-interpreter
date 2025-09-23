@@ -66,17 +66,6 @@ class ContextWebSocket:
         self._lock = asyncio.Lock()
 
     async def reconnect(self):
-        # The results can be already lost
-        for key, execution in self._executions.items():
-            await execution.queue.put(
-                Error(
-                    name="WebSocketError",
-                    value="The connections was lost, rerun the code to get the results",
-                    traceback="",
-                )
-            )
-            await execution.queue.put(UnexpectedEndOfExecution())
-
         if self._ws is not None:
             await self._ws.close(reason="Reconnecting")
 
