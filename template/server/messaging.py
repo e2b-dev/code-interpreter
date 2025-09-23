@@ -80,6 +80,9 @@ class ContextWebSocket:
         if self._ws is not None:
             await self._ws.close(reason="Reconnecting")
 
+        if self._receive_task is not None:
+            await self._receive_task
+
         await self.connect()
 
     async def connect(self):
@@ -90,7 +93,8 @@ class ContextWebSocket:
 
         self._ws = await connect(
             self.url,
-            ping_timeout=30,
+            ping_timeout=0.03,
+            ping_interval=0.03,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
