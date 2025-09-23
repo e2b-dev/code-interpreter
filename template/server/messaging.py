@@ -93,8 +93,7 @@ class ContextWebSocket:
 
         self._ws = await connect(
             self.url,
-            ping_timeout=0.03,
-            ping_interval=0.03,
+            ping_timeout=30,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
