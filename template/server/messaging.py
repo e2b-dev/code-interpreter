@@ -393,7 +393,17 @@ class ContextWebSocket:
                 await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
-            await self.reconnect()
+        finally:
+            # To prevent infinite hang, we need to cancel all ongoing execution as we could lost results during the reconnect
+            for key, execution in self._executions.items():
+                await execution.queue.put(
+                    Error(
+                        name="WebSocketError",
+                        value="The connections was lost, rerun the code to get the results",
+                        traceback="",
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
 
     async def _process_message(self, data: dict):
         """
