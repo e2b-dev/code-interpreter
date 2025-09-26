@@ -31,6 +31,9 @@ from envs import get_envs
 
 logger = logging.getLogger(__name__)
 
+MAX_RECONNECT_RETRIES = 1
+PING_TIMEOUT = 30
+
 
 class Execution:
     def __init__(self, in_background: bool = False):
@@ -82,7 +85,7 @@ class ContextWebSocket:
 
         self._ws = await connect(
             self.url,
-            ping_timeout=30,
+            ping_timeout=PING_TIMEOUT,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
@@ -328,9 +331,9 @@ class ContextWebSocket:
             execution = Execution()
             self._executions[message_id] = execution
 
-            max_retries = 3
             # Send the code for execution
-            for i in range(max_retries):
+            # Initial request and retries
+            for i in range(1 + MAX_RECONNECT_RETRIES):
                 try:
                     logger.info(
                         f"Sending code for the execution ({message_id}): {complete_code}"
@@ -342,17 +345,13 @@ class ContextWebSocket:
                     break
                 except (ConnectionClosedError, WebSocketException) as e:
                     # Keep the last result, even if error
-                    if i < max_retries - 1:
+                    if i < MAX_RECONNECT_RETRIES - 1:
                         logger.warning(
                             f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
                         )
                         await self.reconnect()
-
-                        del self._executions[message_id]
-                        message_id = str(uuid.uuid4())
-                        execution = Execution()
-                        self._executions[message_id] = execution
             else:
+                # The retry didn't help, request wasn't sent successfully
                 logger.error("Failed to send execution request")
                 await execution.queue.put(
                     Error(
@@ -387,6 +386,7 @@ class ContextWebSocket:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
         finally:
             # To prevent infinite hang, we need to cancel all ongoing execution as we could lost results during the reconnect
+            # Thanks to the locking, there can be either no ongoing execution or just one.
             for key, execution in self._executions.items():
                 await execution.queue.put(
                     Error(
