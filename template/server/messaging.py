@@ -345,7 +345,7 @@ class ContextWebSocket:
                     break
                 except (ConnectionClosedError, WebSocketException) as e:
                     # Keep the last result, even if error
-                    if i < MAX_RECONNECT_RETRIES - 1:
+                    if i < MAX_RECONNECT_RETRIES:
                         logger.warning(
                             f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
                         )
