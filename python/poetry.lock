@@ -415,6 +415,18 @@ wrapt = ">=1.10,<2"
 dev = ["PyTest", "PyTest-Cov", "bump2version (<1)", "jinja2 (>=3.0.3,<3.1.0)", "setuptools ; python_version >= \"3.12\"", "sphinx (<2)", "tox"]
 
 [[package]]
+name = "dockerfile-parse"
+version = "2.0.1"
+description = "Python library for Dockerfile manipulation"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "dockerfile-parse-2.0.1.tar.gz", hash = "sha256:3184ccdc513221983e503ac00e1aa504a2aa8f84e5de673c46b0b6eee99ec7bc"},
+    {file = "dockerfile_parse-2.0.1-py2.py3-none-any.whl", hash = "sha256:bdffd126d2eb26acf1066acb54cb2e336682e1d72b974a40894fac76a4df17f6"},
+]
+
+[[package]]
 name = "docspec"
 version = "2.2.1"
 description = "Docspec is a JSON object specification for representing API documentation of programming languages."
@@ -464,18 +476,19 @@ test = ["black", "pytest"]
 
 [[package]]
 name = "e2b"
-version = "2.0.0"
+version = "2.2.1"
 description = "E2B SDK that give agents cloud environments"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "e2b-2.0.0-py3-none-any.whl", hash = "sha256:a6621b905cb2a883a9c520736ae98343a6184fc90c29b4f2f079d720294a0df0"},
-    {file = "e2b-2.0.0.tar.gz", hash = "sha256:4d033d937b0a09b8428e73233321a913cbaef8e7299fc731579c656e9d53a144"},
+    {file = "e2b-2.2.1-py3-none-any.whl", hash = "sha256:e5f164dbfe23a6fa77b3932427e37492101faaee57003b2134f43427180edad9"},
+    {file = "e2b-2.2.1.tar.gz", hash = "sha256:306346db5ae19367aa05d5ccb8944c03aebec6cd3fae177aae2475477b2d4658"},
 ]
 
 [package.dependencies]
 attrs = ">=23.2.0"
+dockerfile-parse = ">=2.0.1,<3.0.0"
 httpcore = ">=1.0.5,<2.0.0"
 httpx = ">=0.27.0,<1.0.0"
 packaging = ">=24.1"
@@ -1833,4 +1846,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "c327b7c1391aa1fe74d57cca0f797ee783fe7bf5826b62a2cd6e023bb53d2369"
+content-hash = "145f0167963c614b8bc6970965e84b511e3a361517f4b671a1eea46ef809f41f"
