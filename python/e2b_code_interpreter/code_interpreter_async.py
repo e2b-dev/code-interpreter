@@ -193,7 +193,7 @@ class AsyncSandbox(BaseAsyncSandbox):
 
         headers = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers = {"X-Access-Token": self._envd_access_token or ""}
 
         try:
             async with self._client.stream(
@@ -255,7 +255,7 @@ class AsyncSandbox(BaseAsyncSandbox):
 
         headers = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers = {"X-Access-Token": self._envd_access_token or ""}
 
         try:
             response = await self._client.post(
