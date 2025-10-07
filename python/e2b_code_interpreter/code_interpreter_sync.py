@@ -188,6 +188,10 @@ class Sandbox(BaseSandbox):
         request_timeout = request_timeout or self.connection_config.request_timeout
         context_id = context.id if context else None
 
+        headers: Dict[str, str] = {}
+        if self._envd_access_token:
+            headers = {"X-Access-Token": self._envd_access_token}
+
         try:
             with self._client.stream(
                 "POST",
@@ -198,7 +202,7 @@ class Sandbox(BaseSandbox):
                     "language": language,
                     "env_vars": envs,
                 },
-                headers={"X-Access-Token": self._envd_access_token},
+                headers=headers,
                 timeout=(request_timeout, timeout, request_timeout, request_timeout),
             ) as response:
                 err = extract_exception(response)
@@ -246,11 +250,15 @@ class Sandbox(BaseSandbox):
         if cwd:
             data["cwd"] = cwd
 
+        headers: Dict[str, str] = {}
+        if self._envd_access_token:
+            headers = {"X-Access-Token": self._envd_access_token}
+
         try:
             response = self._client.post(
                 f"{self._jupyter_url}/contexts",
                 json=data,
-                headers={"X-Access-Token": self._envd_access_token},
+                headers=headers,
                 timeout=request_timeout or self.connection_config.request_timeout,
             )
 

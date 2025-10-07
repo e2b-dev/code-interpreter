@@ -12,6 +12,10 @@ from typing import (
 )
 from pydantic import StrictStr
 from websockets.client import WebSocketClientProtocol, connect
+from websockets.exceptions import (
+    ConnectionClosedError,
+    WebSocketException,
+)
 
 from api.models.error import Error
 from api.models.logs import Stdout, Stderr
@@ -26,6 +30,9 @@ from errors import ExecutionError
 from envs import get_envs
 
 logger = logging.getLogger(__name__)
+
+MAX_RECONNECT_RETRIES = 3
+PING_TIMEOUT = 30
 
 
 class Execution:
@@ -61,6 +68,15 @@ class ContextWebSocket:
         self._executions: Dict[str, Execution] = {}
         self._lock = asyncio.Lock()
 
+    async def reconnect(self):
+        if self._ws is not None:
+            await self._ws.close(reason="Reconnecting")
+
+        if self._receive_task is not None:
+            await self._receive_task
+
+        await self.connect()
+
     async def connect(self):
         logger.debug(f"WebSocket connecting to {self.url}")
 
@@ -69,6 +85,7 @@ class ContextWebSocket:
 
         self._ws = await connect(
             self.url,
+            ping_timeout=PING_TIMEOUT,
             max_size=None,
             max_queue=None,
             logger=ws_logger,
@@ -274,9 +291,6 @@ class ContextWebSocket:
         env_vars: Dict[StrictStr, str],
         access_token: str,
     ):
-        message_id = str(uuid.uuid4())
-        self._executions[message_id] = Execution()
-
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
@@ -313,13 +327,40 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
-            logger.info(
-                f"Sending code for the execution ({message_id}): {complete_code}"
-            )
-            request = self._get_execute_request(message_id, complete_code, False)
+            message_id = str(uuid.uuid4())
+            execution = Execution()
+            self._executions[message_id] = execution
 
             # Send the code for execution
-            await self._ws.send(request)
+            # Initial request and retries
+            for i in range(1 + MAX_RECONNECT_RETRIES):
+                try:
+                    logger.info(
+                        f"Sending code for the execution ({message_id}): {complete_code}"
+                    )
+                    request = self._get_execute_request(
+                        message_id, complete_code, False
+                    )
+                    await self._ws.send(request)
+                    break
+                except (ConnectionClosedError, WebSocketException) as e:
+                    # Keep the last result, even if error
+                    if i < MAX_RECONNECT_RETRIES:
+                        logger.warning(
+                            f"WebSocket connection lost while sending execution request, {i + 1}. reconnecting...: {str(e)}"
+                        )
+                        await self.reconnect()
+            else:
+                # The retry didn't help, request wasn't sent successfully
+                logger.error("Failed to send execution request")
+                await execution.queue.put(
+                    Error(
+                        name="WebSocketError",
+                        value="Failed to send execution request",
+                        traceback="",
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
 
             # Stream the results
             async for item in self._wait_for_result(message_id):
@@ -343,6 +384,18 @@ class ContextWebSocket:
                 await self._process_message(json.loads(message))
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
+        finally:
+            # To prevent infinite hang, we need to cancel all ongoing execution as we could lost results during the reconnect
+            # Thanks to the locking, there can be either no ongoing execution or just one.
+            for key, execution in self._executions.items():
+                await execution.queue.put(
+                    Error(
+                        name="WebSocketError",
+                        value="The connections was lost, rerun the code to get the results",
+                        traceback="",
+                    )
+                )
+                await execution.queue.put(UnexpectedEndOfExecution())
 
     async def _process_message(self, data: dict):
         """
