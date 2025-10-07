@@ -32,7 +32,7 @@ from envs import get_envs
 logger = logging.getLogger(__name__)
 
 MAX_RECONNECT_RETRIES = 3
-PING_TIMEOUT = None
+PING_TIMEOUT = 30
 
 
 class Execution:
