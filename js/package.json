@@ -39,7 +39,7 @@
     "format": "prettier --write src/ tests/ example.mts"
   },
   "devDependencies": {
-    "@types/node": "^18.18.6",
+    "@types/node": "^20.19.19",
     "dotenv": "^16.4.5",
     "knip": "^5.25.1",
     "npm-check-updates": "^17.1.14",
@@ -71,7 +71,7 @@
     "e2b": "^2.0.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "browserslist": [
     "defaults"

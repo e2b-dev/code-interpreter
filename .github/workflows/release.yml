@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -71,7 +71,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -108,7 +108,6 @@ jobs:
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-template")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-
   charts-release:
     name: Charts release
     if: needs.changes.outputs.charts == 'true'
@@ -128,7 +127,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
@@ -156,7 +155,7 @@ jobs:
           poetry build
           poetry config pypi-token.pypi ${PYPI_TOKEN}
           poetry publish --skip-existing
-        working-directory:  ./chart_data_extractor
+        working-directory: ./chart_data_extractor
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYPI_TOKEN: ${{ secrets.CHARTS_PYPI_TOKEN }}
@@ -165,7 +164,7 @@ jobs:
         id: output_version
         working-directory: ./chart_data_extractor
         run: |
-            echo "::set-output name=version::$(pnpm pkg get version --workspaces=false | tr -d \\\")"
+          echo "::set-output name=version::$(pnpm pkg get version --workspaces=false | tr -d \\\")"
 
   build-docker-image:
     name: Build Docker Image
@@ -231,9 +230,9 @@ jobs:
   python-tests:
     name: Python Tests
     needs: [changes, build-template]
-    if: always() && 
+    if: always() &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') && 
+      !contains(needs.*.result, 'cancelled') &&
       needs.changes.outputs.template == 'true'
     uses: ./.github/workflows/python_tests.yml
     secrets: inherit
@@ -241,7 +240,7 @@ jobs:
   js-tests:
     name: JS Tests
     needs: [changes, build-template]
-    if: always() && 
+    if: always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       needs.changes.outputs.template == 'true'
@@ -250,7 +249,7 @@ jobs:
 
   release:
     needs: [python-tests, js-tests]
-    if: always() && 
+    if: always() &&
       !contains(needs.*.result, 'failure') &&
       !contains(needs.*.result, 'cancelled') &&
       (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.charts == 'true' || needs.changes.outputs.template == 'true')
@@ -267,7 +266,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app-token.outputs.token }}
-
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -286,10 +284,10 @@ jobs:
         with:
           version: 9.5
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 20
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: "20.x"
           cache: pnpm
 
       - name: Configure pnpm
@@ -304,11 +302,11 @@ jobs:
         run: pnpm run version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Generate SDK reference
         id: sdk-ref
         run: pnpm run --recursive generate-ref
-      
+
       - name: Show docs file structure
         run: |
           if [ -d "./sdk-reference" ]; then
