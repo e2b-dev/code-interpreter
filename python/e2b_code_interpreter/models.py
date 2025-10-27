@@ -1,3 +1,4 @@
+import inspect
 import json
 import logging
 
@@ -20,8 +21,10 @@ from httpx import Response
 from .charts import Chart, _deserialize_chart
 
 T = TypeVar("T")
-OutputHandler = Union[
-    Callable[[T], Any],
+OutputHandler = Union[Callable[[T], Any],]
+
+OutputHandlerWithAsync = Union[
+    OutputHandler[T],
     Callable[[T], Awaitable[Any]],
 ]
 
@@ -422,6 +425,32 @@ def parse_output(
     on_result: Optional[OutputHandler[Result]] = None,
     on_error: Optional[OutputHandler[ExecutionError]] = None,
 ):
+    _parse_output(execution, output, on_stdout, on_stderr, on_result, on_error)
+
+
+async def async_parse_output(
+    execution: Execution,
+    output: str,
+    on_stdout: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
+    on_stderr: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
+    on_result: Optional[OutputHandlerWithAsync[Result]] = None,
+    on_error: Optional[OutputHandlerWithAsync[ExecutionError]] = None,
+):
+    none_or_awaitable = _parse_output(
+        execution, output, on_stdout, on_stderr, on_result, on_error
+    )
+    if inspect.isawaitable(none_or_awaitable):
+        await none_or_awaitable
+
+
+def _parse_output(
+    execution: Execution,
+    output: str,
+    on_stdout: Optional[OutputHandler[OutputMessage]] = None,
+    on_stderr: Optional[OutputHandler[OutputMessage]] = None,
+    on_result: Optional[OutputHandler[Result]] = None,
+    on_error: Optional[OutputHandler[ExecutionError]] = None,
+) -> Union[None, Awaitable[Any]]:
     data = json.loads(output)
     data_type = data.pop("type")
 
@@ -429,21 +458,23 @@ def parse_output(
         result = Result(**data)
         execution.results.append(result)
         if on_result:
-            on_result(result)
+            return on_result(result)
     elif data_type == "stdout":
         execution.logs.stdout.append(data["text"])
         if on_stdout:
-            on_stdout(OutputMessage(data["text"], data["timestamp"], False))
+            return on_stdout(OutputMessage(data["text"], data["timestamp"], False))
     elif data_type == "stderr":
         execution.logs.stderr.append(data["text"])
         if on_stderr:
-            on_stderr(OutputMessage(data["text"], data["timestamp"], True))
+            return on_stderr(OutputMessage(data["text"], data["timestamp"], True))
     elif data_type == "error":
         execution.error = ExecutionError(data["name"], data["value"], data["traceback"])
         if on_error:
-            on_error(execution.error)
+            return on_error(execution.error)
     elif data_type == "number_of_executions":
         execution.execution_count = data["execution_count"]
+
+    return None
 
 
 @dataclass
