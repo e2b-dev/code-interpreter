@@ -8,11 +8,21 @@ def async_append_fn(items):
     return async_append
 
 
-async def test_resuls(async_sandbox: AsyncSandbox):
+async def test_results(async_sandbox: AsyncSandbox):
     results = []
 
     execution = await async_sandbox.run_code(
         "x = 1;x", on_result=async_append_fn(results)
+    )
+    assert len(results) == 1
+    assert execution.results[0].text == "1"
+
+
+async def test_results_sync_callback(async_sandbox: AsyncSandbox):
+    results = []
+
+    execution = await async_sandbox.run_code(
+        "x = 1;x", on_result=lambda result: results.append(result)
     )
     assert len(results) == 1
     assert execution.results[0].text == "1"
