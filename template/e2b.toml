@@ -13,6 +13,7 @@
 team_id = "460355b3-4f64-48f9-9a16-4442817f79f5"
 memory_mb = 1_024
 start_cmd = "/root/.jupyter/start-up.sh"
+ready_cmd = "curl -s -o /dev/null -w '200' http://localhost:49999/health | grep -q '200'"
 dockerfile = "e2b.Dockerfile"
 template_name = "code-interpreter-v1"
 template_id = "nlhz8vlwyupq845jsdg9"

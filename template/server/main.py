@@ -65,7 +65,17 @@ logger.info("Starting Code Interpreter server")
 
 @app.get("/health")
 async def get_health():
-    return "OK"
+    websockets_ready = True
+    for ws in default_websockets.values():
+        if not ws in websockets or not websockets[ws].is_connected():
+            websockets_ready = False
+            print(f"Context {ws} is not connected")
+            break
+
+    if not websockets_ready:
+        return PlainTextResponse("Not ready", status_code=503)
+
+    return PlainTextResponse("OK", status_code=200)
 
 
 @app.post("/execute")
