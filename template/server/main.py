@@ -65,11 +65,10 @@ logger.info("Starting Code Interpreter server")
 
 @app.get("/health")
 async def get_health():
-    websockets_ready = True
+    websockets_ready = False
     for ws in default_websockets.values():
-        if not ws in websockets or not websockets[ws].is_connected():
-            websockets_ready = False
-            print(f"Context {ws} is not connected")
+        if ws in websockets and websockets[ws].is_connected():
+            websockets_ready = True
             break
 
     if not websockets_ready:
