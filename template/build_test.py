@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from e2b_template import Template
+from e2b import Template
 from template import make_template
 
 load_dotenv()

@@ -100,12 +100,7 @@ def make_template(
         template
         # Create server virtual environment
         .copy("server", ".server")
-        .run_cmd(
-            [
-                "python -m venv .server/.venv",
-                ". .server/.venv/bin/activate",
-            ]
-        )
+        .run_cmd("python -m venv .server/.venv")
         # Copy and install server requirements
         .run_cmd(
             ".server/.venv/bin/pip install --no-cache-dir -r .server/requirements.txt"
