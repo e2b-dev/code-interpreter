@@ -206,7 +206,7 @@ jobs:
           poetry run python build_docker.py | docker buildx build \
             --platform linux/amd64 \
             --push \
-            --tag ${{ secrets.DOCKERHUB_USERNAME }}/desktop:latest -f - .
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest -f - .
 
   build-template:
     name: Build E2B template
