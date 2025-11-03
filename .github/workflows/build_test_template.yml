@@ -46,13 +46,14 @@ jobs:
         id: build-template
         working-directory: ./template
         run: |
-          BUILD_OUTPUT=$(python build_ci.py 2>&1)
-          echo "$BUILD_OUTPUT"
-          TEMPLATE_ID=$(echo "$BUILD_OUTPUT" | grep "Template created with ID:" | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
-          BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -A 1 "Build ID:" | tail -n 1 | xargs)
-          echo "Captured Template ID: $TEMPLATE_ID"
-          echo "Captured Build ID: $BUILD_ID"
-          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+          python build_ci.py
+          # BUILD_OUTPUT=$(python build_ci.py 2>&1)
+          # echo "$BUILD_OUTPUT"
+          # TEMPLATE_ID=$(echo "$BUILD_OUTPUT" | grep "Template created with ID:" | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
+          # BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -A 1 "Build ID:" | tail -n 1 | xargs)
+          # echo "Captured Template ID: $TEMPLATE_ID"
+          # echo "Captured Build ID: $BUILD_ID"
+          # echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
