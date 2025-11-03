@@ -203,7 +203,7 @@ jobs:
       - name: Build and push to DockerHub
         working-directory: ./template
         run: |
-          poetry run python build_docker.py | docker buildx build \
+          python build_docker.py | docker buildx build \
             --platform linux/amd64 \
             --push \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest -f - .
