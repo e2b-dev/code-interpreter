@@ -17,7 +17,7 @@ def test_r_kernel(sandbox: Sandbox):
 @pytest.mark.skip_debug()
 def test_java_kernel(sandbox: Sandbox):
     execution = sandbox.run_code('System.out.println("Hello, World!")', language="java")
-    assert execution.logs.stdout[0] == "Hello, World!"
+    assert execution.logs.stdout[0] == "Hello, World!\n"
 
 
 def test_js_esm_imports(sandbox: Sandbox):
