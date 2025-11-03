@@ -13,6 +13,9 @@ on:
       template_id:
         description: "The ID of the built template"
         value: ${{ jobs.build.outputs.template_id }}
+      build_id:
+        description: "The ID of the build"
+        value: ${{ jobs.build.outputs.build_id }}
 
 permissions:
   contents: read
@@ -23,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       template_id: ${{ steps.build-template.outputs.template_id }}
+      build_id: ${{ steps.build-template.outputs.build_id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,18 +50,18 @@ jobs:
         id: build-template
         working-directory: ./template
         run: |
-          python build_ci.py
-          # BUILD_OUTPUT=$(python build_ci.py 2>&1)
-          # echo "$BUILD_OUTPUT"
-          # TEMPLATE_ID=$(echo "$BUILD_OUTPUT" | grep "Template created with ID:" | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
-          # BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -A 1 "Build ID:" | tail -n 1 | xargs)
-          # echo "Captured Template ID: $TEMPLATE_ID"
-          # echo "Captured Build ID: $BUILD_ID"
-          # echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+          python build_ci.py 2>&1 | tee build_output.log
+          TEMPLATE_ID=$(grep "Template created with ID:" build_output.log | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
+          BUILD_ID=$(grep -A 1 "Build ID:" build_output.log | tail -n 1 | xargs)
+          echo "Captured Template ID: $TEMPLATE_ID"
+          echo "Captured Build ID: $BUILD_ID"
+          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
+          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
 
-      - name: Output template ID
+      - name: Output template and build IDs
         run: |
           echo "Template ID from step output: ${{ steps.build-template.outputs.template_id }}"
+          echo "Build ID from step output: ${{ steps.build-template.outputs.build_id }}"
