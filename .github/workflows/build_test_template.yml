@@ -3,7 +3,7 @@ name: Build Template
 on:
   workflow_call:
     secrets:
-      E2B_TESTS_ACCESS_TOKEN:
+      E2B_API_KEY:
         required: true
     inputs:
       E2B_DOMAIN:
@@ -34,20 +34,27 @@ jobs:
           echo "Version: $VERSION"
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
-      - name: Install E2B CLI
-        run: npm install -g @e2b/cli
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install development dependencies
+        working-directory: ./template
+        run: pip install -r requirements-dev.txt
 
       - name: Build E2B template
         id: build-template
-        run: |
-          rm -f e2b.toml
-          e2b template build --memory-mb 1024 -c "/root/.jupyter/start-up.sh" -d "Dockerfile"
-          TEMPLATE_ID=$(grep "template_id" e2b.toml | cut -d '"' -f 2)
-          echo "Captured Template ID: $TEMPLATE_ID"
-          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         working-directory: ./template
+        run: |
+          BUILD_OUTPUT=$(python build_ci.py 2>&1)
+          echo "$BUILD_OUTPUT"
+          TEMPLATE_ID=$(echo "$BUILD_OUTPUT" | grep "Template created with ID:" | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
+          BUILD_ID=$(echo "$BUILD_OUTPUT" | grep -A 1 "Build ID:" | tail -n 1 | xargs)
+          echo "Captured Template ID: $TEMPLATE_ID"
+          echo "Captured Build ID: $BUILD_ID"
+          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         env:
-          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
 
       - name: Output template ID
