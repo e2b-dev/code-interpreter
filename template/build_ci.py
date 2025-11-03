@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 from e2b import Template, default_build_logger
 from template import make_template
 from uuid import uuid4
