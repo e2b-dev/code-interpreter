@@ -200,13 +200,13 @@ jobs:
 
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./template
-          push: true
-          platforms: linux/amd64
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest
+      - name: Build and push to DockerHub
+        working-directory: ./template
+        run: |
+          poetry run python build_docker.py | docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/desktop:latest -f - .
 
   build-template:
     name: Build E2B template
@@ -219,14 +219,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install E2B CLI
-        run: npm install -g @e2b/cli
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
 
-      - name: Build e2b
-        run: e2b template build
+      - name: Install development dependencies
         working-directory: ./template
+        run: pip install -r requirements-dev.txt
+
+      - name: Build E2B template
+        id: build-template
+        working-directory: ./template
+        run: |
+          python build_prod.py
         env:
-          E2B_ACCESS_TOKEN: ${{ secrets.E2B_ACCESS_TOKEN }}
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
 
   python-tests:
     name: Python Tests
