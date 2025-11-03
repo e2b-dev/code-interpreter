@@ -1,4 +1,4 @@
-from e2b import Template, wait_for_port, wait_for_url
+from e2b import Template, wait_for_url
 
 
 def make_template(
