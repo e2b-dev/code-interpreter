@@ -19,8 +19,6 @@ def make_template(
                 "JUPYTER_CONFIG_PATH": ".jupyter",
                 "IPYTHON_CONFIG_PATH": ".ipython",
                 "SERVER_PATH": ".server",
-                "R_VERSION": "4.4.2",
-                "R_HOME": "/opt/R/4.4.2",
                 "JAVA_HOME": "/opt/java/openjdk",
                 "DENO_INSTALL": "/opt/deno",
             }
@@ -66,7 +64,7 @@ def make_template(
         template = template.run_cmd(
             [
                 "curl -fsSL https://deno.land/x/install/install.sh | sh",
-                "PATH=/opt/deno/bin:$PATH",
+                "PATH=$DENO_INSTALL/bin:$PATH",
                 "deno jupyter --unstable --install",
             ]
         )
