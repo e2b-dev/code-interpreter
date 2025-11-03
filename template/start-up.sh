@@ -13,7 +13,7 @@ function start_jupyter_server() {
 		response=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
 	done
 
-	cd .server/
+	cd /.server/
 	.venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors --timeout-keep-alive 640
 }
 

@@ -104,17 +104,20 @@ def make_template(
         .run_cmd(
             ".server/.venv/bin/pip install --no-cache-dir -r .server/requirements.txt"
         )
-        # Copy configuration files
-        .copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
-        .copy("start-up.sh", ".jupyter/start-up.sh", mode=0o755, user="root")
+    )
+
+    if set_user_workdir:
+        template = template.set_user("user").set_workdir("/home/user")
+
+    # Copy configuration files
+    template = (
+        template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
+        .copy("start-up.sh", ".jupyter/start-up.sh")
         .run_cmd("chmod +x .jupyter/start-up.sh")
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
-
-    if set_user_workdir:
-        template = template.set_user("user").set_workdir("/home/user")
 
     return template.set_start_cmd(".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health"))
