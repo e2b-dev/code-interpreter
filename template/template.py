@@ -1,13 +1,16 @@
-from e2b import Template, wait_for_port
+from e2b import Template, wait_for_port, wait_for_url
 
 
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
+    set_user_workdir: bool = False,
 ):
     # Start with base template
     template = (
         Template()
         .from_image("python:3.12")
+        .set_user("root")
+        .set_workdir("/")
         .set_envs(
             {
                 "PIP_DEFAULT_TIMEOUT": "100",
@@ -19,7 +22,7 @@ def make_template(
                 "R_VERSION": "4.4.2",
                 "R_HOME": "/opt/R/4.4.2",
                 "JAVA_HOME": "/opt/java/openjdk",
-                "DENO_INSTALL": "$HOME/.deno",
+                "DENO_INSTALL": "/opt/deno",
             }
         )
         .apt_install(
@@ -45,11 +48,7 @@ def make_template(
     # Install R Kernel if requested
     if "r" in kernels:
         template = (
-            template.run_cmd(
-                "curl -O https://cdn.rstudio.com/r/debian-12/pkgs/r-4.4.2_1_amd64.deb"
-            )
-            .apt_install("./r-4.4.2_1_amd64.deb")
-            .make_symlink("/opt/R/4.4.2/bin/R", "/usr/bin/R")
+            template.apt_install("r-base")
             .run_cmd(
                 [
                     "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
@@ -70,7 +69,7 @@ def make_template(
         template = template.run_cmd(
             [
                 "curl -fsSL https://deno.land/x/install/install.sh | sh",
-                "PATH=$HOME/.deno/bin:$PATH",
+                "PATH=/opt/deno/bin:$PATH",
                 "deno jupyter --unstable --install",
             ]
         )
@@ -113,7 +112,9 @@ def make_template(
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
-        .set_start_cmd(".jupyter/start-up.sh", wait_for_port(49999))
     )
 
-    return template
+    if set_user_workdir:
+        template = template.set_user("user").set_workdir("/home/user")
+
+    return template.set_start_cmd(".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health"))
