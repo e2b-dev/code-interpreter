@@ -47,14 +47,11 @@ def make_template(
 
     # Install R Kernel if requested
     if "r" in kernels:
-        template = (
-            template.apt_install("r-base")
-            .run_cmd(
-                [
-                    "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
-                    "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
-                ]
-            )
+        template = template.apt_install("r-base").run_cmd(
+            [
+                "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
+                "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
+            ]
         )
 
     # Install JavaScript Kernel if requested
@@ -120,4 +117,6 @@ def make_template(
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
 
-    return template.set_start_cmd(".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health"))
+    return template.set_start_cmd(
+        ".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
+    )
