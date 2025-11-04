@@ -50,18 +50,10 @@ jobs:
         id: build-template
         working-directory: ./template
         run: |
-          python build_ci.py 2>&1 | tee build_output.log
-          TEMPLATE_ID=$(grep "Template created with ID:" build_output.log | sed 's/.*Template created with ID: \([^,]*\).*/\1/')
-          BUILD_ID=$(grep -A 1 "Build ID:" build_output.log | tail -n 1 | xargs)
-          echo "Captured Template ID: $TEMPLATE_ID"
-          echo "Captured Build ID: $BUILD_ID"
+          TEMPLATE_ID=$(uuidgen)
+          echo "Building template with Template ID: $TEMPLATE_ID"
+          python build_ci.py
           echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
-          echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
-
-      - name: Output template and build IDs
-        run: |
-          echo "Template ID from step output: ${{ steps.build-template.outputs.template_id }}"
-          echo "Build ID from step output: ${{ steps.build-template.outputs.build_id }}"
