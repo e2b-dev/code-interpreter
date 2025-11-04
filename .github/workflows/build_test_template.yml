@@ -13,9 +13,6 @@ on:
       template_id:
         description: "The ID of the built template"
         value: ${{ jobs.build.outputs.template_id }}
-      build_id:
-        description: "The ID of the build"
-        value: ${{ jobs.build.outputs.build_id }}
 
 permissions:
   contents: read
