@@ -2,8 +2,8 @@
   "name": "e2b-code-interpreter-root",
   "private": true,
   "scripts": {
-    "version": "changeset version && pnpm run -r postVersion",
-    "publish": "changeset publish && pnpm run -r postPublish",
+    "version": "pnpm changeset version && pnpm run -r postVersion",
+    "publish": "pnpm changeset publish && pnpm run -r postPublish",
     "rm-node-modules": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "lint": "pnpm --if-present --recursive run lint",
     "format": "pnpm --if-present --recursive run format",
