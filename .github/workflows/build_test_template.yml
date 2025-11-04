@@ -49,7 +49,7 @@ jobs:
       - name: Generate Template ID
         id: generate-template-id
         run: |
-          E2B_TESTS_TEMPLATE=$(uuidgen)
+          E2B_TESTS_TEMPLATE=e2b-code-interpreter-ci-$(uuidgen)
           echo "template_id=$E2B_TESTS_TEMPLATE" >> $GITHUB_OUTPUT
 
       - name: Build E2B template
