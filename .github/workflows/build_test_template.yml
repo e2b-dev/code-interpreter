@@ -46,14 +46,18 @@ jobs:
         working-directory: ./template
         run: pip install -r requirements-dev.txt
 
+      - name: Generate Template ID
+        id: generate-template-id
+        run: |
+          E2B_TESTS_TEMPLATE=$(uuidgen)
+          echo "template_id=$E2B_TESTS_TEMPLATE" >> $GITHUB_OUTPUT
+
       - name: Build E2B template
         id: build-template
         working-directory: ./template
         run: |
-          TEMPLATE_ID=$(uuidgen)
-          echo "Building template with Template ID: $TEMPLATE_ID"
           python build_ci.py
-          echo "template_id=$TEMPLATE_ID" >> $GITHUB_OUTPUT
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ steps.generate-template-id.outputs.template_id }}
