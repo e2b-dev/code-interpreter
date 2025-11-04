@@ -542,6 +542,10 @@ class ContextWebSocket:
         else:
             logger.warning(f"[UNHANDLED MESSAGE TYPE]: {data['msg_type']}")
 
+    def is_connected(self) -> bool:
+        """Check if the websocket is connected and open"""
+        return self._ws is not None and self._ws.open
+
     async def close(self):
         logger.debug(f"Closing WebSocket {self.context_id}")
 
