@@ -5,6 +5,7 @@ def make_template(
     kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
     set_user_workdir: bool = False,
 ):
+    kernels = ["python", "javascript"] + kernels
     # Start with base template
     template = (
         Template()
