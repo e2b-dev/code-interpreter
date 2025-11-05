@@ -19,8 +19,11 @@ def make_template(
                 "JUPYTER_CONFIG_PATH": ".jupyter",
                 "IPYTHON_CONFIG_PATH": ".ipython",
                 "SERVER_PATH": ".server",
-                "JAVA_HOME": "/opt/java/openjdk",
+                "JAVA_VERSION": "21",
+                "JAVA_HOME": "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64",
                 "DENO_INSTALL": "/opt/deno",
+                "DENO_VERSION": "v2.4.0",
+                "R_VERSION": "4.5.*",
             }
         )
         .apt_install(
@@ -32,6 +35,10 @@ def make_template(
                 "jq",
                 "sudo",
                 "fonts-noto-cjk",
+                "dirmngr",
+                "gnupg",
+                "apt-transport-https",
+                "ca-certificates",
             ]
         )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
@@ -45,11 +52,21 @@ def make_template(
 
     # Install R Kernel if requested
     if "r" in kernels:
-        template = template.apt_install("r-base").run_cmd(
-            [
-                "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
-                "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
-            ]
+        template = (
+            template.run_cmd(
+                [
+                    "sudo gpg --keyserver keyserver.ubuntu.com --recv-key 95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7",
+                    "sudo gpg --armor --export 95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7 | sudo tee /etc/apt/trusted.gpg.d/cran_debian_key.asc",
+                    'echo "deb https://cloud.r-project.org/bin/linux/debian trixie-cran40/" | sudo tee /etc/apt/sources.list.d/cran.list',
+                ]
+            )
+            .apt_install("r-base=${R_VERSION} r-base-dev")
+            .run_cmd(
+                [
+                    "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
+                    "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
+                ]
+            )
         )
 
     # Install JavaScript Kernel if requested
@@ -63,14 +80,11 @@ def make_template(
     if "deno" in kernels:
         template = template.run_cmd(
             [
-                "curl -fsSL https://deno.land/x/install/install.sh | sh",
+                "curl -fsSL https://deno.land/install.sh | sh -s ${DENO_VERSION}",
                 "PATH=$DENO_INSTALL/bin:$PATH",
                 "deno jupyter --unstable --install",
             ]
-        )
-        template = template.copy(
-            "deno.json", ".local/share/jupyter/kernels/deno/kernel.json"
-        )
+        ).copy("deno.json", ".local/share/jupyter/kernels/deno/kernel.json")
 
     # Install Bash Kernel if requested
     if "bash" in kernels:
@@ -80,9 +94,9 @@ def make_template(
 
     # Install Java and Java Kernel if requested
     if "java" in kernels:
-        template = template.apt_install("default-jdk")
         template = template.run_cmd(
             [
+                "apt-get install -y --no-install-recommends openjdk-${JAVA_VERSION}-jdk",
                 "wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip",
                 "unzip ijava-1.3.0.zip",
                 "python install.py --sys-prefix",
