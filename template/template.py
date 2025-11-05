@@ -19,8 +19,9 @@ def make_template(
                 "JUPYTER_CONFIG_PATH": ".jupyter",
                 "IPYTHON_CONFIG_PATH": ".ipython",
                 "SERVER_PATH": ".server",
-                "JAVA_VERSION": "21",
+                "JAVA_VERSION": "11",
                 "JAVA_HOME": "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64",
+                "IJAVA_VERSION": "1.3.0",
                 "DENO_INSTALL": "/opt/deno",
                 "DENO_VERSION": "v2.4.0",
                 "R_VERSION": "4.5.*",
@@ -35,9 +36,6 @@ def make_template(
                 "jq",
                 "sudo",
                 "fonts-noto-cjk",
-                "dirmngr",
-                "gnupg",
-                "apt-transport-https",
                 "ca-certificates",
             ]
         )
@@ -96,9 +94,12 @@ def make_template(
     if "java" in kernels:
         template = template.run_cmd(
             [
-                "apt-get install -y --no-install-recommends openjdk-${JAVA_VERSION}-jdk",
-                "wget https://github.com/SpencerPark/IJava/releases/download/v1.3.0/ijava-1.3.0.zip",
-                "unzip ijava-1.3.0.zip",
+                "mkdir -p /usr/lib/jvm",
+                "curl -fsSL https://download.java.net/java/ga/jdk${JAVA_VERSION}/openjdk-${JAVA_VERSION}_linux-x64_bin.tar.gz | tar -xz -C /usr/lib/jvm",
+                "update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/java 1",
+                "update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/javac 1",
+                "wget https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip",
+                "unzip ijava-${IJAVA_VERSION}.zip",
                 "python install.py --sys-prefix",
             ]
         )
