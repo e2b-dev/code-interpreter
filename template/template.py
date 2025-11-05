@@ -21,7 +21,7 @@ def make_template(
                 "IPYTHON_CONFIG_PATH": ".ipython",
                 "SERVER_PATH": ".server",
                 "JAVA_VERSION": "11",
-                "JAVA_HOME": "/usr/lib/jvm/java-${JAVA_VERSION}-openjdk-amd64",
+                "JAVA_HOME": "/usr/lib/jvm/jdk-${JAVA_VERSION}",
                 "IJAVA_VERSION": "1.3.0",
                 "DENO_INSTALL": "/opt/deno",
                 "DENO_VERSION": "v2.4.0",
