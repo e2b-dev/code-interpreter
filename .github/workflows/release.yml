@@ -241,7 +241,7 @@ jobs:
         run: |
           python build_prod.py
         env:
-          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
           E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
 
   python-tests:
