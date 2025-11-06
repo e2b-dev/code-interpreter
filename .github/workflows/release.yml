@@ -200,6 +200,14 @@ jobs:
 
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install development dependencies
+        working-directory: ./template
+        run: pip install -r requirements-dev.txt
+
       - name: Build and push to DockerHub
         working-directory: ./template
         run: |
