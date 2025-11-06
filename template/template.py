@@ -5,7 +5,7 @@ def make_template(
     kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
     set_user_workdir: bool = False,
 ):
-    kernels = ["python", "javascript"] + kernels
+    enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
     template = (
         Template()
@@ -46,11 +46,11 @@ def make_template(
         .pip_install("--no-cache-dir -r requirements.txt")
     )
 
-    if "python" in kernels:
+    if "python" in enabled_kernels:
         template = template.run_cmd("ipython kernel install --name 'python3' --user")
 
     # Install R Kernel if requested
-    if "r" in kernels:
+    if "r" in enabled_kernels:
         template = (
             template.run_cmd(
                 [
@@ -69,14 +69,14 @@ def make_template(
         )
 
     # Install JavaScript Kernel if requested
-    if "javascript" in kernels:
+    if "javascript" in enabled_kernels:
         template = template.npm_install(
             "--unsafe-perm git+https://github.com/e2b-dev/ijavascript.git",
             g=True,
         ).run_cmd("ijsinstall --install=global")
 
     # Install Deno Kernel if requested
-    if "deno" in kernels:
+    if "deno" in enabled_kernels:
         template = template.run_cmd(
             [
                 "curl -fsSL https://deno.land/install.sh | sh -s ${DENO_VERSION}",
@@ -86,13 +86,13 @@ def make_template(
         ).copy("deno.json", ".local/share/jupyter/kernels/deno/kernel.json")
 
     # Install Bash Kernel if requested
-    if "bash" in kernels:
+    if "bash" in enabled_kernels:
         template = template.pip_install("bash_kernel").run_cmd(
             "python -m bash_kernel.install"
         )
 
     # Install Java and Java Kernel if requested
-    if "java" in kernels:
+    if "java" in enabled_kernels:
         template = template.run_cmd(
             [
                 "mkdir -p /usr/lib/jvm",
