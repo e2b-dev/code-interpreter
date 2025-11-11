@@ -119,8 +119,7 @@ def make_template(
 
     # Copy configuration files
     template = (
-        template
-        .copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
+        template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
         .copy("start-up.sh", ".jupyter/start-up.sh")
         .run_cmd("chmod +x .jupyter/start-up.sh")
         .copy("jupyter_server_config.py", ".jupyter/")
@@ -135,7 +134,9 @@ def make_template(
         template = template.run_cmd("mkdir -p /home/user")
         template = template.run_cmd("chown -R user:user /home/user")
         # add to sudoers
-        template = template.run_cmd("echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers")
+        template = template.run_cmd(
+            "echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+        )
         # own everything in /root to user
         template = template.run_cmd("chown -R user:user /root")
 
