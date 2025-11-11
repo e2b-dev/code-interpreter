@@ -137,8 +137,6 @@ def make_template(
         template = template.run_cmd(
             "echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
         )
-        # own everything in /root to user
-        template = template.run_cmd("chown -R user:user /root")
 
     template = template.set_user("user").set_workdir("/home/user")
 
