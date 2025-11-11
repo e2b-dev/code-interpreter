@@ -3,7 +3,7 @@ from e2b import Template, wait_for_url
 
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
-    set_user_workdir: bool = False,
+    is_docker: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -11,15 +11,15 @@ def make_template(
         Template()
         .from_image("python:3.12")
         .set_user("root")
-        .set_workdir("/")
+        .set_workdir("/root")
         .set_envs(
             {
                 "PIP_DEFAULT_TIMEOUT": "100",
                 "PIP_DISABLE_PIP_VERSION_CHECK": "1",
                 "PIP_NO_CACHE_DIR": "1",
-                "JUPYTER_CONFIG_PATH": ".jupyter",
-                "IPYTHON_CONFIG_PATH": ".ipython",
-                "SERVER_PATH": ".server",
+                "JUPYTER_CONFIG_PATH": "/root/.jupyter",
+                "IPYTHON_CONFIG_PATH": "/root/.ipython",
+                "SERVER_PATH": "/root/.server",
                 "JAVA_VERSION": "11",
                 "JAVA_HOME": "/usr/lib/jvm/jdk-${JAVA_VERSION}",
                 "IJAVA_VERSION": "1.3.0",
@@ -117,9 +117,6 @@ def make_template(
         )
     )
 
-    if set_user_workdir:
-        template = template.set_user("user").set_workdir("/home/user")
-
     # Copy configuration files
     template = (
         template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
@@ -131,6 +128,18 @@ def make_template(
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
 
+    if is_docker:
+        # create user user and /home/user
+        template = template.run_cmd("useradd -m user")
+        template = template.run_cmd("mkdir -p /home/user")
+        template = template.run_cmd("chown -R user:user /home/user")
+        # add to sudoers
+        template = template.run_cmd(
+            "echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers"
+        )
+
+    template = template.set_user("user").set_workdir("/home/user")
+
     return template.set_start_cmd(
-        ".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
+        "sudo /root/.jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
     )
