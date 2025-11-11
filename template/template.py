@@ -3,7 +3,7 @@ from e2b import Template, wait_for_url
 
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
-    set_user_workdir: bool = False,
+    is_docker: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -11,7 +11,7 @@ def make_template(
         Template()
         .from_image("python:3.12")
         .set_user("root")
-        .set_workdir("/")
+        .set_workdir("/root")
         .set_envs(
             {
                 "PIP_DEFAULT_TIMEOUT": "100",
@@ -117,12 +117,10 @@ def make_template(
         )
     )
 
-    if set_user_workdir:
-        template = template.set_user("user").set_workdir("/home/user")
-
     # Copy configuration files
     template = (
-        template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
+        template
+        .copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
         .copy("start-up.sh", ".jupyter/start-up.sh")
         .run_cmd("chmod +x .jupyter/start-up.sh")
         .copy("jupyter_server_config.py", ".jupyter/")
@@ -131,6 +129,18 @@ def make_template(
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
 
+    if is_docker:
+        # create user user and /home/user
+        template = template.run_cmd("useradd -m user")
+        template = template.run_cmd("mkdir -p /home/user")
+        template = template.run_cmd("chown -R user:user /home/user")
+        # add to sudoers
+        template = template.run_cmd("echo 'user ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers")
+        # own everything in /root to user
+        template = template.run_cmd("chown -R user:user /root")
+
+    template = template.set_user("user").set_workdir("/home/user")
+
     return template.set_start_cmd(
-        ".jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
+        "sudo /root/.jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
     )
