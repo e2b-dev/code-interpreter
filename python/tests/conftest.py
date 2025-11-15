@@ -48,11 +48,12 @@ def sandbox(template, debug):
 @pytest.fixture
 def async_sandbox_factory(request, template, debug, event_loop):
     """Factory for creating async sandboxes with proper cleanup."""
+
     async def factory(template_override=None, **kwargs):
         template_name = template_override or template
         kwargs.setdefault("timeout", timeout)
         kwargs.setdefault("debug", debug)
-        
+
         sandbox = await AsyncSandbox.create(template_name, **kwargs)
 
         def kill():
