@@ -1,6 +1,7 @@
 import pytest
 import pytest_asyncio
 import os
+import asyncio
 
 from logging import warning
 
@@ -8,6 +9,19 @@ from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 timeout = 60
+
+
+# Override the event loop so it never closes during test execution
+# This helps with pytest-xdist and prevents "Event loop is closed" errors
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create a session-scoped event loop for all async tests."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest.fixture()
@@ -31,20 +45,39 @@ def sandbox(template, debug):
                 )
 
 
-@pytest_asyncio.fixture
-async def async_sandbox(template, debug):
-    async_sandbox = await AsyncSandbox.create(template, timeout=timeout, debug=debug)
+@pytest.fixture
+def async_sandbox_factory(request, template, debug, event_loop):
+    """Factory for creating async sandboxes with proper cleanup."""
 
-    try:
-        yield async_sandbox
-    finally:
-        try:
-            await async_sandbox.kill()
-        except:  # noqa: E722
-            if not debug:
-                warning(
-                    "Failed to kill sandbox — this is expected if the test runs with local envd."
-                )
+    async def factory(template_override=None, **kwargs):
+        template_name = template_override or template
+        kwargs.setdefault("timeout", timeout)
+        kwargs.setdefault("debug", debug)
+
+        sandbox = await AsyncSandbox.create(template_name, **kwargs)
+
+        def kill():
+            async def _kill():
+                try:
+                    await sandbox.kill()
+                except:  # noqa: E722
+                    if not debug:
+                        warning(
+                            "Failed to kill sandbox — this is expected if the test runs with local envd."
+                        )
+
+            event_loop.run_until_complete(_kill())
+
+        request.addfinalizer(kill)
+        return sandbox
+
+    return factory
+
+
+@pytest.fixture
+async def async_sandbox(async_sandbox_factory):
+    """Default async sandbox fixture."""
+    return await async_sandbox_factory()
 
 
 @pytest.fixture
