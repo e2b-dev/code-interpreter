@@ -47,5 +47,17 @@ sandboxTest('list contexts', async ({ sandbox }) => {
 sandboxTest('restart context', async ({ sandbox }) => {
   const context = await sandbox.createCodeContext()
 
+  // set a variable in the context
+  await sandbox.runCode('x = 1', { context: context })
+
+  // restart the context
   await sandbox.restartCodeContext(context.id)
+
+  // check that the variable no longer exists
+  const execution = await sandbox.runCode('x', { context: context })
+
+  // check for an NameError with message "name 'x' is not defined"
+  expect(execution.error).toBeDefined()
+  expect(execution.error?.name).toBe('NameError')
+  expect(execution.error?.value).toBe("name 'x' is not defined")
 })

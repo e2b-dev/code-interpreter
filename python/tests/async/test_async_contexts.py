@@ -31,6 +31,9 @@ async def test_remove_context(async_sandbox: AsyncSandbox):
 
     await async_sandbox.remove_code_context(context.id)
 
+    contexts = await async_sandbox.list_code_contexts()
+    assert context.id not in [ctx.id for ctx in contexts]
+
 
 async def test_list_contexts(async_sandbox: AsyncSandbox):
     contexts = await async_sandbox.list_code_contexts()
@@ -44,4 +47,16 @@ async def test_list_contexts(async_sandbox: AsyncSandbox):
 async def test_restart_context(async_sandbox: AsyncSandbox):
     context = await async_sandbox.create_code_context()
 
+    # set a variable in the context
+    await async_sandbox.run_code("x = 1", context=context)
+
+    # restart the context
     await async_sandbox.restart_code_context(context.id)
+
+    # check that the variable no longer exists
+    execution = await async_sandbox.run_code("x", context=context)
+
+    # check for a NameError with message "name 'x' is not defined"
+    assert execution.error is not None
+    assert execution.error.name == "NameError"
+    assert execution.error.value == "name 'x' is not defined"

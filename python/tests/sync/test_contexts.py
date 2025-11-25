@@ -31,6 +31,9 @@ def test_remove_context(sandbox: Sandbox):
 
     sandbox.remove_code_context(context.id)
 
+    contexts = sandbox.list_code_contexts()
+    assert context.id not in [ctx.id for ctx in contexts]
+
 
 def test_list_contexts(sandbox: Sandbox):
     contexts = sandbox.list_code_contexts()
@@ -44,4 +47,16 @@ def test_list_contexts(sandbox: Sandbox):
 def test_restart_context(sandbox: Sandbox):
     context = sandbox.create_code_context()
 
+    # set a variable in the context
+    sandbox.run_code("x = 1", context=context)
+
+    # restart the context
     sandbox.restart_code_context(context.id)
+
+    # check that the variable no longer exists
+    execution = sandbox.run_code("x", context=context)
+
+    # check for a NameError with message "name 'x' is not defined"
+    assert execution.error is not None
+    assert execution.error.name == "NameError"
+    assert execution.error.value == "name 'x' is not defined"

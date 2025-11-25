@@ -398,6 +398,10 @@ export class Sandbox extends BaseSandbox {
           'Content-Type': 'application/json',
           ...this.connectionConfig.headers,
         },
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(
+          this.connectionConfig.requestTimeoutMs
+        ),
       })
 
       const error = await extractError(res)
