@@ -5,6 +5,9 @@ import { sandboxTest } from './setup'
 sandboxTest('create context with no options', async ({ sandbox }) => {
   const context = await sandbox.createCodeContext()
 
+  // wait 1 second for the context to be created
+  await new Promise((resolve) => setTimeout(resolve, 1000))
+
   const contexts = await sandbox.listCodeContexts()
   const lastContext = contexts[contexts.length - 1]
 
@@ -18,6 +21,9 @@ sandboxTest('create context with options', async ({ sandbox }) => {
     language: 'python',
     cwd: '/root',
   })
+
+  // wait 1 second for the context to be created
+  await new Promise((resolve) => setTimeout(resolve, 1000))
 
   const contexts = await sandbox.listCodeContexts()
   const lastContext = contexts[contexts.length - 1]
