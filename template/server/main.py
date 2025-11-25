@@ -2,7 +2,7 @@ import logging
 import sys
 import httpx
 
-from typing import Dict, Union, Literal, Set
+from typing import Dict, Union, Literal, List
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -133,19 +133,18 @@ async def post_contexts(request: CreateContext) -> Context:
 
 
 @app.get("/contexts")
-async def get_contexts() -> Set[Context]:
+async def get_contexts() -> List[Context]:
     logger.info("Listing contexts")
 
-    context_ids = websockets.keys()
-
-    return set(
+    return [
         Context(
-            id=websockets[context_id].context_id,
-            language=websockets[context_id].language,
-            cwd=websockets[context_id].cwd,
+            id=ws.context_id,
+            language=ws.language,
+            cwd=ws.cwd,
         )
-        for context_id in context_ids
-    )
+        for key, ws in websockets.items()
+        if key != "default"
+    ]
 
 
 @app.post("/contexts/{context_id}/restart")

@@ -1,12 +1,8 @@
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
-import asyncio
 
 
 async def test_create_context_with_no_options(async_sandbox: AsyncSandbox):
     context = await async_sandbox.create_code_context()
-
-    # wait 1 second for the context to be created
-    await asyncio.sleep(1)
 
     contexts = await async_sandbox.list_code_contexts()
     last_context = contexts[-1]
@@ -21,9 +17,6 @@ async def test_create_context_with_options(async_sandbox: AsyncSandbox):
         language="python",
         cwd="/root",
     )
-
-    # wait 1 second for the context to be created
-    await asyncio.sleep(1)
 
     contexts = await async_sandbox.list_code_contexts()
     last_context = contexts[-1]

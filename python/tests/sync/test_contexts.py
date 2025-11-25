@@ -1,12 +1,8 @@
 from e2b_code_interpreter.code_interpreter_sync import Sandbox
-import time
 
 
 def test_create_context_with_no_options(sandbox: Sandbox):
     context = sandbox.create_code_context()
-
-    # wait 1 second for the context to be created
-    time.sleep(1)
 
     contexts = sandbox.list_code_contexts()
     last_context = contexts[-1]
@@ -21,9 +17,6 @@ def test_create_context_with_options(sandbox: Sandbox):
         language="python",
         cwd="/root",
     )
-
-    # wait 1 second for the context to be created
-    time.sleep(1)
 
     contexts = sandbox.list_code_contexts()
     last_context = contexts[-1]
