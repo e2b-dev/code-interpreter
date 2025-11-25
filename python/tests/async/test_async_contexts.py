@@ -36,4 +36,3 @@ async def test_restart_context(async_sandbox: AsyncSandbox):
     context = await async_sandbox.create_code_context()
 
     await async_sandbox.restart_code_context(context.id)
-

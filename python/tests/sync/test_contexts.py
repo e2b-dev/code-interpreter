@@ -36,4 +36,3 @@ def test_restart_context(sandbox: Sandbox):
     context = sandbox.create_code_context()
 
     sandbox.restart_code_context(context.id)
-
