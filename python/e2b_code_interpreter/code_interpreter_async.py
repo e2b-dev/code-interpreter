@@ -193,7 +193,9 @@ class AsyncSandbox(BaseAsyncSandbox):
 
         headers: Dict[str, str] = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers["X-Access-Token"] = self._envd_access_token
+        if self.traffic_access_token:
+            headers["e2b-traffic-access-token"] = self.traffic_access_token
 
         try:
             async with self._client.stream(
@@ -255,7 +257,9 @@ class AsyncSandbox(BaseAsyncSandbox):
 
         headers: Dict[str, str] = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers["X-Access-Token"] = self._envd_access_token
+        if self.traffic_access_token:
+            headers["e2b-traffic-access-token"] = self.traffic_access_token
 
         try:
             response = await self._client.post(

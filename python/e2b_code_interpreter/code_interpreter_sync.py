@@ -190,7 +190,9 @@ class Sandbox(BaseSandbox):
 
         headers: Dict[str, str] = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers["X-Access-Token"] = self._envd_access_token
+        if self.traffic_access_token:
+            headers["e2b-traffic-access-token"] = self.traffic_access_token
 
         try:
             with self._client.stream(
@@ -252,7 +254,9 @@ class Sandbox(BaseSandbox):
 
         headers: Dict[str, str] = {}
         if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
+            headers["X-Access-Token"] = self._envd_access_token
+        if self.traffic_access_token:
+            headers["e2b-traffic-access-token"] = self.traffic_access_token
 
         try:
             response = self._client.post(

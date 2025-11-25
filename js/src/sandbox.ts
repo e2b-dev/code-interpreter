@@ -226,6 +226,9 @@ export class Sandbox extends BaseSandbox {
     if (this.envdAccessToken) {
       headers['X-Access-Token'] = this.envdAccessToken
     }
+    if (this.trafficAccessToken) {
+      headers['e2b-traffic-access-token'] = this.trafficAccessToken
+    }
 
     try {
       const res = await fetch(`${this.jupyterUrl}/execute`, {
@@ -295,13 +298,21 @@ export class Sandbox extends BaseSandbox {
    * @returns context object.
    */
   async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...this.connectionConfig.headers,
+    }
+    if (this.envdAccessToken) {
+      headers['X-Access-Token'] = this.envdAccessToken
+    }
+    if (this.trafficAccessToken) {
+      headers['e2b-traffic-access-token'] = this.trafficAccessToken
+    }
+
     try {
       const res = await fetch(`${this.jupyterUrl}/contexts`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-        },
+        headers,
         body: JSON.stringify({
           language: opts?.language,
           cwd: opts?.cwd,
