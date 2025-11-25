@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 
-import { isDebug, sandboxTest } from './setup'
+import { sandboxTest } from './setup'
 
 sandboxTest('create context with no options', async ({ sandbox }) => {
   const context = await sandbox.createCodeContext()
