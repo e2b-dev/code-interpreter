@@ -320,4 +320,94 @@ export class Sandbox extends BaseSandbox {
       throw formatRequestTimeoutError(error)
     }
   }
+
+  /**
+   * Removes a context.
+   *
+   * @param context context to remove.
+   *
+   * @returns void.
+   */
+  async removeCodeContext(context: Context | string): Promise<void> {
+    try {
+      const id = typeof context === 'string' ? context : context.id
+      const res = await fetch(`${this.jupyterUrl}/contexts/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.connectionConfig.headers,
+        },
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(
+          this.connectionConfig.requestTimeoutMs
+        ),
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+
+      return await res.json()
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
+    }
+  }
+
+  /**
+   * List all contexts.
+   *
+   * @returns list of contexts.
+   */
+  async listCodeContexts(): Promise<Context[]> {
+    try {
+      const res = await fetch(`${this.jupyterUrl}/contexts`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.connectionConfig.headers,
+        },
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(
+          this.connectionConfig.requestTimeoutMs
+        ),
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+
+      return await res.json()
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
+    }
+  }
+
+  /**
+   * Restart a context.
+   *
+   * @param context context to restart.
+   *
+   * @returns void.
+   */
+  async restartCodeContext(context: Context | string): Promise<void> {
+    try {
+      const id = typeof context === 'string' ? context : context.id
+      const res = await fetch(`${this.jupyterUrl}/contexts/${id}/restart`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.connectionConfig.headers,
+        },
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
+    }
+  }
 }

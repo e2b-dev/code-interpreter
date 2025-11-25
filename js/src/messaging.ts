@@ -145,10 +145,7 @@ export class Result {
 
   readonly raw: RawData
 
-  constructor(
-    rawData: RawData,
-    public readonly isMainResult: boolean
-  ) {
+  constructor(rawData: RawData, public readonly isMainResult: boolean) {
     const data = { ...rawData }
     delete data['type']
     delete data['is_main_result']
