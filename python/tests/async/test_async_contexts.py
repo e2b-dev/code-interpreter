@@ -11,7 +11,7 @@ async def test_create_context_with_no_options(async_sandbox: AsyncSandbox):
     contexts = await async_sandbox.list_code_contexts()
     last_context = contexts[-1]
 
-    assert last_context.id is not None
+    assert last_context.id == context.id
     assert last_context.language == context.language
     assert last_context.cwd == context.cwd
 
@@ -28,7 +28,7 @@ async def test_create_context_with_options(async_sandbox: AsyncSandbox):
     contexts = await async_sandbox.list_code_contexts()
     last_context = contexts[-1]
 
-    assert last_context.id is not None
+    assert last_context.id == context.id
     assert last_context.language == context.language
     assert last_context.cwd == context.cwd
 

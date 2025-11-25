@@ -11,7 +11,7 @@ sandboxTest('create context with no options', async ({ sandbox }) => {
   const contexts = await sandbox.listCodeContexts()
   const lastContext = contexts[contexts.length - 1]
 
-  expect(lastContext.id).toBeDefined()
+  expect(lastContext.id).toBe(context.id)
   expect(lastContext.language).toBe(context.language)
   expect(lastContext.cwd).toBe(context.cwd)
 })
@@ -28,7 +28,7 @@ sandboxTest('create context with options', async ({ sandbox }) => {
   const contexts = await sandbox.listCodeContexts()
   const lastContext = contexts[contexts.length - 1]
 
-  expect(lastContext.id).toBeDefined()
+  expect(lastContext.id).toBe(context.id)
   expect(lastContext.language).toBe(context.language)
   expect(lastContext.cwd).toBe(context.cwd)
 })
