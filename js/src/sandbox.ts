@@ -347,8 +347,6 @@ export class Sandbox extends BaseSandbox {
       if (error) {
         throw error
       }
-
-      return await res.json()
     } catch (error) {
       throw formatRequestTimeoutError(error)
     }
