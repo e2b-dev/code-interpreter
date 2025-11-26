@@ -220,9 +220,9 @@ export class Sandbox extends BaseSandbox {
         }, requestTimeout)
       : undefined
 
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-    } as Record<string, string>
+    }
 
     if (this.trafficAccessToken) {
       headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
@@ -300,10 +300,10 @@ export class Sandbox extends BaseSandbox {
    */
   async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
     try {
-      const headers = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...this.connectionConfig.headers,
-      } as Record<string, string>
+      }
 
       if (this.trafficAccessToken) {
         headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
@@ -341,10 +341,10 @@ export class Sandbox extends BaseSandbox {
   async removeCodeContext(context: Context | string): Promise<void> {
     try {
       const id = typeof context === 'string' ? context : context.id
-      const headers = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...this.connectionConfig.headers,
-      } as Record<string, string>
+      }
 
       if (this.trafficAccessToken) {
         headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
@@ -411,10 +411,10 @@ export class Sandbox extends BaseSandbox {
   async restartCodeContext(context: Context | string): Promise<void> {
     try {
       const id = typeof context === 'string' ? context : context.id
-      const headers = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...this.connectionConfig.headers,
-      } as Record<string, string>
+      }
 
       if (this.trafficAccessToken) {
         headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
