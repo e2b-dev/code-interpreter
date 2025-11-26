@@ -1,7 +1,6 @@
 import { expect } from 'vitest'
 
-import { isDebug, sandboxTest } from './setup'
-import Sandbox from '../src'
+import { isDebug, sandboxTest, secureSandboxTest } from './setup'
 
 sandboxTest('create context with no options', async ({ sandbox }) => {
   const context = await sandbox.createCodeContext()
@@ -63,14 +62,9 @@ sandboxTest('restart context', async ({ sandbox }) => {
   expect(execution.error?.value).toBe("name 'x' is not defined")
 })
 
-sandboxTest.skipIf(isDebug)(
+secureSandboxTest.skipIf(isDebug)(
   'create context (secure traffic)',
-  async ({ template }) => {
-    const sandbox = await Sandbox.create(template, {
-      network: {
-        allowPublicTraffic: false,
-      },
-    })
+  async ({ sandbox }) => {
     const context = await sandbox.createCodeContext()
 
     const contexts = await sandbox.listCodeContexts()
@@ -79,19 +73,12 @@ sandboxTest.skipIf(isDebug)(
     expect(lastContext.id).toBe(context.id)
     expect(lastContext.language).toBe(context.language)
     expect(lastContext.cwd).toBe(context.cwd)
-
-    await sandbox.kill()
   }
 )
 
-sandboxTest.skipIf(isDebug)(
+secureSandboxTest.skipIf(isDebug)(
   'remove context (secure traffic)',
-  async ({ template }) => {
-    const sandbox = await Sandbox.create(template, {
-      network: {
-        allowPublicTraffic: false,
-      },
-    })
+  async ({ sandbox }) => {
     const context = await sandbox.createCodeContext()
 
     await sandbox.removeCodeContext(context.id)
@@ -103,14 +90,9 @@ sandboxTest.skipIf(isDebug)(
   }
 )
 
-sandboxTest.skipIf(isDebug)(
+secureSandboxTest.skipIf(isDebug)(
   'list contexts (secure traffic)',
-  async ({ template }) => {
-    const sandbox = await Sandbox.create(template, {
-      network: {
-        allowPublicTraffic: false,
-      },
-    })
+  async ({ sandbox }) => {
     const contexts = await sandbox.listCodeContexts()
 
     // default contexts should include python and javascript
@@ -121,14 +103,9 @@ sandboxTest.skipIf(isDebug)(
   }
 )
 
-sandboxTest.skipIf(isDebug)(
+secureSandboxTest.skipIf(isDebug)(
   'restart context (secure traffic)',
-  async ({ template }) => {
-    const sandbox = await Sandbox.create(template, {
-      network: {
-        allowPublicTraffic: false,
-      },
-    })
+  async ({ sandbox }) => {
     const context = await sandbox.createCodeContext()
 
     // set a variable in the context
@@ -144,7 +121,5 @@ sandboxTest.skipIf(isDebug)(
     expect(execution.error).toBeDefined()
     expect(execution.error?.name).toBe('NameError')
     expect(execution.error?.value).toBe("name 'x' is not defined")
-
-    await sandbox.kill()
   }
 )
