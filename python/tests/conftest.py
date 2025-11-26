@@ -24,7 +24,7 @@ def template():
 def sandbox_factory(request, template, sandbox_test_id):
     def factory(*, template_name: str = template, **kwargs):
         kwargs.setdefault("secure", False)
-        kwargs.setdefault("timeout", 5)
+        kwargs.setdefault("timeout", 60)
 
         metadata = kwargs.setdefault("metadata", dict())
         metadata.setdefault("sandbox_test_id", sandbox_test_id)
@@ -58,7 +58,7 @@ def event_loop():
 @pytest.fixture
 def async_sandbox_factory(request, template, sandbox_test_id, event_loop):
     async def factory(*, template_name: str = template, **kwargs):
-        kwargs.setdefault("timeout", 5)
+        kwargs.setdefault("timeout", 60)
 
         metadata = kwargs.setdefault("metadata", dict())
         metadata.setdefault("sandbox_test_id", sandbox_test_id)
