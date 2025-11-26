@@ -188,11 +188,13 @@ class Sandbox(BaseSandbox):
         request_timeout = request_timeout or self.connection_config.request_timeout
         context_id = context.id if context else None
 
-        headers: Dict[str, str] = {}
-        if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
-
         try:
+            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            if self._envd_access_token:
+                headers["X-Access-Token"] = self._envd_access_token
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
             with self._client.stream(
                 "POST",
                 f"{self._jupyter_url}/execute",
@@ -250,11 +252,13 @@ class Sandbox(BaseSandbox):
         if cwd:
             data["cwd"] = cwd
 
-        headers: Dict[str, str] = {}
-        if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
-
         try:
+            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            if self._envd_access_token:
+                headers["X-Access-Token"] = self._envd_access_token
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
             response = self._client.post(
                 f"{self._jupyter_url}/contexts",
                 json=data,
@@ -284,11 +288,13 @@ class Sandbox(BaseSandbox):
         """
         context_id = context.id if isinstance(context, Context) else context
 
-        headers: Dict[str, str] = {}
-        if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
-
         try:
+            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            if self._envd_access_token:
+                headers["X-Access-Token"] = self._envd_access_token
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
             response = self._client.delete(
                 f"{self._jupyter_url}/contexts/{context_id}",
                 headers=headers,
@@ -307,11 +313,13 @@ class Sandbox(BaseSandbox):
 
         :return: List of contexts.
         """
-        headers: Dict[str, str] = {}
-        if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
-
         try:
+            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            if self._envd_access_token:
+                headers["X-Access-Token"] = self._envd_access_token
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
             response = self._client.get(
                 f"{self._jupyter_url}/contexts",
                 headers=headers,
@@ -340,11 +348,13 @@ class Sandbox(BaseSandbox):
         """
         context_id = context.id if isinstance(context, Context) else context
 
-        headers: Dict[str, str] = {}
-        if self._envd_access_token:
-            headers = {"X-Access-Token": self._envd_access_token}
-
         try:
+            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            if self._envd_access_token:
+                headers["X-Access-Token"] = self._envd_access_token
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
             response = self._client.post(
                 f"{self._jupyter_url}/contexts/{context_id}/restart",
                 headers=headers,

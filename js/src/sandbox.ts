@@ -220,8 +220,12 @@ export class Sandbox extends BaseSandbox {
         }, requestTimeout)
       : undefined
 
-    const headers: Record<string, string> = {
+    const headers = {
       'Content-Type': 'application/json',
+    } as Record<string, string>
+
+    if (this.trafficAccessToken) {
+      headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
     }
     if (this.envdAccessToken) {
       headers['X-Access-Token'] = this.envdAccessToken
@@ -296,12 +300,18 @@ export class Sandbox extends BaseSandbox {
    */
   async createCodeContext(opts?: CreateCodeContextOpts): Promise<Context> {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...this.connectionConfig.headers,
+      } as Record<string, string>
+
+      if (this.trafficAccessToken) {
+        headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
+      }
+
       const res = await fetch(`${this.jupyterUrl}/contexts`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-        },
+        headers,
         body: JSON.stringify({
           language: opts?.language,
           cwd: opts?.cwd,
@@ -331,12 +341,18 @@ export class Sandbox extends BaseSandbox {
   async removeCodeContext(context: Context | string): Promise<void> {
     try {
       const id = typeof context === 'string' ? context : context.id
+      const headers = {
+        'Content-Type': 'application/json',
+        ...this.connectionConfig.headers,
+      } as Record<string, string>
+
+      if (this.trafficAccessToken) {
+        headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
+      }
+
       const res = await fetch(`${this.jupyterUrl}/contexts/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-        },
+        headers,
         keepalive: true,
         signal: this.connectionConfig.getSignal(
           this.connectionConfig.requestTimeoutMs
@@ -364,6 +380,9 @@ export class Sandbox extends BaseSandbox {
         headers: {
           'Content-Type': 'application/json',
           ...this.connectionConfig.headers,
+          ...(this.trafficAccessToken
+            ? { 'E2B-Traffic-Access-Token': this.trafficAccessToken }
+            : {}),
         },
         keepalive: true,
         signal: this.connectionConfig.getSignal(
@@ -392,12 +411,18 @@ export class Sandbox extends BaseSandbox {
   async restartCodeContext(context: Context | string): Promise<void> {
     try {
       const id = typeof context === 'string' ? context : context.id
+      const headers = {
+        'Content-Type': 'application/json',
+        ...this.connectionConfig.headers,
+      } as Record<string, string>
+
+      if (this.trafficAccessToken) {
+        headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
+      }
+
       const res = await fetch(`${this.jupyterUrl}/contexts/${id}/restart`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-        },
+        headers,
         keepalive: true,
         signal: this.connectionConfig.getSignal(
           this.connectionConfig.requestTimeoutMs

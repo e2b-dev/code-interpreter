@@ -30,8 +30,8 @@ def template():
 
 
 @pytest.fixture()
-def sandbox(template, debug):
-    sandbox = Sandbox.create(template, timeout=timeout, debug=debug)
+def sandbox(template, debug, network):
+    sandbox = Sandbox.create(template, timeout=timeout, debug=debug, network=network)
 
     try:
         yield sandbox
@@ -46,15 +46,14 @@ def sandbox(template, debug):
 
 
 @pytest.fixture
-def async_sandbox_factory(request, template, debug, event_loop):
+def async_sandbox_factory(request, template, debug, network, event_loop):
     """Factory for creating async sandboxes with proper cleanup."""
 
     async def factory(template_override=None, **kwargs):
         template_name = template_override or template
         kwargs.setdefault("timeout", timeout)
         kwargs.setdefault("debug", debug)
-
-        sandbox = await AsyncSandbox.create(template_name, **kwargs)
+        sandbox = await AsyncSandbox.create(template_name, network=network, **kwargs)
 
         def kill():
             async def _kill():
