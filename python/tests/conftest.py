@@ -87,6 +87,7 @@ async def async_sandbox(async_sandbox_factory):
 def debug():
     return os.getenv("E2B_DEBUG") is not None
 
+
 @pytest.fixture(autouse=True)
 def skip_by_debug(request, debug):
     if request.node.get_closest_marker("skip_debug"):
