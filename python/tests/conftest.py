@@ -53,7 +53,8 @@ def async_sandbox_factory(request, template, debug, network, event_loop):
         template_name = template_override or template
         kwargs.setdefault("timeout", timeout)
         kwargs.setdefault("debug", debug)
-        sandbox = await AsyncSandbox.create(template_name, network=network, **kwargs)
+        kwargs.setdefault("network", network)
+        sandbox = await AsyncSandbox.create(template_name, **kwargs)
 
         def kill():
             async def _kill():
@@ -82,6 +83,11 @@ async def async_sandbox(async_sandbox_factory):
 @pytest.fixture
 def debug():
     return os.getenv("E2B_DEBUG") is not None
+
+
+@pytest.fixture
+def network():
+    return None
 
 
 @pytest.fixture(autouse=True)
