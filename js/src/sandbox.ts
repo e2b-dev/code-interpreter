@@ -302,7 +302,6 @@ export class Sandbox extends BaseSandbox {
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...this.connectionConfig.headers,
       }
 
       if (this.trafficAccessToken) {
@@ -343,7 +342,6 @@ export class Sandbox extends BaseSandbox {
       const id = typeof context === 'string' ? context : context.id
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...this.connectionConfig.headers,
       }
 
       if (this.trafficAccessToken) {
@@ -375,15 +373,17 @@ export class Sandbox extends BaseSandbox {
    */
   async listCodeContexts(): Promise<Context[]> {
     try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (this.trafficAccessToken) {
+        headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
+      }
+
       const res = await fetch(`${this.jupyterUrl}/contexts`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...this.connectionConfig.headers,
-          ...(this.trafficAccessToken
-            ? { 'E2B-Traffic-Access-Token': this.trafficAccessToken }
-            : {}),
-        },
+        headers,
         keepalive: true,
         signal: this.connectionConfig.getSignal(
           this.connectionConfig.requestTimeoutMs
@@ -413,7 +413,6 @@ export class Sandbox extends BaseSandbox {
       const id = typeof context === 'string' ? context : context.id
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...this.connectionConfig.headers,
       }
 
       if (this.trafficAccessToken) {
