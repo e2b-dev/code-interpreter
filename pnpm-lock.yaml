@@ -48,8 +48,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: ^2.8.3
-        version: 2.8.3
+        specifier: ^2.8.4
+        version: 2.8.4
     devDependencies:
       '@types/node':
         specifier: ^20.19.19
@@ -895,8 +895,8 @@ packages:
     resolution: {integrity: sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==}
     engines: {node: '>=12'}
 
-  e2b@2.8.3:
-    resolution: {integrity: sha512-P0hA5UceZ6HVfL9VDqQ0VG+IXZTy1K+FHek3xFkg7vSgcBm6wV9KG/YcvaoEdgiF+n1KS2TsIhunLs22jbrLyQ==}
+  e2b@2.8.4:
+    resolution: {integrity: sha512-InHLjwWYM3eWfr/YYP1NnbjZ6ZojydzfFnY1JMX2oDM5dxO6EPriqIw2ObFJPCwRsrpZelnHeMe19HeJJmVBvg==}
     engines: {node: '>=20'}
 
   eastasianwidth@0.2.0:
@@ -2728,7 +2728,7 @@ snapshots:
 
   dotenv@16.4.7: {}
 
-  e2b@2.8.3:
+  e2b@2.8.4:
     dependencies:
       '@bufbuild/protobuf': 2.9.0
       '@connectrpc/connect': 2.0.0-rc.3(@bufbuild/protobuf@2.9.0)
