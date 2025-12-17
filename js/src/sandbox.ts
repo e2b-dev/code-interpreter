@@ -1,18 +1,13 @@
 import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
 
+import { Result, Execution, OutputMessage, parseOutput } from './messaging'
 import {
-  Result,
-  Execution,
-  OutputMessage,
-  parseOutput,
-  extractError,
   ExecutionError,
-} from './messaging'
-import {
+  extractError,
   formatExecutionTimeoutError,
   formatRequestTimeoutError,
-  readLines,
-} from './utils'
+} from './errors'
+import { readLines } from './utils'
 import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
 
 /**

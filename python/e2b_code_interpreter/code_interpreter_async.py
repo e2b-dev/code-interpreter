@@ -16,7 +16,6 @@ from e2b_code_interpreter.constants import (
 )
 from e2b_code_interpreter.models import (
     Execution,
-    ExecutionError,
     Context,
     Result,
     aextract_exception,
@@ -25,6 +24,7 @@ from e2b_code_interpreter.models import (
     OutputMessage,
 )
 from e2b_code_interpreter.exceptions import (
+    ExecutionError,
     format_execution_timeout_error,
     format_request_timeout_error,
 )

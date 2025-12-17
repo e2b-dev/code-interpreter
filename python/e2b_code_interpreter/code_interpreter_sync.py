@@ -11,7 +11,6 @@ from e2b_code_interpreter.constants import (
     DEFAULT_TIMEOUT,
 )
 from e2b_code_interpreter.models import (
-    ExecutionError,
     Execution,
     Context,
     Result,
@@ -21,6 +20,7 @@ from e2b_code_interpreter.models import (
     OutputMessage,
 )
 from e2b_code_interpreter.exceptions import (
+    ExecutionError,
     format_execution_timeout_error,
     format_request_timeout_error,
 )

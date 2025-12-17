@@ -19,6 +19,7 @@ from typing import (
 from httpx import Response
 
 from .charts import Chart, _deserialize_chart
+from .exceptions import ExecutionError
 
 T = TypeVar("T")
 OutputHandler = Union[Callable[[T], Any],]
@@ -52,39 +53,6 @@ class OutputMessage:
 
     def __str__(self):
         return self.line
-
-
-@dataclass
-class ExecutionError:
-    """
-    Represents an error that occurred during the execution of a cell.
-    The error contains the name of the error, the value of the error, and the traceback.
-    """
-
-    name: str
-    """
-    Name of the error.
-    """
-    value: str
-    """
-    Value of the error.
-    """
-    traceback: str
-    """
-    The raw traceback of the error.
-    """
-
-    def __init__(self, name: str, value: str, traceback: str, **kwargs):
-        self.name = name
-        self.value = value
-        self.traceback = traceback
-
-    def to_json(self) -> str:
-        """
-        Returns the JSON representation of the Error object.
-        """
-        data = {"name": self.name, "value": self.value, "traceback": self.traceback}
-        return json.dumps(data)
 
 
 class MIMEType(str):
