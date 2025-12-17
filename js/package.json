@@ -43,7 +43,7 @@
     "dotenv": "^16.4.5",
     "knip": "^5.25.1",
     "npm-check-updates": "^17.1.14",
-    "tsup": "^8.4.0",
+    "tsup": "^8.5.1",
     "typedoc": "0.26.8",
     "typedoc-plugin-markdown": "4.2.7",
     "typescript": "^5.5.3",
