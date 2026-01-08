@@ -14,7 +14,7 @@ e2b_charts
 # Other packages
 aiohttp==3.13.3
 beautifulsoup4==4.13.4
-bokeh==3.7.3
+bokeh==3.8.2
 gensim==4.3.3 # unmaintained, blocking numpy and scipy bump
 imageio==2.37.0
 joblib==1.5.0
@@ -38,7 +38,7 @@ soundfile==0.13.1
 spacy==3.8.2 # doesn't work on 3.13.x
 textblob==0.19.0
 tornado==6.5.1
-urllib3==2.6.0
+urllib3==2.6.3
 xarray==2025.4.0
 xlrd==2.0.1
 sympy==1.14.0
