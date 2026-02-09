@@ -12,13 +12,13 @@ packages = [{ include = "e2b_charts" }]
 [tool.poetry.dependencies]
 python = "^3.10"
 
-numpy = ">=1.26.4"
-matplotlib = "^3.10.3"
-pydantic = "^2.9.1"
+numpy = "^1.26.4"
+matplotlib = "^3.9.2"
+pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.5"
-python-dotenv = "^1.2.1"
+pytest = "^7.4.0"
+python-dotenv = "^1.0.0"
 pytest-dotenv = "^0.5.2"
 ruff = "^0.11.12"
 
