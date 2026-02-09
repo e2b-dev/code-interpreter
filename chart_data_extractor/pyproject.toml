@@ -10,7 +10,7 @@ repository = "https://github.com/e2b-dev/e2b-code-interpreter/tree/python"
 packages = [{ include = "e2b_charts" }]
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = "^3.12"
 
 numpy = "^2.3.5"
 matplotlib = "^3.10.3"
