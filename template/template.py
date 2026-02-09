@@ -9,7 +9,7 @@ def make_template(
     # Start with base template
     template = (
         Template()
-        .from_image("python:3.12")
+        .from_image("python:3.13")
         .set_user("root")
         .set_workdir("/root")
         .set_envs(
