@@ -8,8 +8,7 @@ pandas==2.2.3
 matplotlib==3.10.3
 pillow==11.3.0
 
-# Latest version for
-e2b_charts
+# e2b_charts installed separately (--no-deps) until new version is published with numpy 2 support
 
 # Other packages
 aiohttp==3.13.3

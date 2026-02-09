@@ -44,6 +44,7 @@ def make_template(
         .apt_install("nodejs")
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
+        .pip_install("--no-cache-dir --no-deps e2b_charts")
     )
 
     if "python" in enabled_kernels:
