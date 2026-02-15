@@ -2,7 +2,7 @@
   "name": "@e2b/code-interpreter-python",
   "private": true,
   "version": "2.4.1",
-  "packageManager": "pnpm@9.15.5",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "test": "poetry run pytest -n 4 --verbose -x",
     "example": "poetry run python3 example.py",
