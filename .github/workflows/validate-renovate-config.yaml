@@ -1,5 +1,8 @@
 name: validate renovate config
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     branches:
