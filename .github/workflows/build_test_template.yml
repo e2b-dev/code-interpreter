@@ -27,6 +27,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Set package version
         working-directory: ./template
         run: |
@@ -36,7 +43,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13' 
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install development dependencies
         working-directory: ./template
