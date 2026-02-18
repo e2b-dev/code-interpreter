@@ -15,7 +15,7 @@ e2b_charts
 aiohttp==3.13.3
 beautifulsoup4==4.14.3
 bokeh==3.8.2
-gensim==4.3.3 # unmaintained, blocking numpy and scipy bump
+gensim==4.4.0 # unmaintained, blocking numpy and scipy bump
 imageio==2.37.2
 joblib==1.5.3
 librosa==0.11.0
