@@ -19,7 +19,7 @@ gensim==4.3.3 # unmaintained, blocking numpy and scipy bump
 imageio==2.37.2
 joblib==1.5.3
 librosa==0.11.0
-nltk==3.9.2
+nltk==3.9.3
 numpy==1.26.4 # bump blocked by gensim
 numba==0.61.2
 opencv-python==4.11.0.86
