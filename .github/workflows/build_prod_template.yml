@@ -1,7 +1,7 @@
 name: Build Prod Template
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 permissions:
   contents: read
