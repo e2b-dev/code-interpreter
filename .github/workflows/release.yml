@@ -119,6 +119,13 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         id: pnpm-install
@@ -126,14 +133,14 @@ jobs:
           version: 9.5
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.5.1
+          version: '${{ env.TOOL_VERSION_POETRY }}'
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
@@ -179,6 +186,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -202,7 +216,7 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13' 
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install development dependencies
         working-directory: ./template
@@ -227,9 +241,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.13' 
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install development dependencies
         working-directory: ./template
@@ -284,15 +306,22 @@ jobs:
         with:
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
         with:
-          python-version: "3.12"
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.8.1
+          version: '${{ env.TOOL_VERSION_POETRY }}'
           virtualenvs-create: true
           virtualenvs-in-project: true
           installer-parallel: true
