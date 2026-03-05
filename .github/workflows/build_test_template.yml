@@ -22,7 +22,7 @@ jobs:
     name: Build E2B Template
     runs-on: ubuntu-latest
     outputs:
-      template_id: ${{ steps.generate-template-id.outputs.template_id }}
+      template_id: ${{ steps.build-template.outputs.template_id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,12 +42,12 @@ jobs:
         working-directory: ./template
         run: pip install -r requirements-dev.txt
 
-      - name: Generate Template ID
+      - name: Generate Template Name
         id: generate-template-id
         run: |
           E2B_TESTS_TEMPLATE=e2b-code-interpreter-ci-$(uuidgen)
-          echo "Generated Template ID: $E2B_TESTS_TEMPLATE"
-          echo "template_id=$E2B_TESTS_TEMPLATE" >> $GITHUB_OUTPUT
+          echo "Generated Template Name: $E2B_TESTS_TEMPLATE"
+          echo "template_name=$E2B_TESTS_TEMPLATE" >> $GITHUB_OUTPUT
 
       - name: Build E2B template
         id: build-template
@@ -57,4 +57,4 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
-          E2B_TESTS_TEMPLATE: ${{ steps.generate-template-id.outputs.template_id }}
+          E2B_TESTS_TEMPLATE: ${{ steps.generate-template-id.outputs.template_name }}
