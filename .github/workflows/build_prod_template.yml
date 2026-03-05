@@ -2,6 +2,12 @@ name: Build Prod Template
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: Skip build cache
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -29,3 +35,4 @@ jobs:
         env:
           E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
           E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          SKIP_CACHE: ${{ inputs.skip_cache }}
