@@ -9,6 +9,10 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: Release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
