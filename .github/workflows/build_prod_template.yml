@@ -1,0 +1,42 @@
+name: Build Prod Template
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: Skip build cache
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: Release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-template:
+    name: Build E2B template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
+
+      - name: Install development dependencies
+        working-directory: ./template
+        run: pip install -r requirements-dev.txt
+
+      - name: Build E2B template
+        id: build-template
+        working-directory: ./template
+        run: |
+          python build_prod.py
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
+          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          SKIP_CACHE: ${{ inputs.skip_cache }}
