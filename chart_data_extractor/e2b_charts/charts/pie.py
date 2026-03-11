@@ -25,7 +25,11 @@ class PieChart(Chart):
         for wedge in ax.patches:
             pie_data = PieData(
                 label=wedge.get_label(),
-                angle=abs(dynamic_round(Decimal(float(wedge.theta2)) - Decimal(float(wedge.theta1)))),
+                angle=abs(
+                    dynamic_round(
+                        Decimal(float(wedge.theta2)) - Decimal(float(wedge.theta1))
+                    )
+                ),
                 radius=wedge.r,
             )
 
