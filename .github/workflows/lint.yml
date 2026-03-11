@@ -3,6 +3,9 @@ name: Lint
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint
@@ -14,7 +17,7 @@ jobs:
 
       - uses: pnpm/action-setup@v4
         with:
-          version: 9.15.5
+          version: 9.15.9
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
