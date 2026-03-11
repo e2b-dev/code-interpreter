@@ -49,7 +49,7 @@ importers:
     dependencies:
       e2b:
         specifier: ^2.8.4
-        version: 2.13.0
+        version: 2.14.1
     devDependencies:
       '@types/node':
         specifier: ^20.19.19
@@ -1042,8 +1042,8 @@ packages:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
-  e2b@2.13.0:
-    resolution: {integrity: sha512-tYsRDXKx47WoV0lVHZxg1uGlSGC2+085Vy+LMxAnnw96vCQm0lBIKPaxV59xDkQZp4yI9/vgZtd2NzNNnoQPTg==}
+  e2b@2.14.1:
+    resolution: {integrity: sha512-g0NPZNzwIaePTahu9ixBtqrw9IZQ8ThK8dt+DU394+jmxQJ+69c2t8A0j973/j+bHo3QdNFxIRIH6zDcC3ueaw==}
     engines: {node: '>=20'}
 
   easy-table@1.2.0:
@@ -1788,8 +1788,8 @@ packages:
     resolution: {integrity: sha512-GNzQvQTOIP6RyTfE2Qxb8ZVlNmw0n88vp1szwWRimP02mnTsx3Wtn5qRdqY9w2XduFNUgvOwhNnQsjwCp+kqaQ==}
     engines: {node: '>=6'}
 
-  tar@7.5.9:
-    resolution: {integrity: sha512-BTLcK0xsDh2+PUe9F6c2TlRp4zOOBMTkoQHQIWSIzI0R7KG46uEwq4OPk2W7bZcprBMsuaeFsqwYr7pjh6CuHg==}
+  tar@7.5.11:
+    resolution: {integrity: sha512-ChjMH33/KetonMTAtpYdgUFr0tbz69Fp2v7zWxQfYZX4g5ZN2nOBXm1R2xyA+lMIKrLKIoKAwFj93jE/avX9cQ==}
     engines: {node: '>=18'}
 
   text-table@0.2.0:
@@ -2896,7 +2896,7 @@ snapshots:
 
   dotenv@16.6.1: {}
 
-  e2b@2.13.0:
+  e2b@2.14.1:
     dependencies:
       '@bufbuild/protobuf': 2.11.0
       '@connectrpc/connect': 2.0.0-rc.3(@bufbuild/protobuf@2.11.0)
@@ -2907,7 +2907,7 @@ snapshots:
       glob: 11.1.0
       openapi-fetch: 0.14.1
       platform: 1.3.6
-      tar: 7.5.9
+      tar: 7.5.11
 
   easy-table@1.2.0:
     dependencies:
@@ -3713,7 +3713,7 @@ snapshots:
 
   tapable@2.2.1: {}
 
-  tar@7.5.9:
+  tar@7.5.11:
     dependencies:
       '@isaacs/fs-minipass': 4.0.1
       chownr: 3.0.0
