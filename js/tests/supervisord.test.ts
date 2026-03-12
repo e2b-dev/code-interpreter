@@ -19,8 +19,10 @@ sandboxTest('restart after jupyter kill', async ({ sandbox }) => {
   const initialHealth = await waitForHealth(sandbox)
   expect(initialHealth).toBe(true)
 
-  // Kill the jupyter process
-  await sandbox.commands.run('supervisorctl stop jupyter')
+  // Kill the jupyter process by pid
+  await sandbox.commands.run(
+    "kill -9 $(pgrep -f 'jupyter server')"
+  )
 
   // Wait for supervisord to restart it and health to come back
   const recovered = await waitForHealth(sandbox, 10, 100)
@@ -36,8 +38,10 @@ sandboxTest('restart after code-interpreter kill', async ({ sandbox }) => {
   const initialHealth = await waitForHealth(sandbox)
   expect(initialHealth).toBe(true)
 
-  // Kill the code-interpreter process
-  await sandbox.commands.run('supervisorctl stop code-interpreter')
+  // Kill the code-interpreter process by pid
+  await sandbox.commands.run(
+    'kill -9 $(cat /var/run/code-interpreter.pid)'
+  )
 
   // Wait for supervisord to restart it and health to come back
   const recovered = await waitForHealth(sandbox, 10, 100)

@@ -18,8 +18,8 @@ async def test_restart_after_jupyter_kill(async_sandbox: AsyncSandbox):
     # Verify health is up initially
     assert await wait_for_health(async_sandbox)
 
-    # Kill the jupyter process
-    await async_sandbox.commands.run("supervisorctl stop jupyter")
+    # Kill the jupyter process by pid
+    await async_sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server')")
 
     # Wait for supervisord to restart it and health to come back
     assert await wait_for_health(async_sandbox, 10, 100)
@@ -33,8 +33,8 @@ async def test_restart_after_code_interpreter_kill(async_sandbox: AsyncSandbox):
     # Verify health is up initially
     assert await wait_for_health(async_sandbox)
 
-    # Kill the code-interpreter process
-    await async_sandbox.commands.run("supervisorctl stop code-interpreter")
+    # Kill the code-interpreter process by pid
+    await async_sandbox.commands.run("kill -9 $(cat /var/run/code-interpreter.pid)")
 
     # Wait for supervisord to restart it and health to come back
     assert await wait_for_health(async_sandbox, 10, 100)
