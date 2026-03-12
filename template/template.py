@@ -122,9 +122,8 @@ def make_template(
     template = (
         template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
         .copy("start-up.sh", ".jupyter/start-up.sh")
-        .run_cmd("chmod +x .jupyter/start-up.sh")
         .copy("start-code-interpreter.sh", ".jupyter/start-code-interpreter.sh")
-        .run_cmd("chmod +x .jupyter/start-code-interpreter.sh")
+        .run_cmd("chmod +x .jupyter/start-code-interpreter.sh .jupyter/start-up.sh")
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
