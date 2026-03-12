@@ -52,16 +52,7 @@ def make_template(
     # Install R Kernel if requested
     if "r" in enabled_kernels:
         template = (
-            template.run_cmd(
-                [
-                    "sudo gpg --keyserver keyserver.ubuntu.com --recv-key 95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7",
-                    "sudo gpg --armor --export 95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7 | sudo tee /etc/apt/trusted.gpg.d/cran_debian_key.asc",
-                    'echo "deb https://cloud.r-project.org/bin/linux/debian trixie-cran40/" | sudo tee /etc/apt/sources.list.d/cran.list',
-                ]
-            )
-            .run_cmd(
-                "DEBIAN_FRONTEND=noninteractive DEBCONF_NOWARNINGS=yes apt-get install -y --fix-missing r-base=${R_VERSION} r-base-dev"
-            )
+            template.apt_install("r-base=${R_VERSION} r-base-dev")
             .run_cmd(
                 [
                     "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
