@@ -38,6 +38,7 @@ def make_template(
                 "sudo",
                 "fonts-noto-cjk",
                 "ca-certificates",
+                "systemd",
             ]
         )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
@@ -126,6 +127,15 @@ def make_template(
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
+        # Install systemd service units
+        .copy("jupyter.service", ".jupyter/jupyter.service")
+        .copy("code-interpreter.service", ".jupyter/code-interpreter.service")
+        .run_cmd(
+            [
+                "cp /root/.jupyter/jupyter.service /etc/systemd/system/",
+                "cp /root/.jupyter/code-interpreter.service /etc/systemd/system/",
+            ]
+        )
     )
 
     if is_docker:
