@@ -124,7 +124,9 @@ def make_template(
         .copy("start-up.sh", ".jupyter/start-up.sh")
         .copy("start-code-interpreter.sh", ".jupyter/start-code-interpreter.sh")
         .copy("start-jupyter.sh", ".jupyter/start-jupyter.sh")
-        .run_cmd("chmod +x .jupyter/start-code-interpreter.sh .jupyter/start-up.sh .jupyter/start-jupyter.sh")
+        .run_cmd(
+            "chmod +x .jupyter/start-code-interpreter.sh .jupyter/start-up.sh .jupyter/start-jupyter.sh"
+        )
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
