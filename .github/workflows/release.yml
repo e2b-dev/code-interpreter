@@ -111,6 +111,7 @@ jobs:
 
   charts-release:
     name: Charts release
+    needs: [changes]
     if: needs.changes.outputs.charts == 'true'
     runs-on: ubuntu-latest
     outputs:
