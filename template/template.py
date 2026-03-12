@@ -51,14 +51,11 @@ def make_template(
 
     # Install R Kernel if requested
     if "r" in enabled_kernels:
-        template = (
-            template.apt_install("r-base=${R_VERSION} r-base-dev")
-            .run_cmd(
-                [
-                    "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
-                    "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
-                ]
-            )
+        template = template.apt_install("r-base=${R_VERSION} r-base-dev").run_cmd(
+            [
+                "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
+                "R -e \"IRkernel::installspec(user = FALSE, name = 'r', displayname = 'R')\"",
+            ]
         )
 
     # Install JavaScript Kernel if requested
