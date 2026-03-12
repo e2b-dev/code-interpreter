@@ -8,6 +8,7 @@ build_info = Template.build(
     cpu_count=2,
     memory_mb=2048,
     on_build_logs=default_build_logger(),
+    skip_cache=True,
 )
 
 template_id = build_info.template_id
