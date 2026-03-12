@@ -4,4 +4,4 @@
 
 # Jupyter exited — kill code-interpreter so supervisord restarts both
 echo "Jupyter exited, killing code-interpreter..."
-pkill -f "uvicorn main:app"
+kill "$(cat /var/run/code-interpreter.pid)" 2>/dev/null
