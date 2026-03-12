@@ -59,7 +59,7 @@ def make_template(
                     'echo "deb https://cloud.r-project.org/bin/linux/debian trixie-cran40/" | sudo tee /etc/apt/sources.list.d/cran.list',
                 ]
             )
-            .apt_install("r-base=${R_VERSION} r-base-dev")
+            .run_cmd("apt-get update && DEBIAN_FRONTEND=noninteractive DEBCONF_NOWARNINGS=yes apt-get install -y --fix-missing r-base=${R_VERSION} r-base-dev")
             .run_cmd(
                 [
                     "R -e \"install.packages('IRkernel', repos='https://cloud.r-project.org')\"",
