@@ -25,7 +25,9 @@ async def test_restart_after_jupyter_kill(async_sandbox: AsyncSandbox):
     # The command handle may get killed too (killing jupyter cascades to code-interpreter),
     # so we catch the error.
     try:
-        await async_sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server')", user="root")
+        await async_sandbox.commands.run(
+            "kill -9 $(pgrep -f 'jupyter server')", user="root"
+        )
     except Exception:
         pass
 
@@ -43,7 +45,9 @@ async def test_restart_after_code_interpreter_kill(async_sandbox: AsyncSandbox):
 
     # Kill the code-interpreter process as root
     try:
-        await async_sandbox.commands.run("kill -9 $(cat /var/run/code-interpreter.pid)", user="root")
+        await async_sandbox.commands.run(
+            "kill -9 $(cat /var/run/code-interpreter.pid)", user="root"
+        )
     except Exception:
         pass
 
