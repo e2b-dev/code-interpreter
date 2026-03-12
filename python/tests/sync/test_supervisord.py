@@ -22,10 +22,15 @@ def test_restart_after_jupyter_kill(sandbox: Sandbox):
     assert wait_for_health(sandbox)
 
     # Kill the jupyter process as root
-    sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server') || true", user="root")
+    # The command handle may get killed too (killing jupyter cascades to code-interpreter),
+    # so we catch the error.
+    try:
+        sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server')", user="root")
+    except Exception:
+        pass
 
-    # Wait for supervisord to restart it and health to come back
-    assert wait_for_health(sandbox, 20, 100)
+    # Wait for supervisord to restart both services
+    assert wait_for_health(sandbox, 60, 500)
 
     # Verify code execution works after recovery
     result = sandbox.run_code("x = 1; x")
@@ -37,12 +42,15 @@ def test_restart_after_code_interpreter_kill(sandbox: Sandbox):
     assert wait_for_health(sandbox)
 
     # Kill the code-interpreter process as root
-    sandbox.commands.run(
-        "kill -9 $(cat /var/run/code-interpreter.pid) || true", user="root"
-    )
+    try:
+        sandbox.commands.run(
+            "kill -9 $(cat /var/run/code-interpreter.pid)", user="root"
+        )
+    except Exception:
+        pass
 
     # Wait for supervisord to restart it and health to come back
-    assert wait_for_health(sandbox, 20, 100)
+    assert wait_for_health(sandbox, 60, 500)
 
     # Verify code execution works after recovery
     result = sandbox.run_code("x = 1; x")

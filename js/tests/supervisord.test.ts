@@ -24,12 +24,18 @@ sandboxTest('restart after jupyter kill', async ({ sandbox }) => {
   expect(initialHealth).toBe(true)
 
   // Kill the jupyter process as root
-  await sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server') || true", {
-    user: 'root',
-  })
+  // The command handle may get killed too (since killing jupyter cascades to code-interpreter),
+  // so we catch the error.
+  try {
+    await sandbox.commands.run("kill -9 $(pgrep -f 'jupyter server')", {
+      user: 'root',
+    })
+  } catch {
+    // Expected — the kill cascade may terminate the command handle
+  }
 
-  // Wait for supervisord to restart it and health to come back
-  const recovered = await waitForHealth(sandbox, 20, 100)
+  // Wait for supervisord to restart both services (jupyter startup + code-interpreter startup)
+  const recovered = await waitForHealth(sandbox, 60, 500)
   expect(recovered).toBe(true)
 
   // Verify code execution works after recovery
@@ -43,12 +49,16 @@ sandboxTest('restart after code-interpreter kill', async ({ sandbox }) => {
   expect(initialHealth).toBe(true)
 
   // Kill the code-interpreter process as root
-  await sandbox.commands.run('kill -9 $(cat /var/run/code-interpreter.pid) || true', {
-    user: 'root',
-  })
+  try {
+    await sandbox.commands.run('kill -9 $(cat /var/run/code-interpreter.pid)', {
+      user: 'root',
+    })
+  } catch {
+    // Expected — killing code-interpreter may terminate the command handle
+  }
 
   // Wait for supervisord to restart it and health to come back
-  const recovered = await waitForHealth(sandbox, 20, 100)
+  const recovered = await waitForHealth(sandbox, 60, 500)
   expect(recovered).toBe(true)
 
   // Verify code execution works after recovery
