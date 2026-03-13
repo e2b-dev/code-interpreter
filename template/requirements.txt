@@ -16,7 +16,7 @@ aiohttp==3.13.3
 beautifulsoup4==4.14.3
 bokeh==3.8.2
 gensim==4.4.0
-imageio==2.37.2
+imageio==2.37.3
 joblib==1.5.3
 librosa==0.11.0
 nltk==3.9.3
@@ -32,7 +32,7 @@ pytz==2025.2
 requests==2.32.5
 scikit-image==0.25.2
 scikit-learn==1.6.1
-scipy==1.17.0
+scipy==1.17.1
 seaborn==0.13.2
 soundfile==0.13.1
 spacy==3.8.11
