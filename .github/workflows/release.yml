@@ -356,18 +356,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate SDK reference
-        id: sdk-ref
-        run: pnpm run --recursive generate-ref
-
-      - name: Show docs file structure
-        run: |
-          if [ -d "./sdk-reference" ]; then
-            tree ./sdk-reference
-          else
-            echo "sdk-reference directory does not exist"
-          fi
-
       - name: Release new versions
         uses: changesets/action@v1
         with:
@@ -385,7 +373,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add ./sdk-reference
           git commit -am "[skip ci] Release new versions" || exit 0
           git push
         env:
