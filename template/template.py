@@ -38,6 +38,7 @@ def make_template(
                 "sudo",
                 "fonts-noto-cjk",
                 "ca-certificates",
+                "supervisor",
             ]
         )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
@@ -111,11 +112,17 @@ def make_template(
     template = (
         template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
         .copy("start-up.sh", ".jupyter/start-up.sh")
-        .run_cmd("chmod +x .jupyter/start-up.sh")
+        .copy("start-code-interpreter.sh", ".jupyter/start-code-interpreter.sh")
+        .copy("start-jupyter.sh", ".jupyter/start-jupyter.sh")
+        .run_cmd(
+            "chmod +x .jupyter/start-code-interpreter.sh .jupyter/start-up.sh .jupyter/start-jupyter.sh"
+        )
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
+        # Install supervisord config
+        .copy("supervisord.conf", "/etc/supervisord.conf")
     )
 
     if is_docker:
