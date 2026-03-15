@@ -14,7 +14,7 @@ e2b_charts
 # Other packages
 aiohttp==3.13.3
 beautifulsoup4==4.14.3
-bokeh==3.8.2
+bokeh==3.9.0
 gensim==4.4.0
 imageio==2.37.3
 joblib==1.5.3
