@@ -39,6 +39,25 @@ async def test_restart_after_jupyter_kill(async_sandbox: AsyncSandbox):
     assert result.text == "1"
 
 
+async def test_restart_after_jupyter_kernel_kill(async_sandbox: AsyncSandbox):
+    # Verify code execution works initially
+    initial = await async_sandbox.run_code("x = 42; x")
+    assert initial.text == "42"
+
+    # Kill all jupyter kernel processes as root
+    try:
+        await async_sandbox.commands.run(
+            "kill -9 $(pgrep -f 'ipykernel_launcher')", user="root"
+        )
+    except Exception:
+        pass
+
+    # Code execution still works but the variable is undefined
+    result = await async_sandbox.run_code("x")
+    assert result.error is not None
+    assert result.error.value == "name 'x' is not defined"
+
+
 async def test_restart_after_code_interpreter_kill(async_sandbox: AsyncSandbox):
     # Verify health is up initially
     assert await wait_for_health(async_sandbox)

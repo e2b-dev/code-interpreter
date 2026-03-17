@@ -37,6 +37,25 @@ def test_restart_after_jupyter_kill(sandbox: Sandbox):
     assert result.text == "1"
 
 
+def test_restart_after_jupyter_kernel_kill(sandbox: Sandbox):
+    # Verify code execution works initially
+    initial = sandbox.run_code("x = 42; x")
+    assert initial.text == "42"
+
+    # Kill all jupyter kernel processes as root
+    try:
+        sandbox.commands.run(
+            "kill -9 $(pgrep -f 'ipykernel_launcher')", user="root"
+        )
+    except Exception:
+        pass
+
+    # Code execution still works but the variable is undefined
+    result = sandbox.run_code("x")
+    assert result.error is not None
+    assert result.error.value == "name 'x' is not defined"
+
+
 def test_restart_after_code_interpreter_kill(sandbox: Sandbox):
     # Verify health is up initially
     assert wait_for_health(sandbox)

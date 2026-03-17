@@ -43,6 +43,25 @@ sandboxTest('restart after jupyter kill', async ({ sandbox }) => {
   expect(result.text).toEqual('1')
 })
 
+sandboxTest('restart after jupyter kernel kill', async ({ sandbox }) => {
+  // Verify code execution works initially
+  const code = await sandbox.runCode('x = 42; x')
+  expect(code.text).toEqual('42')
+
+  // Kill all jupyter kernel processes as root
+  try {
+    await sandbox.commands.run("kill -9 $(pgrep -f 'ipykernel_launcher')", {
+      user: 'root',
+    })
+  } catch {
+    // Expected — the kill may terminate the command handle
+  }
+
+  // Code execution still works but the variable is undefined
+  const code2 = await sandbox.runCode('x')
+  expect(code2.error!.value).toEqual("name 'x' is not defined")
+})
+
 sandboxTest('restart after code-interpreter kill', async ({ sandbox }) => {
   // Verify health is up initially
   const initialHealth = await waitForHealth(sandbox)
