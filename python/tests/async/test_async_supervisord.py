@@ -52,10 +52,14 @@ async def test_restart_after_jupyter_kernel_kill(async_sandbox: AsyncSandbox):
     except Exception:
         pass
 
-    # Code execution still works but the variable is undefined
+    # First call after kill returns context restarted error
     result = await async_sandbox.run_code("x")
     assert result.error is not None
-    assert result.error.value == "name 'x' is not defined"
+    assert result.error.value == "Context was restarted"
+
+    # Subsequent call works normally
+    result2 = await async_sandbox.run_code("y = 1; y")
+    assert result2.text == "1"
 
 
 async def test_restart_after_code_interpreter_kill(async_sandbox: AsyncSandbox):

@@ -57,9 +57,13 @@ sandboxTest('restart after jupyter kernel kill', async ({ sandbox }) => {
     // Expected — the kill may terminate the command handle
   }
 
-  // Code execution still works but the variable is undefined
+  // First call after kill returns context restarted error
   const code2 = await sandbox.runCode('x')
-  expect(code2.error!.value).toEqual("name 'x' is not defined")
+  expect(code2.error!.value).toEqual('Context was restarted')
+
+  // Subsequent call works normally
+  const code3 = await sandbox.runCode('y = 1; y')
+  expect(code3.text).toEqual('1')
 })
 
 sandboxTest('restart after code-interpreter kill', async ({ sandbox }) => {
