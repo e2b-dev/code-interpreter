@@ -149,7 +149,7 @@ def make_template(
     if is_docker:
         start_cmd = "sudo /root/.jupyter/start-up.sh"
     else:
-        start_cmd = "systemctl start jupyter"
+        start_cmd = "sudo systemctl start jupyter"
 
     return template.set_start_cmd(
         start_cmd, wait_for_url("http://localhost:49999/health")
