@@ -43,9 +43,7 @@ def test_restart_after_code_interpreter_kill(sandbox: Sandbox):
 
     # Kill the code-interpreter process as root
     try:
-        sandbox.commands.run(
-            "kill -9 $(pgrep -f 'uvicorn main:app')", user="root"
-        )
+        sandbox.commands.run("kill -9 $(pgrep -f 'uvicorn main:app')", user="root")
     except Exception:
         pass
 
