@@ -1,0 +1,15 @@
+[Unit]
+Description=Jupyter Server
+Documentation=https://jupyter-server.readthedocs.io
+
+[Service]
+Type=simple
+Environment=MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc
+Environment=JUPYTER_CONFIG_PATH=/root/.jupyter
+ExecStart=/usr/local/bin/jupyter server --IdentityProvider.token=""
+ExecStartPost=/root/.jupyter/jupyter-healthcheck.sh
+ExecStartPost=-/usr/bin/systemctl start code-interpreter
+Restart=on-failure
+RestartSec=2
+StandardOutput=null
+StandardError=journal
