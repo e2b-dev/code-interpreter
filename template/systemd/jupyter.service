@@ -10,6 +10,6 @@ ExecStart=/usr/local/bin/jupyter server --IdentityProvider.token=""
 ExecStartPost=/root/.jupyter/jupyter-healthcheck.sh
 ExecStartPost=-/usr/bin/systemctl start code-interpreter
 Restart=on-failure
-RestartSec=2
+RestartSec=1
 StandardOutput=null
 StandardError=journal
