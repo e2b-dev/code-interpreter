@@ -2,6 +2,7 @@
 Description=Jupyter Server
 Documentation=https://jupyter-server.readthedocs.io
 Wants=code-interpreter.service
+StartLimitBurst=0
 
 [Service]
 Type=simple
