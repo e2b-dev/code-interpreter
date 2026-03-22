@@ -19,7 +19,7 @@ on:
         default: false
 
 concurrency:
-  group: Release-${{ github.ref }}
+  group: Release-${{ github.ref }}-${{ inputs.target_environment }}
   cancel-in-progress: false
 
 permissions:
