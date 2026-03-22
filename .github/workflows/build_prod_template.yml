@@ -77,6 +77,11 @@ jobs:
               ;;
           esac
 
+          if [ -z "$E2B_DOMAIN" ]; then
+            echo "Missing E2B domain for target environment: $TARGET_ENVIRONMENT" >&2
+            exit 1
+          fi
+
           if [ -z "$E2B_API_KEY" ]; then
             echo "Missing API key secret for target environment: $TARGET_ENVIRONMENT" >&2
             exit 1
