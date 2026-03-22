@@ -51,6 +51,7 @@ jobs:
       - name: Resolve target environment
         env:
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          FOXTROT_DOMAIN: ${{ vars.E2B_DOMAIN }}
           FOXTROT_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
           STAGING_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}
           JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
@@ -59,7 +60,7 @@ jobs:
 
           case "$TARGET_ENVIRONMENT" in
             foxtrot)
-              E2B_DOMAIN="e2b.dev"
+              E2B_DOMAIN="$FOXTROT_DOMAIN"
               E2B_API_KEY="$FOXTROT_API_KEY"
               ;;
             staging)
