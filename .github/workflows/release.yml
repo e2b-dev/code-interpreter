@@ -5,7 +5,7 @@ on:
     branches:
       - main
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency: Release-${{ github.ref }}-foxtrot
 
 permissions:
   id-token: write

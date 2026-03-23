@@ -3,6 +3,15 @@ name: Build Prod Template
 on:
   workflow_dispatch:
     inputs:
+      target_environment:
+        description: Target environment
+        required: true
+        type: choice
+        default: foxtrot
+        options:
+          - foxtrot
+          - staging
+          - juliett
       skip_cache:
         description: Skip build cache
         required: false
@@ -10,7 +19,7 @@ on:
         default: false
 
 concurrency:
-  group: Release-${{ github.ref }}
+  group: Release-${{ github.ref }}-${{ inputs.target_environment }}
   cancel-in-progress: false
 
 permissions:
@@ -33,11 +42,64 @@ jobs:
 
       - uses: actions/setup-python@v6
         with:
-          python-version: '${{ env.TOOL_VERSION_PYTHON }}' 
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install development dependencies
         working-directory: ./template
         run: pip install -r requirements-dev.txt
+
+      - name: Resolve target environment
+        env:
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          FOXTROT_DOMAIN: ${{ vars.E2B_DOMAIN }}
+          FOXTROT_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
+          STAGING_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}
+          JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
+        run: |
+          set -eu
+
+          case "$TARGET_ENVIRONMENT" in
+            foxtrot)
+              E2B_DOMAIN="$FOXTROT_DOMAIN"
+              E2B_API_KEY="$FOXTROT_API_KEY"
+              ;;
+            staging)
+              E2B_DOMAIN="e2b-staging.dev"
+              E2B_API_KEY="$STAGING_API_KEY"
+              ;;
+            juliett)
+              E2B_DOMAIN="e2b-juliett.dev"
+              E2B_API_KEY="$JULIETT_API_KEY"
+              ;;
+            *)
+              echo "Unknown target environment: $TARGET_ENVIRONMENT" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ -z "$E2B_DOMAIN" ]; then
+            echo "Missing E2B domain for target environment: $TARGET_ENVIRONMENT" >&2
+            exit 1
+          fi
+
+          if [ -z "$E2B_API_KEY" ]; then
+            echo "Missing API key secret for target environment: $TARGET_ENVIRONMENT" >&2
+            exit 1
+          fi
+
+          echo "::add-mask::$E2B_API_KEY"
+
+          {
+            echo "E2B_DOMAIN=$E2B_DOMAIN"
+            echo "E2B_API_KEY=$E2B_API_KEY"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "### Build target"
+            echo
+            echo "Target: $TARGET_ENVIRONMENT"
+            echo "Domain: $E2B_DOMAIN"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build E2B template
         id: build-template
@@ -45,6 +107,4 @@ jobs:
         run: |
           python build_prod.py
         env:
-          E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
-          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
           SKIP_CACHE: ${{ inputs.skip_cache }}
