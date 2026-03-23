@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "e2b-code-interpreter"
-version = "2.4.1"
+version = "2.5.0"
 description = "E2B Code Interpreter - Stateful code execution"
 authors = ["e2b <hello@e2b.dev>"]
 license = "MIT"
@@ -10,7 +10,7 @@ repository = "https://github.com/e2b-dev/code-interpreter/tree/main/python"
 packages = [{ include = "e2b_code_interpreter" }]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 
 httpx = ">=0.20.0, <1.0.0"
 attrs = ">=21.3.0"
@@ -22,7 +22,6 @@ python-dotenv = "^1.0.0"
 pytest-dotenv = "^0.5.2"
 pytest-asyncio = "^0.24.0"
 pytest-xdist = "^3.6.1"
-pydoc-markdown = "^4.8.2"
 matplotlib = "^3.8.0"
 ruff = "^0.11.12"
 

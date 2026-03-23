@@ -1,7 +1,7 @@
 {
   "name": "@e2b/code-interpreter-python",
   "private": true,
-  "version": "2.4.1",
+  "version": "2.5.0",
   "packageManager": "pnpm@9.15.9",
   "scripts": {
     "test": "poetry run pytest -n 4 --verbose -x",
@@ -10,7 +10,6 @@
     "postVersion": "poetry version $(pnpm pkg get version --workspaces=false | tr -d \\\")",
     "postPublish": "poetry build && poetry config pypi-token.pypi ${PYPI_TOKEN} && poetry publish --skip-existing",
     "pretest": "poetry install",
-    "generate-ref": "poetry install && ./scripts/generate_sdk_ref.sh",
     "lint": "poetry run ruff check .",
     "format": "poetry run ruff format ."
   }
