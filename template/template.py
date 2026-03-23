@@ -17,9 +17,6 @@ def make_template(
                 "PIP_DEFAULT_TIMEOUT": "100",
                 "PIP_DISABLE_PIP_VERSION_CHECK": "1",
                 "PIP_NO_CACHE_DIR": "1",
-                "JUPYTER_CONFIG_PATH": "/root/.jupyter",
-                "IPYTHON_CONFIG_PATH": "/root/.ipython",
-                "SERVER_PATH": "/root/.server",
                 "JAVA_VERSION": "11",
                 "JAVA_HOME": "/usr/lib/jvm/jdk-${JAVA_VERSION}",
                 "IJAVA_VERSION": "1.3.0",
@@ -110,13 +107,29 @@ def make_template(
     # Copy configuration files
     template = (
         template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
-        .copy("start-up.sh", ".jupyter/start-up.sh")
-        .run_cmd("chmod +x .jupyter/start-up.sh")
+        .copy("jupyter-healthcheck.sh", ".jupyter/jupyter-healthcheck.sh")
+        .run_cmd("chmod +x .jupyter/jupyter-healthcheck.sh")
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
+
+    if not is_docker:
+        template = (
+            template.copy(
+                "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
+            )
+            .copy(
+                "systemd/code-interpreter.service",
+                "/etc/systemd/system/code-interpreter.service",
+            )
+            .run_cmd("systemctl daemon-reload")
+        )
+    else:
+        template = template.copy("start-up.sh", ".jupyter/start-up.sh").run_cmd(
+            "chmod +x .jupyter/start-up.sh"
+        )
 
     if is_docker:
         # create user user and /home/user
@@ -130,6 +143,11 @@ def make_template(
 
     template = template.set_user("user").set_workdir("/home/user")
 
+    if is_docker:
+        start_cmd = "sudo /root/.jupyter/start-up.sh"
+    else:
+        start_cmd = "sudo systemctl start jupyter"
+
     return template.set_start_cmd(
-        "sudo /root/.jupyter/start-up.sh", wait_for_url("http://localhost:49999/health")
+        start_cmd, wait_for_url("http://localhost:49999/health")
     )
