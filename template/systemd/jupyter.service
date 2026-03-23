@@ -7,7 +7,6 @@ StartLimitBurst=0
 [Service]
 Type=simple
 Environment=MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc
-Environment=JUPYTER_CONFIG_PATH=/root/.jupyter
 ExecStart=/usr/local/bin/jupyter server --IdentityProvider.token=""
 ExecStartPost=-/usr/bin/systemctl reset-failed code-interpreter
 Restart=on-failure
