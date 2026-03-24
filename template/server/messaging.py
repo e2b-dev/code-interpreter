@@ -294,6 +294,14 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
+        message_id = str(uuid.uuid4())
+        execution = Execution()
+
+        # Lock only the setup + send phase, not the streaming phase.
+        # Results are read from a per-execution queue (keyed by message_id)
+        # so streaming doesn't need serialization. Releasing before streaming
+        # prevents client disconnect from holding the lock until the kernel
+        # finishes execution (see #213).
         async with self._lock:
             # Wait for any pending cleanup task to complete
             if self._cleanup_task and not self._cleanup_task.done():
@@ -327,8 +335,6 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
-            message_id = str(uuid.uuid4())
-            execution = Execution()
             self._executions[message_id] = execution
 
             # Send the code for execution
@@ -362,17 +368,19 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
 
-            # Stream the results
+        # Stream the results without holding the lock
+        try:
             async for item in self._wait_for_result(message_id):
                 yield item
+        finally:
+            if message_id in self._executions:
+                del self._executions[message_id]
 
-            del self._executions[message_id]
-
-            # Clean up env vars in a separate request after the main code has run
-            if env_vars:
-                self._cleanup_task = asyncio.create_task(
-                    self._cleanup_env_vars(env_vars)
-                )
+        # Clean up env vars in a separate request after the main code has run
+        if env_vars:
+            self._cleanup_task = asyncio.create_task(
+                self._cleanup_env_vars(env_vars)
+            )
 
     async def _receive_message(self):
         if not self._ws:
@@ -385,8 +393,7 @@ class ContextWebSocket:
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
         finally:
-            # To prevent infinite hang, we need to cancel all ongoing execution as we could lost results during the reconnect
-            # Thanks to the locking, there can be either no ongoing execution or just one.
+            # To prevent infinite hang, cancel all ongoing executions as results may be lost during reconnect.
             for key, execution in self._executions.items():
                 await execution.queue.put(
                     Error(
