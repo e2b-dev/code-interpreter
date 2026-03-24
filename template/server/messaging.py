@@ -367,6 +367,14 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
 
+            # Schedule env var cleanup inside the lock so the next execution
+            # can wait for it. The task sends reset code to the kernel, which
+            # queues it after the current execution's code.
+            if env_vars:
+                self._cleanup_task = asyncio.create_task(
+                    self._cleanup_env_vars(env_vars)
+                )
+
         # Stream the results without holding the lock
         try:
             async for item in self._wait_for_result(message_id):
@@ -374,10 +382,6 @@ class ContextWebSocket:
         finally:
             if message_id in self._executions:
                 del self._executions[message_id]
-
-        # Clean up env vars in a separate request after the main code has run
-        if env_vars:
-            self._cleanup_task = asyncio.create_task(self._cleanup_env_vars(env_vars))
 
     async def _receive_message(self):
         if not self._ws:
