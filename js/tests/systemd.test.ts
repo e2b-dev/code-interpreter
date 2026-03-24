@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-import { sandboxTest, wait } from './setup'
+import { isDebug, sandboxTest, wait } from './setup'
 
 async function waitForHealth(sandbox: any, maxRetries = 10, intervalMs = 100) {
   for (let i = 0; i < maxRetries; i++) {
@@ -18,7 +18,7 @@ async function waitForHealth(sandbox: any, maxRetries = 10, intervalMs = 100) {
   return false
 }
 
-sandboxTest('restart after jupyter kill', async ({ sandbox }) => {
+sandboxTest.skipIf(isDebug)('restart after jupyter kill', async ({ sandbox }) => {
   // Verify health is up initially
   const initialHealth = await waitForHealth(sandbox)
   expect(initialHealth).toBe(true)
@@ -43,7 +43,7 @@ sandboxTest('restart after jupyter kill', async ({ sandbox }) => {
   expect(result.text).toEqual('1')
 })
 
-sandboxTest('restart after code-interpreter kill', async ({ sandbox }) => {
+sandboxTest.skipIf(isDebug)('restart after code-interpreter kill', async ({ sandbox }) => {
   // Verify health is up initially
   const initialHealth = await waitForHealth(sandbox)
   expect(initialHealth).toBe(true)
