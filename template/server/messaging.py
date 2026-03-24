@@ -377,9 +377,7 @@ class ContextWebSocket:
 
         # Clean up env vars in a separate request after the main code has run
         if env_vars:
-            self._cleanup_task = asyncio.create_task(
-                self._cleanup_env_vars(env_vars)
-            )
+            self._cleanup_task = asyncio.create_task(self._cleanup_env_vars(env_vars))
 
     async def _receive_message(self):
         if not self._ws:
