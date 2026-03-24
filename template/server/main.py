@@ -183,6 +183,27 @@ async def restart_context(context_id: str) -> None:
     websockets[context_id] = ws
 
 
+@app.post("/contexts/{context_id}/interrupt")
+async def interrupt_context(context_id: str) -> None:
+    logger.info(f"Interrupting context {context_id}")
+
+    ws = websockets.get(context_id, None)
+    if not ws:
+        return PlainTextResponse(
+            f"Context {context_id} not found",
+            status_code=404,
+        )
+
+    response = await client.post(
+        f"{JUPYTER_BASE_URL}/api/kernels/{ws.context_id}/interrupt"
+    )
+    if not response.is_success:
+        return PlainTextResponse(
+            f"Failed to interrupt context {context_id}",
+            status_code=500,
+        )
+
+
 @app.delete("/contexts/{context_id}")
 async def remove_context(context_id: str) -> None:
     logger.info(f"Removing context {context_id}")

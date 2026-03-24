@@ -369,3 +369,41 @@ class AsyncSandbox(BaseAsyncSandbox):
                 raise err
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+
+    async def interrupt_code_context(
+        self,
+        context: Union[Context, str],
+    ) -> None:
+        """
+        Interrupt a running execution in a context.
+
+        This sends an interrupt signal to the Jupyter kernel, which stops the
+        currently running code without restarting the kernel. All previously
+        defined variables, imports, and state are preserved.
+
+        This is useful for stopping long-running code after a timeout without
+        losing kernel state.
+
+        :param context: Context to interrupt. Can be a Context object or a context ID string.
+
+        :return: None
+        """
+        context_id = context.id if isinstance(context, Context) else context
+        try:
+            headers = {
+                "Content-Type": "application/json",
+            }
+            if self.traffic_access_token:
+                headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
+
+            response = await self._client.post(
+                f"{self._jupyter_url}/contexts/{context_id}/interrupt",
+                headers=headers,
+                timeout=self.connection_config.request_timeout,
+            )
+
+            err = await aextract_exception(response)
+            if err:
+                raise err
+        except httpx.TimeoutException:
+            raise format_request_timeout_error()

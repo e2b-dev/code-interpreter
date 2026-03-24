@@ -294,6 +294,11 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
+        # Phase A (under lock): prepare env vars, send request to kernel,
+        # and schedule env var cleanup. The lock serializes sends to the
+        # Jupyter kernel WebSocket and protects shared state like
+        # _global_env_vars and _cleanup_task.
+        message_id = str(uuid.uuid4())
         async with self._lock:
             # Wait for any pending cleanup task to complete
             if self._cleanup_task and not self._cleanup_task.done():
@@ -327,7 +332,6 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
-            message_id = str(uuid.uuid4())
             execution = Execution()
             self._executions[message_id] = execution
 
@@ -362,17 +366,27 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
 
-            # Stream the results
-            async for item in self._wait_for_result(message_id):
-                yield item
-
-            del self._executions[message_id]
-
-            # Clean up env vars in a separate request after the main code has run
+            # Schedule env var cleanup while still holding the lock.
+            # The cleanup sends a background execute_request to the kernel,
+            # which will be processed after the main code finishes (kernel
+            # serializes execution). The next execute() call will await
+            # this task in Phase A before proceeding.
             if env_vars:
                 self._cleanup_task = asyncio.create_task(
                     self._cleanup_env_vars(env_vars)
                 )
+
+        # Phase B (no lock held): stream results back to client.
+        # Results are routed by unique message_id in _process_message(),
+        # so no shared state is accessed during streaming. If the client
+        # disconnects (SDK timeout), the generator is abandoned but the
+        # lock is already released — no orphaned lock.
+        try:
+            async for item in self._wait_for_result(message_id):
+                yield item
+        finally:
+            # Clean up execution entry even if generator is abandoned
+            self._executions.pop(message_id, None)
 
     async def _receive_message(self):
         if not self._ws:

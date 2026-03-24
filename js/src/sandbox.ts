@@ -436,4 +436,47 @@ export class Sandbox extends BaseSandbox {
       throw formatRequestTimeoutError(error)
     }
   }
+
+  /**
+   * Interrupt a running execution in a context.
+   *
+   * This sends an interrupt signal to the Jupyter kernel, which stops the
+   * currently running code without restarting the kernel. All previously
+   * defined variables, imports, and state are preserved.
+   *
+   * This is useful for stopping long-running code after a timeout without
+   * losing kernel state.
+   *
+   * @param context context to interrupt.
+   *
+   * @returns void.
+   */
+  async interruptCodeContext(context: Context | string): Promise<void> {
+    try {
+      const id = typeof context === 'string' ? context : context.id
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+
+      if (this.trafficAccessToken) {
+        headers['E2B-Traffic-Access-Token'] = this.trafficAccessToken
+      }
+
+      const res = await fetch(`${this.jupyterUrl}/contexts/${id}/interrupt`, {
+        method: 'POST',
+        headers,
+        keepalive: true,
+        signal: this.connectionConfig.getSignal(
+          this.connectionConfig.requestTimeoutMs
+        ),
+      })
+
+      const error = await extractError(res)
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      throw formatRequestTimeoutError(error)
+    }
+  }
 }
