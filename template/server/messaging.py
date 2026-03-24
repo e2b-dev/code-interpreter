@@ -294,9 +294,6 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
-        message_id = str(uuid.uuid4())
-        execution = Execution()
-
         # Lock only the setup + send phase, not the streaming phase.
         # Results are read from a per-execution queue (keyed by message_id)
         # so streaming doesn't need serialization. Releasing before streaming
@@ -335,6 +332,8 @@ class ContextWebSocket:
                 )
                 complete_code = f"{indented_env_code}\n{complete_code}"
 
+            message_id = str(uuid.uuid4())
+            execution = Execution()
             self._executions[message_id] = execution
 
             # Send the code for execution
