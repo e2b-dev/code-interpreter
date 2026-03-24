@@ -1,9 +1,9 @@
 import { expect } from 'vitest'
 
 import { Sandbox } from '../src'
-import { sandboxTest } from './setup'
+import { isDebug, sandboxTest } from './setup'
 
-sandboxTest('reconnect', async ({ sandbox }) => {
+sandboxTest.skipIf(isDebug)('reconnect', async ({ sandbox }) => {
   sandbox = await Sandbox.connect(sandbox.sandboxId)
 
   const result = await sandbox.runCode('x =1; x')

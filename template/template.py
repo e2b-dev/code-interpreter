@@ -144,7 +144,7 @@ def make_template(
     template = template.set_user("user").set_workdir("/home/user")
 
     if is_docker:
-        start_cmd = "sudo /root/.jupyter/start-up.sh"
+        start_cmd = "sudo --preserve-env=E2B_LOCAL /root/.jupyter/start-up.sh"
     else:
         start_cmd = "sudo systemctl start jupyter"
 
