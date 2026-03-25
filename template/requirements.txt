@@ -19,7 +19,7 @@ gensim==4.4.0
 imageio==2.37.3
 joblib==1.5.3
 librosa==0.11.0
-nltk==3.9.3
+nltk==3.9.4
 numpy==2.3.5
 numba==0.63.1
 opencv-python==4.11.0.86
