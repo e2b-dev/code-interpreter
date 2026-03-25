@@ -1,6 +1,9 @@
+import pytest
+
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
+@pytest.mark.skip_debug
 async def test_reconnect(async_sandbox: AsyncSandbox):
     sandbox_id = async_sandbox.sandbox_id
 

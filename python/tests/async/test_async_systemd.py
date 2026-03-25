@@ -1,5 +1,7 @@
 import asyncio
 
+import pytest
+
 from e2b_code_interpreter.code_interpreter_async import AsyncSandbox
 
 
@@ -17,6 +19,7 @@ async def wait_for_health(sandbox: AsyncSandbox, max_retries=10, interval_ms=100
     return False
 
 
+@pytest.mark.skip_debug
 async def test_restart_after_jupyter_kill(async_sandbox: AsyncSandbox):
     # Verify health is up initially
     assert await wait_for_health(async_sandbox)
@@ -39,6 +42,7 @@ async def test_restart_after_jupyter_kill(async_sandbox: AsyncSandbox):
     assert result.text == "1"
 
 
+@pytest.mark.skip_debug
 async def test_restart_after_code_interpreter_kill(async_sandbox: AsyncSandbox):
     # Verify health is up initially
     assert await wait_for_health(async_sandbox)

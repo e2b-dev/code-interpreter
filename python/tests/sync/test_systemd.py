@@ -1,5 +1,7 @@
 import time
 
+import pytest
+
 from e2b_code_interpreter.code_interpreter_sync import Sandbox
 
 
@@ -17,6 +19,7 @@ def wait_for_health(sandbox: Sandbox, max_retries=10, interval_ms=100):
     return False
 
 
+@pytest.mark.skip_debug
 def test_restart_after_jupyter_kill(sandbox: Sandbox):
     # Verify health is up initially
     assert wait_for_health(sandbox)
@@ -37,6 +40,7 @@ def test_restart_after_jupyter_kill(sandbox: Sandbox):
     assert result.text == "1"
 
 
+@pytest.mark.skip_debug
 def test_restart_after_code_interpreter_kill(sandbox: Sandbox):
     # Verify health is up initially
     assert wait_for_health(sandbox)
