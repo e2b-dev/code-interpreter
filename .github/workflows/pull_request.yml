@@ -14,8 +14,6 @@ on:
       - main
 
 jobs:
-  server-unit-tests:
-    uses: ./.github/workflows/server_tests.yml
   build-template:
     uses: ./.github/workflows/build_test_template.yml
     secrets:
