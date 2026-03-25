@@ -394,12 +394,10 @@ class ContextWebSocket:
             # Stream the results.
             # If the client disconnects (Starlette cancels the task), we
             # interrupt the kernel so the next execution isn't blocked (#213).
-            client_disconnected = False
             try:
                 async for item in self._wait_for_result(message_id):
                     yield item
             except (asyncio.CancelledError, GeneratorExit):
-                client_disconnected = True
                 logger.warning(
                     f"Client disconnected during execution ({message_id}), interrupting kernel"
                 )
@@ -415,7 +413,7 @@ class ContextWebSocket:
                     del self._executions[message_id]
 
             # Clean up env vars in a separate request after the main code has run
-            if env_vars and not client_disconnected:
+            if env_vars:
                 self._cleanup_task = asyncio.create_task(
                     self._cleanup_env_vars(env_vars)
                 )
