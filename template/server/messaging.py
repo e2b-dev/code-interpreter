@@ -260,9 +260,7 @@ class ContextWebSocket:
 
         while True:
             try:
-                output = await asyncio.wait_for(
-                    queue.get(), timeout=KEEPALIVE_INTERVAL
-                )
+                output = await asyncio.wait_for(queue.get(), timeout=KEEPALIVE_INTERVAL)
             except asyncio.TimeoutError:
                 # Yield a keepalive so Starlette writes to the socket.
                 # If the client has disconnected, the write fails and
