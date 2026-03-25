@@ -1,0 +1,34 @@
+name: Test Code Interpreter Server
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Server - Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
+
+      - name: Install server dependencies
+        run: pip install -r template/server/requirements.txt
+
+      - name: Run server unit tests
+        working-directory: template/server
+        run: python -m pytest tests/ -v
