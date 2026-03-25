@@ -4,6 +4,8 @@ import logging
 import uuid
 import asyncio
 
+import httpx
+
 from asyncio import Queue
 from typing import (
     Dict,
@@ -26,6 +28,7 @@ from api.models.output import (
     OutputType,
     UnexpectedEndOfExecution,
 )
+from consts import JUPYTER_BASE_URL
 from errors import ExecutionError
 from envs import get_envs
 
@@ -33,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 MAX_RECONNECT_RETRIES = 3
 PING_TIMEOUT = 30
+KEEPALIVE_INTERVAL = 5  # seconds between keepalive pings during streaming
 
 
 class Execution:
@@ -96,6 +100,22 @@ class ContextWebSocket:
             self._receive_message(),
             name="receive_message",
         )
+
+    async def interrupt(self):
+        """Interrupt the current kernel execution via the Jupyter REST API."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{JUPYTER_BASE_URL}/api/kernels/{self.context_id}/interrupt"
+                )
+                if response.is_success:
+                    logger.info(f"Kernel {self.context_id} interrupted successfully")
+                else:
+                    logger.error(
+                        f"Failed to interrupt kernel {self.context_id}: {response.status_code}"
+                    )
+        except Exception as e:
+            logger.error(f"Error interrupting kernel {self.context_id}: {e}")
 
     def _get_execute_request(
         self, msg_id: str, code: Union[str, StrictStr], background: bool
@@ -239,7 +259,18 @@ class ContextWebSocket:
         queue = self._executions[message_id].queue
 
         while True:
-            output = await queue.get()
+            try:
+                output = await asyncio.wait_for(
+                    queue.get(), timeout=KEEPALIVE_INTERVAL
+                )
+            except asyncio.TimeoutError:
+                # Yield a keepalive so Starlette writes to the socket.
+                # If the client has disconnected, the write fails and
+                # uvicorn delivers http.disconnect, which cancels this
+                # generator via CancelledError.
+                yield {"type": "keepalive"}
+                continue
+
             if output.type == OutputType.END_OF_EXECUTION:
                 break
 
@@ -294,11 +325,6 @@ class ContextWebSocket:
         if self._ws is None:
             raise Exception("WebSocket not connected")
 
-        # Lock only the setup + send phase, not the streaming phase.
-        # Results are read from a per-execution queue (keyed by message_id)
-        # so streaming doesn't need serialization. Releasing before streaming
-        # prevents client disconnect from holding the lock until the kernel
-        # finishes execution (see #213).
         async with self._lock:
             # Wait for any pending cleanup task to complete
             if self._cleanup_task and not self._cleanup_task.done():
@@ -367,21 +393,34 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
 
-            # Schedule env var cleanup inside the lock so the next execution
-            # can wait for it. The task sends reset code to the kernel, which
-            # queues it after the current execution's code.
-            if env_vars:
+            # Stream the results.
+            # If the client disconnects (Starlette cancels the task), we
+            # interrupt the kernel so the next execution isn't blocked (#213).
+            client_disconnected = False
+            try:
+                async for item in self._wait_for_result(message_id):
+                    yield item
+            except (asyncio.CancelledError, GeneratorExit):
+                client_disconnected = True
+                logger.warning(
+                    f"Client disconnected during execution ({message_id}), interrupting kernel"
+                )
+                # Shield the interrupt from the ongoing cancellation so
+                # the HTTP request to the kernel actually completes.
+                try:
+                    await asyncio.shield(self.interrupt())
+                except asyncio.CancelledError:
+                    pass
+                raise
+            finally:
+                if message_id in self._executions:
+                    del self._executions[message_id]
+
+            # Clean up env vars in a separate request after the main code has run
+            if env_vars and not client_disconnected:
                 self._cleanup_task = asyncio.create_task(
                     self._cleanup_env_vars(env_vars)
                 )
-
-        # Stream the results without holding the lock
-        try:
-            async for item in self._wait_for_result(message_id):
-                yield item
-        finally:
-            if message_id in self._executions:
-                del self._executions[message_id]
 
     async def _receive_message(self):
         if not self._ws:
@@ -394,7 +433,8 @@ class ContextWebSocket:
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
         finally:
-            # To prevent infinite hang, cancel all ongoing executions as results may be lost during reconnect.
+            # To prevent infinite hang, we need to cancel all ongoing execution as we could lost results during the reconnect
+            # Thanks to the locking, there can be either no ongoing execution or just one.
             for key, execution in self._executions.items():
                 await execution.queue.put(
                     Error(
