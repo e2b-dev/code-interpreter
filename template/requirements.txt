@@ -29,7 +29,7 @@ kaleido==1.0.0
 pytest==8.3.5
 python-docx==1.1.2
 pytz==2025.2
-requests==2.32.5
+requests==2.33.0
 scikit-image==0.25.2
 scikit-learn==1.6.1
 scipy==1.17.1
