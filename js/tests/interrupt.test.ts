@@ -9,7 +9,7 @@ sandboxTest(
     // This simulates a client disconnect: the SDK aborts the connection,
     // which should trigger the server to interrupt the kernel (#213).
     await expect(
-      sandbox.runCode('import time; time.sleep(30)', { timeoutMs: 3_000 })
+      sandbox.runCode('import time; time.sleep(300)', { timeoutMs: 3_000 })
     ).rejects.toThrow()
 
     // Wait for the server to detect the disconnect (via keepalive write

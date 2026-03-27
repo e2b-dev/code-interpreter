@@ -11,7 +11,7 @@ def test_subsequent_execution_works_after_client_timeout(sandbox: Sandbox):
     # This simulates a client disconnect: the SDK closes the connection,
     # which should trigger the server to interrupt the kernel (#213).
     with pytest.raises(TimeoutException):
-        sandbox.run_code("import time; time.sleep(30)", timeout=3)
+        sandbox.run_code("import time; time.sleep(300)", timeout=3)
 
     # Wait for the server to detect the disconnect (via keepalive write
     # failure) and interrupt the kernel.

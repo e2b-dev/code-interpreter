@@ -258,6 +258,13 @@ class ContextWebSocket:
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
 
+        # Use a timeout on queue.get() to periodically send keepalives.
+        # Without keepalives, the generator blocks indefinitely waiting for
+        # kernel output. If the client silently disappears (e.g. network
+        # failure), uvicorn can only detect the broken connection when it
+        # tries to write — so we force a write every KEEPALIVE_INTERVAL
+        # seconds. This ensures timely disconnect detection and kernel
+        # interrupt for abandoned executions (see #213).
         while True:
             try:
                 output = await asyncio.wait_for(queue.get(), timeout=KEEPALIVE_INTERVAL)
