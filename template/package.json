@@ -1,7 +1,7 @@
 {
   "name": "@e2b/code-interpreter-template",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "scripts": {
     "lint": "ruff check .",
     "format": "ruff format ."
