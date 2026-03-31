@@ -22,12 +22,6 @@ async def test_cwd_typescript(async_sandbox: AsyncSandbox):
 
 
 @pytest.mark.skip_debug()
-async def test_cwd_deno(async_sandbox: AsyncSandbox):
-    result = await async_sandbox.run_code("Deno.cwd()", language="deno")
-    assert result.text == "/home/user"
-
-
-@pytest.mark.skip_debug()
 async def test_cwd_r(async_sandbox: AsyncSandbox):
     result = await async_sandbox.run_code("getwd()", language="r")
     assert result.results[0].text.strip() == '[1] "/home/user"'

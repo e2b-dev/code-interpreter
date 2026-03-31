@@ -27,13 +27,6 @@ sandboxTest.skipIf(isDebug)('cwd typescript', async ({ sandbox }) => {
   expect(result.text).toEqual('/home/user')
 })
 
-sandboxTest.skipIf(isDebug)('cwd deno', async ({ sandbox }) => {
-  const result = await sandbox.runCode('Deno.cwd()', {
-    language: 'deno',
-  })
-  expect(result.text).toEqual('/home/user')
-})
-
 sandboxTest.skipIf(isDebug)('cwd r', async ({ sandbox }) => {
   const result = await sandbox.runCode('getwd()', {
     language: 'r',

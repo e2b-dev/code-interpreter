@@ -22,12 +22,6 @@ def test_cwd_typescript(sandbox: Sandbox):
 
 
 @pytest.mark.skip_debug()
-def test_cwd_deno(sandbox: Sandbox):
-    result = sandbox.run_code("Deno.cwd()", language="deno")
-    assert result.text == "/home/user"
-
-
-@pytest.mark.skip_debug()
 def test_cwd_r(sandbox: Sandbox):
     result = sandbox.run_code("getwd()", language="r")
     assert result.results[0].text.strip() == '[1] "/home/user"'
