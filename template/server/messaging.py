@@ -265,7 +265,7 @@ class ContextWebSocket:
             request = self._get_execute_request(
                 message_id, f"Deno.chdir('{path}')", True
             )
-        elif language in ("js", "javascript", "typescript", "ts", "node"):
+        elif language in ("javascript", "typescript"):
             request = self._get_execute_request(
                 message_id, f"process.chdir('{path}')", True
             )
