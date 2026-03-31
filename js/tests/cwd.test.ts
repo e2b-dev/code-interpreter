@@ -42,9 +42,8 @@ sandboxTest.skipIf(isDebug)('cwd r', async ({ sandbox }) => {
 })
 
 sandboxTest.skipIf(isDebug)('cwd java', async ({ sandbox }) => {
-  const result = await sandbox.runCode(
-    'System.getProperty("user.dir")',
-    { language: 'java' }
-  )
+  const result = await sandbox.runCode('System.getProperty("user.dir")', {
+    language: 'java',
+  })
   expect(result.results[0]?.text.trim()).toEqual('/home/user')
 })
