@@ -12,7 +12,7 @@ pillow==12.1.1
 e2b_charts
 
 # Other packages
-aiohttp==3.13.3
+aiohttp==3.13.4
 beautifulsoup4==4.14.3
 bokeh==3.9.0
 gensim==4.4.0
