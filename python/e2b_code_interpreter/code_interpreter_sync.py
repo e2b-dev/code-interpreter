@@ -65,7 +65,11 @@ class Sandbox(BaseSandbox):
     def run_code(
         self,
         code: str,
-        language: Union[Literal["python", "javascript", "typescript", "r", "java", "bash"], str, None] = None,
+        language: Union[
+            Literal["python", "javascript", "typescript", "r", "java", "bash"],
+            str,
+            None,
+        ] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
@@ -198,7 +202,11 @@ class Sandbox(BaseSandbox):
     def create_code_context(
         self,
         cwd: Optional[str] = None,
-        language: Union[Literal["python", "javascript", "typescript", "r", "java", "bash"], str, None] = None,
+        language: Union[
+            Literal["python", "javascript", "typescript", "r", "java", "bash"],
+            str,
+            None,
+        ] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """
