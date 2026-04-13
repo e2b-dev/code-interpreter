@@ -88,7 +88,7 @@ export interface CreateCodeContextOpts {
    *
    * @default python
    */
-  language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
+  language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & NonNullable<unknown>)
   /**
    * Timeout for the request in **milliseconds**.
    *
@@ -149,7 +149,7 @@ export class Sandbox extends BaseSandbox {
        *
        * If not defined, the default Python context is used.
        */
-      language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
+      language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & NonNullable<unknown>)
     }
   ): Promise<Execution>
   /**
