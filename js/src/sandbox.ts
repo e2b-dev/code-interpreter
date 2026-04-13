@@ -89,7 +89,14 @@ export interface CreateCodeContextOpts {
    * @default python
    */
   // eslint-disable-next-line @typescript-eslint/ban-types
-  language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
+  language?:
+    | 'python'
+    | 'javascript'
+    | 'typescript'
+    | 'r'
+    | 'java'
+    | 'bash'
+    | (string & {})
   /**
    * Timeout for the request in **milliseconds**.
    *
@@ -151,7 +158,14 @@ export class Sandbox extends BaseSandbox {
        * If not defined, the default Python context is used.
        */
       // eslint-disable-next-line @typescript-eslint/ban-types
-      language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
+      language?:
+        | 'python'
+        | 'javascript'
+        | 'typescript'
+        | 'r'
+        | 'java'
+        | 'bash'
+        | (string & {})
     }
   ): Promise<Execution>
   /**
