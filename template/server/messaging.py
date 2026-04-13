@@ -4,6 +4,8 @@ import logging
 import uuid
 import asyncio
 
+import httpx
+
 from asyncio import Queue
 from typing import (
     Dict,
@@ -26,6 +28,7 @@ from api.models.output import (
     OutputType,
     UnexpectedEndOfExecution,
 )
+from consts import JUPYTER_BASE_URL
 from errors import ExecutionError
 from envs import get_envs
 
@@ -33,6 +36,7 @@ logger = logging.getLogger(__name__)
 
 MAX_RECONNECT_RETRIES = 3
 PING_TIMEOUT = 30
+KEEPALIVE_INTERVAL = 5  # seconds between keepalive pings during streaming
 
 
 class Execution:
@@ -96,6 +100,22 @@ class ContextWebSocket:
             self._receive_message(),
             name="receive_message",
         )
+
+    async def interrupt(self):
+        """Interrupt the current kernel execution via the Jupyter REST API."""
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{JUPYTER_BASE_URL}/api/kernels/{self.context_id}/interrupt"
+                )
+                if response.is_success:
+                    logger.info(f"Kernel {self.context_id} interrupted successfully")
+                else:
+                    logger.error(
+                        f"Failed to interrupt kernel {self.context_id}: {response.status_code}"
+                    )
+        except Exception as e:
+            logger.error(f"Error interrupting kernel {self.context_id}: {e}")
 
     def _get_execute_request(
         self, msg_id: str, code: Union[str, StrictStr], background: bool
@@ -238,8 +258,24 @@ class ContextWebSocket:
     async def _wait_for_result(self, message_id: str):
         queue = self._executions[message_id].queue
 
+        # Use a timeout on queue.get() to periodically send keepalives.
+        # Without keepalives, the generator blocks indefinitely waiting for
+        # kernel output. If the client silently disappears (e.g. network
+        # failure), uvicorn can only detect the broken connection when it
+        # tries to write — so we force a write every KEEPALIVE_INTERVAL
+        # seconds. This ensures timely disconnect detection and kernel
+        # interrupt for abandoned executions (see #213).
         while True:
-            output = await queue.get()
+            try:
+                output = await asyncio.wait_for(queue.get(), timeout=KEEPALIVE_INTERVAL)
+            except asyncio.TimeoutError:
+                # Yield a keepalive so Starlette writes to the socket.
+                # If the client has disconnected, the write fails and
+                # uvicorn delivers http.disconnect, which cancels this
+                # generator via CancelledError.
+                yield {"type": "keepalive"}
+                continue
+
             if output.type == OutputType.END_OF_EXECUTION:
                 break
 
@@ -362,11 +398,26 @@ class ContextWebSocket:
                 )
                 await execution.queue.put(UnexpectedEndOfExecution())
 
-            # Stream the results
-            async for item in self._wait_for_result(message_id):
-                yield item
-
-            del self._executions[message_id]
+            # Stream the results.
+            # If the client disconnects (Starlette cancels the task), we
+            # interrupt the kernel so the next execution isn't blocked (#213).
+            try:
+                async for item in self._wait_for_result(message_id):
+                    yield item
+            except (asyncio.CancelledError, GeneratorExit):
+                logger.warning(
+                    f"Client disconnected during execution ({message_id}), interrupting kernel"
+                )
+                # Shield the interrupt from the ongoing cancellation so
+                # the HTTP request to the kernel actually completes.
+                try:
+                    await asyncio.shield(self.interrupt())
+                except asyncio.CancelledError:
+                    pass
+                raise
+            finally:
+                if message_id in self._executions:
+                    del self._executions[message_id]
 
             # Clean up env vars in a separate request after the main code has run
             if env_vars:
