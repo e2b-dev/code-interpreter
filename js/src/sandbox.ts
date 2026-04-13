@@ -88,7 +88,7 @@ export interface CreateCodeContextOpts {
    *
    * @default python
    */
-  language?: string
+  language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
   /**
    * Timeout for the request in **milliseconds**.
    *
@@ -129,29 +129,6 @@ export class Sandbox extends BaseSandbox {
   }
 
   /**
-   * Run the code as Python.
-   *
-   * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
-   *
-   * You can reference previously defined variables, imports, and functions in the code.
-   *
-   * @param code code to execute.
-   * @param opts options for executing the code.
-   *
-   * @returns `Execution` result object.
-   */
-  async runCode(
-    code: string,
-    opts?: RunCodeOpts & {
-      /**
-       * Language to use for code execution.
-       *
-       * If not defined, the default Python context is used.
-       */
-      language?: 'python'
-    }
-  ): Promise<Execution>
-  /**
    * Run the code for the specified language.
    *
    * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
@@ -172,7 +149,7 @@ export class Sandbox extends BaseSandbox {
        *
        * If not defined, the default Python context is used.
        */
-      language?: string
+      language?: 'python' | 'javascript' | 'typescript' | 'r' | 'java' | 'bash' | (string & {})
     }
   ): Promise<Execution>
   /**

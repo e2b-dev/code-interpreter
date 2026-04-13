@@ -65,41 +65,7 @@ class Sandbox(BaseSandbox):
     def run_code(
         self,
         code: str,
-        language: Union[Literal["python"], None] = None,
-        on_stdout: Optional[OutputHandler[OutputMessage]] = None,
-        on_stderr: Optional[OutputHandler[OutputMessage]] = None,
-        on_result: Optional[OutputHandler[Result]] = None,
-        on_error: Optional[OutputHandler[ExecutionError]] = None,
-        envs: Optional[Dict[str, str]] = None,
-        timeout: Optional[float] = None,
-        request_timeout: Optional[float] = None,
-    ) -> Execution:
-        """
-        Runs the code as Python.
-
-        Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
-
-        You can reference previously defined variables, imports, and functions in the code.
-
-        :param code: Code to execute
-        :param language: Language to use for code execution. If not defined, the default Python context is used.
-        :param on_stdout: Callback for stdout messages
-        :param on_stderr: Callback for stderr messages
-        :param on_result: Callback for the `Result` object
-        :param on_error: Callback for the `ExecutionError` object
-        :param envs: Custom environment variables
-        :param timeout: Timeout for the code execution in **seconds**
-        :param request_timeout: Timeout for the request in **seconds**
-
-        :return: `Execution` result object
-        """
-        ...
-
-    @overload
-    def run_code(
-        self,
-        code: str,
-        language: Optional[str] = None,
+        language: Union[Literal["python", "javascript", "typescript", "r", "java", "bash"], str, None] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
@@ -232,7 +198,7 @@ class Sandbox(BaseSandbox):
     def create_code_context(
         self,
         cwd: Optional[str] = None,
-        language: Optional[str] = None,
+        language: Union[Literal["python", "javascript", "typescript", "r", "java", "bash"], str, None] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """
