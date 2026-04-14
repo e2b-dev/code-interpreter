@@ -22,32 +22,48 @@ export function formatExecutionTimeoutError(error: unknown) {
 
 export async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader()
-  let buffer = ''
+  const decoder = new TextDecoder()
+  const pending: string[] = []
 
   try {
     while (true) {
       const { done, value } = await reader.read()
 
-      if (value !== undefined) {
-        buffer += new TextDecoder().decode(value)
-      }
-
       if (done) {
-        if (buffer.length > 0) {
-          yield buffer
+        if (pending.length > 0) {
+          yield pending.join('')
         }
         break
       }
 
-      let newlineIdx = -1
+      if (value !== undefined) {
+        const chunk = decoder.decode(value, { stream: true })
 
-      do {
-        newlineIdx = buffer.indexOf('\n')
-        if (newlineIdx !== -1) {
-          yield buffer.slice(0, newlineIdx)
-          buffer = buffer.slice(newlineIdx + 1)
+        if (chunk.indexOf('\n') === -1) {
+          // No newline — accumulate in O(1)
+          pending.push(chunk)
+          continue
         }
-      } while (newlineIdx !== -1)
+
+        // Chunk contains newline(s) — split and yield complete lines
+        const parts = chunk.split('\n')
+
+        // First part completes the pending line
+        pending.push(parts[0])
+        yield pending.join('')
+        pending.length = 0
+
+        // Middle parts are already complete lines
+        for (let i = 1; i < parts.length - 1; i++) {
+          yield parts[i]
+        }
+
+        // Last part starts a new pending line (may be empty)
+        const last = parts[parts.length - 1]
+        if (last.length > 0) {
+          pending.push(last)
+        }
+      }
     }
   } finally {
     reader.releaseLock()
