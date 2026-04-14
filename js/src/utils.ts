@@ -30,6 +30,8 @@ export async function* readLines(stream: ReadableStream<Uint8Array>) {
       const { done, value } = await reader.read()
 
       if (done) {
+        const trailing = decoder.decode()
+        if (trailing) pending.push(trailing)
         if (pending.length > 0) {
           yield pending.join('')
         }
