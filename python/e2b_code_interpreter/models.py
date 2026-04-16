@@ -6,6 +6,7 @@ from e2b import NotFoundException, TimeoutException, SandboxException
 from dataclasses import dataclass, field
 from typing import (
     List,
+    Literal,
     Optional,
     Iterable,
     Dict,
@@ -19,6 +20,11 @@ from typing import (
 from httpx import Response
 
 from .charts import Chart, _deserialize_chart
+
+RunCodeLanguage = Union[
+    Literal["python", "javascript", "typescript", "r", "java", "bash"],
+    str,
+]
 
 T = TypeVar("T")
 OutputHandler = Union[Callable[[T], Any],]

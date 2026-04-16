@@ -33,6 +33,20 @@ export type Context = {
   cwd: string
 }
 
+/* eslint-disable @typescript-eslint/ban-types */
+/**
+ * Supported language for code execution.
+ */
+export type RunCodeLanguage =
+  | 'python'
+  | 'javascript'
+  | 'typescript'
+  | 'r'
+  | 'java'
+  | 'bash'
+  | (string & {})
+/* eslint-enable @typescript-eslint/ban-types */
+
 /**
  * Options for running code.
  */
@@ -88,7 +102,7 @@ export interface CreateCodeContextOpts {
    *
    * @default python
    */
-  language?: string
+  language?: RunCodeLanguage
   /**
    * Timeout for the request in **milliseconds**.
    *
@@ -129,29 +143,6 @@ export class Sandbox extends BaseSandbox {
   }
 
   /**
-   * Run the code as Python.
-   *
-   * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
-   *
-   * You can reference previously defined variables, imports, and functions in the code.
-   *
-   * @param code code to execute.
-   * @param opts options for executing the code.
-   *
-   * @returns `Execution` result object.
-   */
-  async runCode(
-    code: string,
-    opts?: RunCodeOpts & {
-      /**
-       * Language to use for code execution.
-       *
-       * If not defined, the default Python context is used.
-       */
-      language?: 'python'
-    }
-  ): Promise<Execution>
-  /**
    * Run the code for the specified language.
    *
    * Specify the `language` or `context` option to run the code as a different language or in a different `Context`.
@@ -172,7 +163,7 @@ export class Sandbox extends BaseSandbox {
        *
        * If not defined, the default Python context is used.
        */
-      language?: string
+      language?: RunCodeLanguage
     }
   ): Promise<Execution>
   /**
