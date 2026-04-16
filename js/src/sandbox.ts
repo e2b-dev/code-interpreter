@@ -33,6 +33,20 @@ export type Context = {
   cwd: string
 }
 
+/* eslint-disable @typescript-eslint/ban-types */
+/**
+ * Supported language for code execution.
+ */
+export type RunCodeLanguage =
+  | 'python'
+  | 'javascript'
+  | 'typescript'
+  | 'r'
+  | 'java'
+  | 'bash'
+  | (string & {})
+/* eslint-enable @typescript-eslint/ban-types */
+
 /**
  * Options for running code.
  */
@@ -88,16 +102,7 @@ export interface CreateCodeContextOpts {
    *
    * @default python
    */
-  /* eslint-disable @typescript-eslint/ban-types */
-  language?:
-    | 'python'
-    | 'javascript'
-    | 'typescript'
-    | 'r'
-    | 'java'
-    | 'bash'
-    | (string & {})
-  /* eslint-enable @typescript-eslint/ban-types */
+  language?: RunCodeLanguage
   /**
    * Timeout for the request in **milliseconds**.
    *
@@ -158,16 +163,7 @@ export class Sandbox extends BaseSandbox {
        *
        * If not defined, the default Python context is used.
        */
-      /* eslint-disable @typescript-eslint/ban-types */
-      language?:
-        | 'python'
-        | 'javascript'
-        | 'typescript'
-        | 'r'
-        | 'java'
-        | 'bash'
-        | (string & {})
-      /* eslint-enable @typescript-eslint/ban-types */
+      language?: RunCodeLanguage
     }
   ): Promise<Execution>
   /**

@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, Dict, overload, Union, Literal, List
+from typing import Optional, Dict, overload, Union, List
 from httpx import AsyncClient
 
 from e2b import (
@@ -18,6 +18,7 @@ from e2b_code_interpreter.models import (
     Execution,
     ExecutionError,
     Context,
+    RunCodeLanguage,
     Result,
     aextract_exception,
     OutputHandlerWithAsync,
@@ -68,11 +69,7 @@ class AsyncSandbox(BaseAsyncSandbox):
     async def run_code(
         self,
         code: str,
-        language: Union[
-            Literal["python", "javascript", "typescript", "r", "java", "bash"],
-            str,
-            None,
-        ] = None,
+        language: RunCodeLanguage = None,
         on_stdout: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
         on_stderr: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
         on_result: Optional[OutputHandlerWithAsync[Result]] = None,
@@ -206,11 +203,7 @@ class AsyncSandbox(BaseAsyncSandbox):
     async def create_code_context(
         self,
         cwd: Optional[str] = None,
-        language: Union[
-            Literal["python", "javascript", "typescript", "r", "java", "bash"],
-            str,
-            None,
-        ] = None,
+        language: RunCodeLanguage = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """
