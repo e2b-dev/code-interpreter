@@ -66,7 +66,7 @@ class Sandbox(BaseSandbox):
     def run_code(
         self,
         code: str,
-        language: RunCodeLanguage = None,
+        language: Optional[RunCodeLanguage] = None,
         on_stdout: Optional[OutputHandler[OutputMessage]] = None,
         on_stderr: Optional[OutputHandler[OutputMessage]] = None,
         on_result: Optional[OutputHandler[Result]] = None,
@@ -199,7 +199,7 @@ class Sandbox(BaseSandbox):
     def create_code_context(
         self,
         cwd: Optional[str] = None,
-        language: RunCodeLanguage = None,
+        language: Optional[RunCodeLanguage] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """

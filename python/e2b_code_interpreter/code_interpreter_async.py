@@ -69,7 +69,7 @@ class AsyncSandbox(BaseAsyncSandbox):
     async def run_code(
         self,
         code: str,
-        language: RunCodeLanguage = None,
+        language: Optional[RunCodeLanguage] = None,
         on_stdout: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
         on_stderr: Optional[OutputHandlerWithAsync[OutputMessage]] = None,
         on_result: Optional[OutputHandlerWithAsync[Result]] = None,
@@ -203,7 +203,7 @@ class AsyncSandbox(BaseAsyncSandbox):
     async def create_code_context(
         self,
         cwd: Optional[str] = None,
-        language: RunCodeLanguage = None,
+        language: Optional[RunCodeLanguage] = None,
         request_timeout: Optional[float] = None,
     ) -> Context:
         """

@@ -24,7 +24,6 @@ from .charts import Chart, _deserialize_chart
 RunCodeLanguage = Union[
     Literal["python", "javascript", "typescript", "r", "java", "bash"],
     str,
-    None,
 ]
 
 T = TypeVar("T")
