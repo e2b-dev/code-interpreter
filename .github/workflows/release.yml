@@ -344,8 +344,16 @@ jobs:
           pnpm config set exclude-links-from-lockfile true
 
       - name: Update npm
+        # Workaround: the pre-installed npm on the Node 22 runner image ships
+        # with a broken @npmcli/arborist (missing promise-retry), so `npm
+        # install -g npm@11` fails during reify. Replace npm via tarball.
+        # npm 11+ is required for OIDC trusted publishing (NPM_TOKEN="").
         run: |
-          npm install -g npm@^11.6
+          NPM_VERSION="11.9.0"
+          NPM_DIR="$(dirname "$(dirname "$(which node)")")/lib/node_modules/npm"
+          sudo rm -rf "${NPM_DIR}"
+          sudo mkdir -p "${NPM_DIR}"
+          curl -fsSL "https://registry.npmjs.org/npm/-/npm-${NPM_VERSION}.tgz" | sudo tar -xz -C "${NPM_DIR}" --strip-components=1
           npm --version
 
       - name: Install dependencies
