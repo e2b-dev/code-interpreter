@@ -345,7 +345,7 @@ jobs:
 
       - name: Update npm
         run: |
-          npm install -g npm@^11.6
+          npm install -g --force npm@^11.6
           npm --version
 
       - name: Install dependencies
