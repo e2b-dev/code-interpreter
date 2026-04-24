@@ -331,10 +331,10 @@ jobs:
         with:
           version: 9.5
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 24
         uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version: "24.x"
           registry-url: 'https://registry.npmjs.org'
           cache: pnpm
 
@@ -342,11 +342,6 @@ jobs:
         run: |
           pnpm config set auto-install-peers true
           pnpm config set exclude-links-from-lockfile true
-
-      - name: Update npm
-        run: |
-          npm install -g --force npm@^11.6
-          npm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
