@@ -48,8 +48,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: ^2.8.4
-        version: 2.15.0
+        specifier: ^2.19.2
+        version: 2.19.2
     devDependencies:
       '@types/node':
         specifier: ^20.19.19
@@ -987,8 +987,8 @@ packages:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
-  e2b@2.15.0:
-    resolution: {integrity: sha512-wjdrWBB/H9Lmo1vpJaCKlpcNjHKzztAL+/0q4gv8mpD96rrE4eh45kIxOMbGwb0vFXaDjjL2d93CYGAZDfKlPg==}
+  e2b@2.19.2:
+    resolution: {integrity: sha512-AJtaQ72XIjdOBGnsvzVuYveYmy4ZDALLzZddN7sFIgd49eCY7u7Nwx7TXp97vZLPTEgfCwEqn1U9mehDrQMp3g==}
     engines: {node: '>=20'}
 
   easy-table@1.2.0:
@@ -2660,7 +2660,7 @@ snapshots:
 
   dotenv@16.6.1: {}
 
-  e2b@2.15.0:
+  e2b@2.19.2:
     dependencies:
       '@bufbuild/protobuf': 2.11.0
       '@connectrpc/connect': 2.0.0-rc.3(@bufbuild/protobuf@2.11.0)
