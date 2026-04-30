@@ -43,20 +43,10 @@ def sandbox(sandbox_factory):
     return sandbox_factory()
 
 
-# override the event loop so it never closes
-# this helps us with the global-scoped async http transport
-@pytest.fixture(scope="session")
-def event_loop():
-    try:
-        loop = asyncio.get_running_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest.fixture
-def async_sandbox_factory(request, template, sandbox_test_id, event_loop):
+async def async_sandbox_factory(template, sandbox_test_id):
+    sandboxes: list[AsyncSandbox] = []
+
     async def factory(*, template_name: str = template, **kwargs):
         kwargs.setdefault("timeout", 60)
 
@@ -64,18 +54,14 @@ def async_sandbox_factory(request, template, sandbox_test_id, event_loop):
         metadata.setdefault("sandbox_test_id", sandbox_test_id)
 
         sandbox = await AsyncSandbox.create(template_name, **kwargs)
-
-        def kill():
-            async def _kill():
-                await sandbox.kill()
-
-            event_loop.run_until_complete(_kill())
-
-        request.addfinalizer(kill)
-
+        sandboxes.append(sandbox)
         return sandbox
 
-    return factory
+    yield factory
+
+    await asyncio.gather(
+        *(sandbox.kill() for sandbox in sandboxes), return_exceptions=True
+    )
 
 
 @pytest.fixture
