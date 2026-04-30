@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 import pytest
@@ -58,8 +59,9 @@ async def async_sandbox_factory(template, sandbox_test_id):
 
     yield factory
 
-    for sandbox in sandboxes:
-        await sandbox.kill()
+    await asyncio.gather(
+        *(sandbox.kill() for sandbox in sandboxes), return_exceptions=True
+    )
 
 
 @pytest.fixture
