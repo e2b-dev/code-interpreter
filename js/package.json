@@ -71,6 +71,6 @@
     "defaults"
   ],
   "dependencies": {
-    "e2b": "^2.19.2"
+    "e2b": "^2.19.4"
   }
 }
