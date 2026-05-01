@@ -59,6 +59,27 @@ jobs:
           poetry install --with dev
           pip install ruff=="0.11.12"
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.TOOL_VERSION_GOLANG }}'
+          cache-dependency-path: go/go.sum
+
+      - name: Check Go formatting
+        working-directory: go
+        run: |
+          if [[ -n "$(gofmt -l .)" ]]; then
+            echo "❌ Go files are not formatted properly:"
+            gofmt -d .
+            exit 1
+          else
+            echo "✅ Go files are properly formatted."
+          fi
+
+      - name: Go vet
+        working-directory: go
+        run: go vet ./...
+
       - name: Run linting
         run: |
           pnpm run lint
