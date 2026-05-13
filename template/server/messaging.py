@@ -154,8 +154,6 @@ class ContextWebSocket:
             return f"import os; os.environ['{key}'] = '{value}'"
         elif self.language in ["javascript", "typescript"]:
             return f"process.env['{key}'] = '{value}'"
-        elif self.language == "deno":
-            return f"Deno.env.set('{key}', '{value}')"
         elif self.language == "r":
             return f'Sys.setenv({key} = "{value}")'
         elif self.language == "java":
@@ -170,8 +168,6 @@ class ContextWebSocket:
             return f"import os; del os.environ['{key}']"
         elif self.language in ["javascript", "typescript"]:
             return f"delete process.env['{key}']"
-        elif self.language == "deno":
-            return f"Deno.env.delete('{key}')"
         elif self.language == "r":
             return f"Sys.unsetenv('{key}')"
         elif self.language == "java":
@@ -297,10 +293,6 @@ class ContextWebSocket:
         self._executions[message_id] = Execution(in_background=True)
         if language == "python":
             request = self._get_execute_request(message_id, f"%cd {path}", True)
-        elif language == "deno":
-            request = self._get_execute_request(
-                message_id, f"Deno.chdir('{path}')", True
-            )
         elif language in ("javascript", "typescript"):
             request = self._get_execute_request(
                 message_id, f"process.chdir('{path}')", True

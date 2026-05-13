@@ -2,7 +2,7 @@ from e2b import Template, wait_for_url
 
 
 def make_template(
-    kernels: list[str] = ["python", "r", "javascript", "deno", "bash", "java"],
+    kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
@@ -20,8 +20,6 @@ def make_template(
                 "JAVA_VERSION": "11",
                 "JAVA_HOME": "/usr/lib/jvm/jdk-${JAVA_VERSION}",
                 "IJAVA_VERSION": "1.3.0",
-                "DENO_INSTALL": "/opt/deno",
-                "DENO_VERSION": "v2.4.0",
                 "R_VERSION": "4.5.*",
             }
         )
@@ -61,16 +59,6 @@ def make_template(
             "--unsafe-perm git+https://github.com/e2b-dev/ijavascript.git",
             g=True,
         ).run_cmd("ijsinstall --install=global")
-
-    # Install Deno Kernel if requested
-    if "deno" in enabled_kernels:
-        template = template.run_cmd(
-            [
-                "curl -fsSL https://deno.land/install.sh | sh -s ${DENO_VERSION}",
-                "PATH=$DENO_INSTALL/bin:$PATH",
-                "deno jupyter --unstable --install",
-            ]
-        ).copy("deno.json", ".local/share/jupyter/kernels/deno/kernel.json")
 
     # Install Bash Kernel if requested
     if "bash" in enabled_kernels:
