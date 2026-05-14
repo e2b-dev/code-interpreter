@@ -305,7 +305,7 @@ class ContextWebSocket:
                 message_id, f'System.setProperty("user.dir", "{path}");', True
             )
         elif language == "bash":
-            request = self._get_execute_request(message_id, f"cd {path}", True)
+            request = self._get_execute_request(message_id, f"cd '{path}'", True)
         else:
             return
 
