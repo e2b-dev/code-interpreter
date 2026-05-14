@@ -40,3 +40,10 @@ sandboxTest.skipIf(isDebug)('cwd java', async ({ sandbox }) => {
   })
   expect(result.results[0]?.text.trim()).toEqual('/home/user')
 })
+
+sandboxTest.skipIf(isDebug)('cwd bash', async ({ sandbox }) => {
+  const result = await sandbox.runCode('pwd', {
+    language: 'bash',
+  })
+  expect(result.logs.stdout.join().trim()).toEqual('/home/user')
+})

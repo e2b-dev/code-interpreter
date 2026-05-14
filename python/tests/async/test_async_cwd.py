@@ -33,3 +33,9 @@ async def test_cwd_java(async_sandbox: AsyncSandbox):
         'System.getProperty("user.dir")', language="java"
     )
     assert result.results[0].text.strip() == "/home/user"
+
+
+@pytest.mark.skip_debug()
+async def test_cwd_bash(async_sandbox: AsyncSandbox):
+    result = await async_sandbox.run_code("pwd", language="bash")
+    assert "".join(result.logs.stdout).strip() == "/home/user"

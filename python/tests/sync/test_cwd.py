@@ -31,3 +31,9 @@ def test_cwd_r(sandbox: Sandbox):
 def test_cwd_java(sandbox: Sandbox):
     result = sandbox.run_code('System.getProperty("user.dir")', language="java")
     assert result.results[0].text.strip() == "/home/user"
+
+
+@pytest.mark.skip_debug()
+def test_cwd_bash(sandbox: Sandbox):
+    result = sandbox.run_code("pwd", language="bash")
+    assert "".join(result.logs.stdout).strip() == "/home/user"
