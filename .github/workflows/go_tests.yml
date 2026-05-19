@@ -1,0 +1,68 @@
+name: Test Go SDK
+
+on:
+  workflow_call:
+    secrets:
+      E2B_API_KEY:
+        required: false
+    inputs:
+      E2B_DOMAIN:
+        required: false
+        type: string
+      E2B_TESTS_TEMPLATE:
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    defaults:
+      run:
+        working-directory: ./go
+    name: Go SDK - Build and test
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '${{ env.TOOL_VERSION_GOLANG }}'
+          cache-dependency-path: go/go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Verify dependencies
+        run: go mod verify
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        env:
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+          E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
+          E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: go/coverage.out
+          if-no-files-found: ignore
