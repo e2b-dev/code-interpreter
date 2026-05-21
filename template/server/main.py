@@ -41,11 +41,6 @@ async def lifespan(app: FastAPI):
         default_websockets["python"] = python_context.id
         websockets["default"] = websockets[python_context.id]
 
-        javascript_context = await create_context(
-            client, websockets, "javascript", "/home/user"
-        )
-        default_websockets["javascript"] = javascript_context.id
-
         logger.info("Connected to default runtime")
         yield
 
