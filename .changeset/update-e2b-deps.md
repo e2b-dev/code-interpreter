@@ -1,6 +1,6 @@
 ---
-'@e2b/code-interpreter': patch
-'@e2b/code-interpreter-python': patch
+'@e2b/code-interpreter': minor
+'@e2b/code-interpreter-python': minor
 ---
 
 Update e2b SDK versions
