@@ -4,6 +4,7 @@ import httpx
 from typing import Optional, Dict, overload, Union, List
 from httpx import Client
 from e2b import Sandbox as BaseSandbox, InvalidArgumentException
+from e2b.api.client_sync import get_transport
 
 from e2b_code_interpreter.constants import (
     DEFAULT_TEMPLATE,
@@ -60,7 +61,21 @@ class Sandbox(BaseSandbox):
 
     @property
     def _client(self) -> Client:
-        return Client(transport=self._transport)
+        # TODO: Remove later
+        # Use a dedicated HTTP/1.1 transport for Jupyter requests.
+        #
+        # The base SDK's shared transport now defaults to http2=True. With
+        # HTTP/2, multiple requests are multiplexed over a single TCP
+        # connection, so when a client cancels a request (e.g. the caller
+        # disconnects from the streaming `/execute` endpoint) the server
+        # may not detect the disconnect: only the HTTP/2 stream is
+        # cancelled, the underlying TCP connection stays open.
+        #
+        # Forcing HTTP/1.1 here keeps the 1:1 mapping between TCP
+        # connection and request, so client disconnects propagate to the
+        # server as a TCP close and long-running executions can be
+        # cancelled reliably.
+        return Client(transport=get_transport(self.connection_config, http2=False))
 
     @overload
     def run_code(
