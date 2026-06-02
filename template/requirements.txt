@@ -1,5 +1,5 @@
 # Jupyter server requirements
-jupyter-server==2.16.0
+jupyter-server==2.18.0
 ipykernel==6.31.0
 ipython==9.14.0
 
