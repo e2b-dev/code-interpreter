@@ -3,9 +3,9 @@ jupyter-server==2.16.0
 ipykernel==6.31.0
 ipython==9.14.0
 
-orjson==3.11.7
+orjson==3.11.9
 pandas==2.2.3
-matplotlib==3.10.8
+matplotlib==3.10.9
 pillow==12.2.0
 
 # Latest version for
@@ -35,9 +35,9 @@ scikit-learn==1.6.1
 scipy==1.17.1
 seaborn==0.13.2
 soundfile==0.13.1
-spacy==3.8.11
+spacy==3.8.14
 textblob==0.19.0
-tornado==6.5.5
+tornado==6.5.6
 urllib3==2.7.0
 xarray==2025.4.0
 xlrd==2.0.2
