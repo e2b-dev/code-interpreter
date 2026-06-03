@@ -3,3 +3,6 @@ start-template-server:
 
 kill-template-server:
 	docker kill $(shell docker ps --filter expose=49999 --format {{.ID}})
+
+debug-template:
+	cd template && python build_debug.py && python debug_logs.py

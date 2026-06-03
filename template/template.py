@@ -4,6 +4,7 @@ from e2b import Template, wait_for_url
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
+    ready=None,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -136,6 +137,7 @@ def make_template(
     else:
         start_cmd = "sudo systemctl start jupyter"
 
-    return template.set_start_cmd(
-        start_cmd, wait_for_url("http://localhost:49999/health")
-    )
+    if ready is None:
+        ready = wait_for_url("http://localhost:49999/health")
+
+    return template.set_start_cmd(start_cmd, ready)
