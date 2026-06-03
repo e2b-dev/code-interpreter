@@ -11,7 +11,6 @@ sbx = Sandbox.create(template=alias, timeout=600)
 print(f"sandbox: {sbx.sandbox_id}")
 
 CMDS = [
-    "sleep 25",  # let the start command (try to) bring the services up
     "systemctl --no-pager status jupyter || true",
     "systemctl --no-pager status code-interpreter || true",
     "journalctl --no-pager -u jupyter || true",
