@@ -118,7 +118,6 @@ def make_template(
                 "systemd/jupyter-debug.conf",
                 "/etc/systemd/system/jupyter.service.d/debug.conf",
             )
-        template = template.run_cmd("systemctl daemon-reload")
     else:
         template = template.copy("start-up.sh", ".jupyter/start-up.sh").run_cmd(
             "chmod +x .jupyter/start-up.sh"
