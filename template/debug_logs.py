@@ -7,7 +7,7 @@ load_dotenv()
 
 alias = os.getenv("E2B_DEBUG_TEMPLATE", "code-interpreter-debug")
 
-sbx = Sandbox.create(template=alias, timeout=180)
+sbx = Sandbox.create(template=alias, timeout=600)
 print(f"sandbox: {sbx.sandbox_id}")
 
 CMDS = [
@@ -23,10 +23,14 @@ CMDS = [
 try:
     for cmd in CMDS:
         print(f"\n===== $ {cmd} =====")
-        result = sbx.commands.run(f"sudo bash -lc {cmd!r}", timeout=60)
-        if result.stdout:
-            print(result.stdout)
-        if result.stderr:
-            print("[stderr]", result.stderr)
+        try:
+            result = sbx.commands.run(f"sudo bash -lc {cmd!r}", timeout=60)
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print("[stderr]", result.stderr)
+        except Exception as e:
+            # Keep going so one slow/failed command doesn't skip the rest.
+            print(f"[command failed] {e}")
 finally:
     sbx.kill()
