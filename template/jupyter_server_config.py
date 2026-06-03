@@ -3,6 +3,19 @@
 c = get_config()  # noqa
 
 
+# Pin the contents root directory.
+#
+#         Sessions are created with a relative path (a bare uuid, see
+#         server/contexts.py). Without an explicit root_dir, jupyter-server
+#         inherits the process working directory as its root — which is "/"
+#         under systemd (jupyter.service has no WorkingDirectory). Since
+#         jupyter-server 2.18.0 (CVE-2026-35397 path-traversal hardening), a
+#         root_dir of "/" makes every POST /api/sessions fail with
+#         "<uuid> is outside root contents directory", so the server never
+#         starts. Pinning it to /home/user matches the execution cwd.
+c.ServerApp.root_dir = "/home/user"
+
+
 # Set the Access-Control-Allow-Origin header
 #
 #          Use '*' to allow any origin to access your server.
