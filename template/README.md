@@ -76,6 +76,11 @@ it finalizes even while the server is crash-looping), spawns a sandbox, and
 prints `systemctl status` + the full `journalctl` for both services. It needs
 `template/.env` with your `E2B_API_KEY` and the deps from `requirements-dev.txt`.
 
+The debug build also applies a systemd drop-in that routes Jupyter's stdout to
+the journal (`make_template(debug=True)`). Production builds keep
+`StandardOutput=null`, so Jupyter's request/error logs are only captured in the
+debug template.
+
 Inside a running sandbox you can also inspect things directly:
 
 ```

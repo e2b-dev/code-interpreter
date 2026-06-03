@@ -5,6 +5,7 @@ def make_template(
     kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
     ready: ReadyCmd | None = None,
+    debug: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -105,16 +106,19 @@ def make_template(
     )
 
     if not is_docker:
-        template = (
-            template.copy(
-                "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
-            )
-            .copy(
-                "systemd/code-interpreter.service",
-                "/etc/systemd/system/code-interpreter.service",
-            )
-            .run_cmd("systemctl daemon-reload")
+        template = template.copy(
+            "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
+        ).copy(
+            "systemd/code-interpreter.service",
+            "/etc/systemd/system/code-interpreter.service",
         )
+        if debug:
+            # Drop-in that routes Jupyter's stdout to the journal for debugging.
+            template = template.copy(
+                "systemd/jupyter-debug.conf",
+                "/etc/systemd/system/jupyter.service.d/debug.conf",
+            )
+        template = template.run_cmd("systemctl daemon-reload")
     else:
         template = template.copy("start-up.sh", ".jupyter/start-up.sh").run_cmd(
             "chmod +x .jupyter/start-up.sh"

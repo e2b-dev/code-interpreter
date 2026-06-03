@@ -2,4 +2,4 @@
 "@e2b/code-interpreter-template": patch
 ---
 
-Improve template debuggability: send Jupyter's stdout to the systemd journal (instead of /dev/null) so startup errors are visible, and add a `make debug-template` workflow that builds via the systemd path and dumps the service journals for diagnosing a server that fails to start.
+Add a `make debug-template` workflow for diagnosing a server that fails to start: it builds the template via the systemd path (with a fixed-timeout ready gate and a drop-in routing Jupyter's stdout to the journal) and dumps the service journals. Production builds are unchanged.
