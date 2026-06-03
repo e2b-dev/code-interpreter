@@ -1,10 +1,10 @@
-from e2b import Template, wait_for_url
+from e2b import ReadyCmd, Template, wait_for_url
 
 
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
-    ready=None,
+    ready: ReadyCmd | None = None,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
