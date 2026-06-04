@@ -1,9 +1,11 @@
-from e2b import Template, wait_for_url
+from e2b import ReadyCmd, Template, wait_for_url
 
 
 def make_template(
     kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
+    ready: ReadyCmd | None = None,
+    debug: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -104,16 +106,18 @@ def make_template(
     )
 
     if not is_docker:
-        template = (
-            template.copy(
-                "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
-            )
-            .copy(
-                "systemd/code-interpreter.service",
-                "/etc/systemd/system/code-interpreter.service",
-            )
-            .run_cmd("systemctl daemon-reload")
+        template = template.copy(
+            "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
+        ).copy(
+            "systemd/code-interpreter.service",
+            "/etc/systemd/system/code-interpreter.service",
         )
+        if debug:
+            # Drop-in that routes Jupyter's stdout to the journal for debugging.
+            template = template.copy(
+                "systemd/jupyter-debug.conf",
+                "/etc/systemd/system/jupyter.service.d/debug.conf",
+            )
     else:
         template = template.copy("start-up.sh", ".jupyter/start-up.sh").run_cmd(
             "chmod +x .jupyter/start-up.sh"
@@ -136,6 +140,7 @@ def make_template(
     else:
         start_cmd = "sudo systemctl start jupyter"
 
-    return template.set_start_cmd(
-        start_cmd, wait_for_url("http://localhost:49999/health")
-    )
+    if ready is None:
+        ready = wait_for_url("http://localhost:49999/health")
+
+    return template.set_start_cmd(start_cmd, ready)
