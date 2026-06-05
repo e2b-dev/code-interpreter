@@ -3,7 +3,7 @@
 ## Building the production template
 
 To build the official `code-interpreter-v1` template from this repo, use
-`template/build_prod.py`. This is the script CI and releases run.
+`build_prod.py`. This is the script CI and releases run.
 
 1. Install the build dependencies:
 
