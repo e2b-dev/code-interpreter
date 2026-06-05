@@ -1,4 +1,4 @@
-# Using custom sandbox with Code Interpreter SDK
+# Customizing the Code Interpreter template
 
 If you want to customize the Code Interpreter sandbox (e.g.: add a preinstalled package) you can do that by creating a [custom sandbox template](https://e2b.dev/docs/template/quickstart).
 
@@ -40,13 +40,19 @@ Template.build(
 )
 ```
 
-3. Build the template:
+4. Set your environment variables in a `.env` file (loaded by `load_dotenv()`):
+
+```
+E2B_API_KEY=e2b_***
+```
+
+5. Build the template:
 
 ```
 python build.py
 ```
 
-4. Use the custom template:
+6. Use the custom template:
 
 ```python
 from e2b import Sandbox
@@ -54,6 +60,35 @@ from e2b import Sandbox
 sbx = Sandbox.create(template="code-interpreter-custom")
 execution = sbx.run_code("print('Hello, World!')")
 print(execution.logs.stdout)
+```
+
+## Building the production template
+
+To build the official `code-interpreter-v1` template from this repo, use
+`template/build_prod.py`. This is the script CI and releases run.
+
+1. Install the build dependencies:
+
+```
+pip install -r template/requirements-dev.txt
+```
+
+2. Provide your credentials in `template/.env`:
+
+```
+E2B_API_KEY=e2b_***
+```
+
+3. Build the template:
+
+```
+python template/build_prod.py
+```
+
+Set `SKIP_CACHE=true` to force a clean rebuild that ignores the layer cache:
+
+```
+SKIP_CACHE=true python template/build_prod.py
 ```
 
 ## Debugging a server that won't start
