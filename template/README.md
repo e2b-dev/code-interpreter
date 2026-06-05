@@ -8,10 +8,10 @@ To build the official `code-interpreter-v1` template from this repo, use
 1. Install the build dependencies:
 
 ```
-pip install -r template/requirements-dev.txt
+pip install -r requirements-dev.txt
 ```
 
-2. Provide your credentials in `template/.env`:
+2. Provide your credentials in `.env`:
 
 ```
 E2B_API_KEY=e2b_***
@@ -20,13 +20,13 @@ E2B_API_KEY=e2b_***
 3. Build the template:
 
 ```
-python template/build_prod.py
+python build_prod.py
 ```
 
 Set `SKIP_CACHE=true` to force a clean rebuild that ignores the layer cache:
 
 ```
-SKIP_CACHE=true python template/build_prod.py
+SKIP_CACHE=true python build_prod.py
 ```
 
 If you want to customize the Code Interpreter sandbox (e.g.: add a preinstalled package) you can do that by creating a [custom sandbox template](https://e2b.dev/docs/template/quickstart).
