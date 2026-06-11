@@ -1,8 +1,4 @@
-import {
-  Sandbox as BaseSandbox,
-  InvalidArgumentError,
-  SandboxError,
-} from 'e2b'
+import { Sandbox as BaseSandbox, InvalidArgumentError, SandboxError } from 'e2b'
 
 import {
   Result,
