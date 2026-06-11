@@ -1,4 +1,4 @@
-import { Sandbox as BaseSandbox, InvalidArgumentError, SandboxError } from 'e2b'
+import { Sandbox as BaseSandbox, InvalidArgumentError, TimeoutError } from 'e2b'
 
 import {
   Result,
@@ -435,7 +435,7 @@ export class Sandbox extends BaseSandbox {
   }
 
   /**
-   * Throws a descriptive `SandboxError` if the connection error was caused
+   * Throws a descriptive `TimeoutError` if the connection error was caused
    * by the sandbox being killed mid-request. If the sandbox is still running
    * (or its state can't be determined), returns so the caller can re-throw
    * the original error.
@@ -448,7 +448,7 @@ export class Sandbox extends BaseSandbox {
       // original error instead of wrongly claiming the sandbox is gone.
       (await this.isRunning().catch(() => true)) === false
     ) {
-      throw new SandboxError(
+      throw new TimeoutError(
         'The sandbox was killed while the request was in progress. This can happen when the sandbox times out or is killed manually. ' +
           "You can modify the sandbox timeout by passing 'timeoutMs' when starting the sandbox or calling '.setTimeout' on the sandbox with the desired timeout."
       )

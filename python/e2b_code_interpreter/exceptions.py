@@ -1,4 +1,4 @@
-from e2b import SandboxException, TimeoutException
+from e2b import TimeoutException
 
 
 def format_request_timeout_error() -> Exception:
@@ -14,7 +14,7 @@ def format_execution_timeout_error() -> Exception:
 
 
 def format_sandbox_killed_error() -> Exception:
-    return SandboxException(
+    return TimeoutException(
         "The sandbox was killed while the request was in progress. This can happen when the sandbox times out or is killed manually. "
         "You can modify the sandbox timeout by passing 'timeout' when starting the sandbox or calling '.set_timeout' on the sandbox with the desired timeout",
     )

@@ -2,7 +2,7 @@ import threading
 
 import pytest
 
-from e2b import SandboxException
+from e2b import TimeoutException
 from e2b_code_interpreter import Sandbox
 
 
@@ -13,7 +13,7 @@ def test_run_code_raises_when_sandbox_is_killed_during_execution(sandbox: Sandbo
 
     try:
         with pytest.raises(
-            SandboxException,
+            TimeoutException,
             match="sandbox was killed while the request was in progress",
         ):
             sandbox.run_code("import time; time.sleep(60)")
