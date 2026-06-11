@@ -1,4 +1,8 @@
-import { Sandbox as BaseSandbox, InvalidArgumentError } from 'e2b'
+import {
+  Sandbox as BaseSandbox,
+  InvalidArgumentError,
+  SandboxError,
+} from 'e2b'
 
 import {
   Result,
@@ -11,6 +15,7 @@ import {
 import {
   formatExecutionTimeoutError,
   formatRequestTimeoutError,
+  isConnectionClosedError,
   readLines,
 } from './utils'
 import { JUPYTER_PORT, DEFAULT_TIMEOUT_MS } from './consts'
@@ -278,6 +283,7 @@ export class Sandbox extends BaseSandbox {
 
       return execution
     } catch (error) {
+      await this.throwIfSandboxKilled(error)
       throw formatRequestTimeoutError(error)
     }
   }
@@ -317,6 +323,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
+      await this.throwIfSandboxKilled(error)
       throw formatRequestTimeoutError(error)
     }
   }
@@ -353,6 +360,7 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
+      await this.throwIfSandboxKilled(error)
       throw formatRequestTimeoutError(error)
     }
   }
@@ -388,6 +396,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
+      await this.throwIfSandboxKilled(error)
       throw formatRequestTimeoutError(error)
     }
   }
@@ -424,7 +433,29 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
+      await this.throwIfSandboxKilled(error)
       throw formatRequestTimeoutError(error)
+    }
+  }
+
+  /**
+   * Throws a descriptive `SandboxError` if the connection error was caused
+   * by the sandbox being killed mid-request. If the sandbox is still running
+   * (or its state can't be determined), returns so the caller can re-throw
+   * the original error.
+   */
+  private async throwIfSandboxKilled(error: unknown): Promise<void> {
+    if (
+      isConnectionClosedError(error) &&
+      // If the state check itself fails we can't tell whether the sandbox
+      // was killed — assume it's running so the caller re-throws the
+      // original error instead of wrongly claiming the sandbox is gone.
+      (await this.isRunning().catch(() => true)) === false
+    ) {
+      throw new SandboxError(
+        'The sandbox was killed while the request was in progress. This can happen when the sandbox times out or is killed manually. ' +
+          "You can modify the sandbox timeout by passing 'timeoutMs' when starting the sandbox or calling '.setTimeout' on the sandbox with the desired timeout."
+      )
     }
   }
 }

@@ -25,6 +25,7 @@ from e2b_code_interpreter.models import (
 from e2b_code_interpreter.exceptions import (
     format_execution_timeout_error,
     format_request_timeout_error,
+    format_sandbox_killed_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -76,6 +77,23 @@ class Sandbox(BaseSandbox):
         # server as a TCP close and long-running executions can be
         # cancelled reliably.
         return Client(transport=get_transport(self.connection_config, http2=False))
+
+    def _raise_if_sandbox_killed(self, err: Exception) -> None:
+        """
+        Raises a descriptive exception if the connection error was caused by
+        the sandbox being killed mid-request. If the sandbox is still running
+        (or its state can't be determined), returns so the caller can re-raise
+        the original error.
+        """
+        try:
+            running = self.is_running()
+        except Exception:
+            # The state check itself failed, so we can't tell whether the
+            # sandbox was killed — let the caller re-raise the original error
+            # instead of wrongly claiming the sandbox is gone.
+            return
+        if not running:
+            raise format_sandbox_killed_error() from err
 
     @overload
     def run_code(
@@ -210,6 +228,9 @@ class Sandbox(BaseSandbox):
             raise format_execution_timeout_error()
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            self._raise_if_sandbox_killed(err)
+            raise
 
     def create_code_context(
         self,
@@ -256,6 +277,9 @@ class Sandbox(BaseSandbox):
             return Context.from_json(data)
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            self._raise_if_sandbox_killed(err)
+            raise
 
     def remove_code_context(
         self,
@@ -288,6 +312,9 @@ class Sandbox(BaseSandbox):
                 raise err
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            self._raise_if_sandbox_killed(err)
+            raise
 
     def list_code_contexts(self) -> List[Context]:
         """
@@ -316,6 +343,9 @@ class Sandbox(BaseSandbox):
             return [Context.from_json(context_data) for context_data in data]
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            self._raise_if_sandbox_killed(err)
+            raise
 
     def restart_code_context(
         self,
@@ -348,3 +378,6 @@ class Sandbox(BaseSandbox):
                 raise err
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            self._raise_if_sandbox_killed(err)
+            raise

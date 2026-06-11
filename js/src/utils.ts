@@ -20,6 +20,35 @@ export function formatExecutionTimeoutError(error: unknown) {
   return error
 }
 
+const CONNECTION_CLOSED_CODES = ['ECONNRESET', 'EPIPE', 'UND_ERR_SOCKET']
+
+/**
+ * Checks if the error means the connection was closed/reset while the request
+ * was in flight. The shape of this error is runtime-specific — Bun and Deno
+ * set a `code` directly, while Node's fetch (undici) wraps the socket error
+ * in the `cause` of a generic `TypeError`.
+ */
+export function isConnectionClosedError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const code = (error as { code?: unknown }).code
+  if (typeof code === 'string' && CONNECTION_CLOSED_CODES.includes(code)) {
+    return true
+  }
+
+  if (error.name === 'ConnectionReset' || error.name === 'ConnectionClosed') {
+    return true
+  }
+
+  if (error.cause) {
+    return isConnectionClosedError(error.cause)
+  }
+
+  return false
+}
+
 export async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader()
   let buffer = ''
