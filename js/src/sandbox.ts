@@ -279,8 +279,7 @@ export class Sandbox extends BaseSandbox {
 
       return execution
     } catch (error) {
-      await this.throwIfSandboxKilled(error)
-      throw formatRequestTimeoutError(error)
+      throw await this.formatRequestError(error)
     }
   }
 
@@ -319,8 +318,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
-      await this.throwIfSandboxKilled(error)
-      throw formatRequestTimeoutError(error)
+      throw await this.formatRequestError(error)
     }
   }
 
@@ -356,8 +354,7 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
-      await this.throwIfSandboxKilled(error)
-      throw formatRequestTimeoutError(error)
+      throw await this.formatRequestError(error)
     }
   }
 
@@ -392,8 +389,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
-      await this.throwIfSandboxKilled(error)
-      throw formatRequestTimeoutError(error)
+      throw await this.formatRequestError(error)
     }
   }
 
@@ -429,29 +425,30 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
-      await this.throwIfSandboxKilled(error)
-      throw formatRequestTimeoutError(error)
+      throw await this.formatRequestError(error)
     }
   }
 
   /**
-   * Throws a descriptive `TimeoutError` if the connection error was caused
-   * by the sandbox being killed mid-request. If the sandbox is still running
-   * (or its state can't be determined), returns so the caller can re-throw
-   * the original error.
+   * Returns the error to throw for a failed request. If the connection was
+   * closed because the sandbox was killed mid-request, returns a descriptive
+   * `TimeoutError`. Otherwise falls back to formatting request timeouts and
+   * re-throwing the original error.
    */
-  private async throwIfSandboxKilled(error: unknown): Promise<void> {
+  private async formatRequestError(error: unknown): Promise<unknown> {
     if (
       isConnectionClosedError(error) &&
       // If the state check itself fails we can't tell whether the sandbox
-      // was killed — assume it's running so the caller re-throws the
-      // original error instead of wrongly claiming the sandbox is gone.
+      // was killed — assume it's running so we re-throw the original error
+      // instead of wrongly claiming the sandbox is gone.
       (await this.isRunning().catch(() => true)) === false
     ) {
-      throw new TimeoutError(
+      return new TimeoutError(
         'The sandbox was killed while the request was in progress. This can happen when the sandbox times out or is killed manually. ' +
           "You can modify the sandbox timeout by passing 'timeoutMs' when starting the sandbox or calling '.setTimeout' on the sandbox with the desired timeout."
       )
     }
+
+    return formatRequestTimeoutError(error)
   }
 }
