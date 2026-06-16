@@ -78,7 +78,7 @@ class Sandbox(BaseSandbox):
         # cancelled reliably.
         return Client(transport=get_transport(self.connection_config, http2=False))
 
-    def _raise_if_sandbox_killed(self, err: Exception) -> None:
+    def _handle_connection_error(self, err: Exception) -> None:
         """
         Raises a descriptive exception if the connection error was caused by
         the sandbox being killed mid-request. If the sandbox is still running
@@ -229,7 +229,7 @@ class Sandbox(BaseSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            self._raise_if_sandbox_killed(err)
+            self._handle_connection_error(err)
             raise
 
     def create_code_context(
@@ -278,7 +278,7 @@ class Sandbox(BaseSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            self._raise_if_sandbox_killed(err)
+            self._handle_connection_error(err)
             raise
 
     def remove_code_context(
@@ -313,7 +313,7 @@ class Sandbox(BaseSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            self._raise_if_sandbox_killed(err)
+            self._handle_connection_error(err)
             raise
 
     def list_code_contexts(self) -> List[Context]:
@@ -344,7 +344,7 @@ class Sandbox(BaseSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            self._raise_if_sandbox_killed(err)
+            self._handle_connection_error(err)
             raise
 
     def restart_code_context(
@@ -379,5 +379,5 @@ class Sandbox(BaseSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            self._raise_if_sandbox_killed(err)
+            self._handle_connection_error(err)
             raise

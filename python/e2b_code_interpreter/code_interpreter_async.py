@@ -84,7 +84,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             transport=get_transport(self.connection_config, http2=False),
         )
 
-    async def _raise_if_sandbox_killed(self, err: Exception) -> None:
+    async def _handle_connection_error(self, err: Exception) -> None:
         """
         Raises a descriptive exception if the connection error was caused by
         the sandbox being killed mid-request. If the sandbox is still running
@@ -236,7 +236,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            await self._raise_if_sandbox_killed(err)
+            await self._handle_connection_error(err)
             raise
 
     async def create_code_context(
@@ -285,7 +285,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            await self._raise_if_sandbox_killed(err)
+            await self._handle_connection_error(err)
             raise
 
     async def remove_code_context(
@@ -320,7 +320,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            await self._raise_if_sandbox_killed(err)
+            await self._handle_connection_error(err)
             raise
 
     async def list_code_contexts(self) -> List[Context]:
@@ -351,7 +351,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            await self._raise_if_sandbox_killed(err)
+            await self._handle_connection_error(err)
             raise
 
     async def restart_code_context(
@@ -385,5 +385,5 @@ class AsyncSandbox(BaseAsyncSandbox):
         except httpx.TimeoutException:
             raise format_request_timeout_error()
         except (httpx.ReadError, httpx.RemoteProtocolError) as err:
-            await self._raise_if_sandbox_killed(err)
+            await self._handle_connection_error(err)
             raise

@@ -279,7 +279,7 @@ export class Sandbox extends BaseSandbox {
 
       return execution
     } catch (error) {
-      throw await this.formatRequestError(error)
+      throw await this.handleRequestError(error)
     }
   }
 
@@ -318,7 +318,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
-      throw await this.formatRequestError(error)
+      throw await this.handleRequestError(error)
     }
   }
 
@@ -354,7 +354,7 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
-      throw await this.formatRequestError(error)
+      throw await this.handleRequestError(error)
     }
   }
 
@@ -389,7 +389,7 @@ export class Sandbox extends BaseSandbox {
 
       return await res.json()
     } catch (error) {
-      throw await this.formatRequestError(error)
+      throw await this.handleRequestError(error)
     }
   }
 
@@ -425,7 +425,7 @@ export class Sandbox extends BaseSandbox {
         throw error
       }
     } catch (error) {
-      throw await this.formatRequestError(error)
+      throw await this.handleRequestError(error)
     }
   }
 
@@ -435,7 +435,7 @@ export class Sandbox extends BaseSandbox {
    * `TimeoutError`. Otherwise falls back to formatting request timeouts and
    * re-throwing the original error.
    */
-  private async formatRequestError(error: unknown): Promise<unknown> {
+  private async handleRequestError(error: unknown): Promise<unknown> {
     if (
       isConnectionClosedError(error) &&
       // If the state check itself fails we can't tell whether the sandbox
