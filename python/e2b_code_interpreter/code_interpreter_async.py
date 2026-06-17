@@ -29,6 +29,7 @@ from e2b_code_interpreter.models import (
 from e2b_code_interpreter.exceptions import (
     format_execution_timeout_error,
     format_request_timeout_error,
+    format_sandbox_killed_error,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,23 @@ class AsyncSandbox(BaseAsyncSandbox):
         return AsyncClient(
             transport=get_transport(self.connection_config, http2=False),
         )
+
+    async def _handle_connection_error(self, err: Exception) -> None:
+        """
+        Raises a descriptive exception if the connection error was caused by
+        the sandbox being killed mid-request. If the sandbox is still running
+        (or its state can't be determined), returns so the caller can re-raise
+        the original error.
+        """
+        try:
+            running = await self.is_running()
+        except Exception:
+            # The state check itself failed, so we can't tell whether the
+            # sandbox was killed — let the caller re-raise the original error
+            # instead of wrongly claiming the sandbox is gone.
+            return
+        if not running:
+            raise format_sandbox_killed_error() from err
 
     @overload
     async def run_code(
@@ -217,6 +235,9 @@ class AsyncSandbox(BaseAsyncSandbox):
             raise format_execution_timeout_error()
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            await self._handle_connection_error(err)
+            raise
 
     async def create_code_context(
         self,
@@ -263,6 +284,9 @@ class AsyncSandbox(BaseAsyncSandbox):
             return Context.from_json(data)
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            await self._handle_connection_error(err)
+            raise
 
     async def remove_code_context(
         self,
@@ -295,6 +319,9 @@ class AsyncSandbox(BaseAsyncSandbox):
                 raise err
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            await self._handle_connection_error(err)
+            raise
 
     async def list_code_contexts(self) -> List[Context]:
         """
@@ -323,6 +350,9 @@ class AsyncSandbox(BaseAsyncSandbox):
             return [Context.from_json(context_data) for context_data in data]
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            await self._handle_connection_error(err)
+            raise
 
     async def restart_code_context(
         self,
@@ -354,3 +384,6 @@ class AsyncSandbox(BaseAsyncSandbox):
                 raise err
         except httpx.TimeoutException:
             raise format_request_timeout_error()
+        except (httpx.ReadError, httpx.RemoteProtocolError) as err:
+            await self._handle_connection_error(err)
+            raise
