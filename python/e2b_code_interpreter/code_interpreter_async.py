@@ -61,7 +61,22 @@ class AsyncSandbox(BaseAsyncSandbox):
 
     @property
     def _jupyter_url(self) -> str:
+        # When E2B_SANDBOX_URL is set (local/self-hosted environment), route through the client-proxy
+        sandbox_url = self.connection_config._sandbox_url
+        if sandbox_url:
+            return sandbox_url
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
+
+    @property
+    def _jupyter_headers(self) -> Dict[str, str]:
+        """Extra headers for local client-proxy routing (E2b-Sandbox-Id / E2b-Sandbox-Port)."""
+        sandbox_url = self.connection_config._sandbox_url
+        if sandbox_url:
+            return {
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
+        return {}
 
     @property
     def _client(self) -> AsyncClient:
@@ -197,6 +212,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             headers = {
                 "Content-Type": "application/json",
             }
+            headers.update(self._jupyter_headers)
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
@@ -266,6 +282,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             headers = {
                 "Content-Type": "application/json",
             }
+            headers.update(self._jupyter_headers)
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -305,6 +322,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             headers = {
                 "Content-Type": "application/json",
             }
+            headers.update(self._jupyter_headers)
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -333,6 +351,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             headers = {
                 "Content-Type": "application/json",
             }
+            headers.update(self._jupyter_headers)
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -370,6 +389,7 @@ class AsyncSandbox(BaseAsyncSandbox):
             headers = {
                 "Content-Type": "application/json",
             }
+            headers.update(self._jupyter_headers)
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
