@@ -13,4 +13,4 @@ function start_code_interpreter() {
 
 echo "Starting Code Interpreter server..."
 start_code_interpreter &
-MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token="" >/dev/null 2>&1
+MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc jupyter server --IdentityProvider.token=""
