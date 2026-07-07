@@ -1,7 +1,7 @@
 # Jupyter server requirements
 jupyter-server==2.20.0
 ipykernel==6.31.0
-ipython==9.14.0
+ipython==9.15.0
 
 orjson==3.11.9
 pandas==2.2.3
