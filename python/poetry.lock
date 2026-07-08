@@ -178,27 +178,27 @@ files = [
 
 [[package]]
 name = "e2b"
-version = "2.26.0"
+version = "2.31.0"
 description = "E2B SDK that give agents cloud environments"
 optional = false
-python-versions = "<4.0,>=3.10"
+python-versions = ">=3.10"
 files = [
-    {file = "e2b-2.26.0-py3-none-any.whl", hash = "sha256:55cdb88b30d3026084fff862275815d88ffd37665814f73f09beea9c057de5bc"},
-    {file = "e2b-2.26.0.tar.gz", hash = "sha256:e140aec56c29a34706cdaf1bbe4dc1858ac38c7bed87145795019cf321866a2f"},
+    {file = "e2b-2.31.0-py3-none-any.whl", hash = "sha256:532631b1b5d13d3bc6b7f8a81730f4c54e021b724cc3ec21efd000c84f58a87a"},
+    {file = "e2b-2.31.0.tar.gz", hash = "sha256:0d695e4a73e8a46db0ceca16cac042efffddeee9e0d4fc1e80a7e65427ae4756"},
 ]
 
 [package.dependencies]
 attrs = ">=23.2.0"
-dockerfile-parse = ">=2.0.1,<3.0.0"
+dockerfile-parse = ">=2.0.1,<3"
 h2 = ">=4,<5"
-httpcore = ">=1.0.5,<2.0.0"
+httpcore = ">=1.0.5,<2"
 httpx = ">=0.27.0,<1.0.0"
 packaging = ">=24.1"
 protobuf = ">=4.21.0"
 python-dateutil = ">=2.8.2"
 rich = ">=14.0.0"
 typing-extensions = ">=4.1.0"
-wcmatch = ">=10.1,<11.0"
+wcmatch = ">=10.1,<11"
 
 [[package]]
 name = "exceptiongroup"
