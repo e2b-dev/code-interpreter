@@ -58,6 +58,11 @@ class Sandbox(BaseSandbox):
 
     @property
     def _jupyter_url(self) -> str:
+        # Honors the `sandbox_url` option and the `E2B_SANDBOX_URL` environment
+        # variable, same as the base SDK does for envd requests.
+        sandbox_url = self.connection_config._sandbox_url
+        if sandbox_url:
+            return sandbox_url
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
 
     @property
@@ -189,7 +194,11 @@ class Sandbox(BaseSandbox):
         context_id = context.id if context else None
 
         try:
-            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            headers: Dict[str, str] = {
+                "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
@@ -256,7 +265,11 @@ class Sandbox(BaseSandbox):
             data["cwd"] = cwd
 
         try:
-            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            headers: Dict[str, str] = {
+                "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
@@ -295,7 +308,11 @@ class Sandbox(BaseSandbox):
         context_id = context.id if isinstance(context, Context) else context
 
         try:
-            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            headers: Dict[str, str] = {
+                "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
@@ -323,7 +340,11 @@ class Sandbox(BaseSandbox):
         :return: List of contexts.
         """
         try:
-            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            headers: Dict[str, str] = {
+                "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
@@ -361,7 +382,11 @@ class Sandbox(BaseSandbox):
         context_id = context.id if isinstance(context, Context) else context
 
         try:
-            headers: Dict[str, str] = {"Content-Type": "application/json"}
+            headers: Dict[str, str] = {
+                "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
+            }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
