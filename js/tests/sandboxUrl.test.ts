@@ -43,6 +43,11 @@ test('jupyterUrl honors the sandboxUrl option', () => {
   expect(sandbox.jupyterUrl).toBe('https://proxy.example.com')
 })
 
+test('jupyterUrl strips trailing slashes from the sandboxUrl option', () => {
+  const sandbox = createSandbox({ sandboxUrl: 'https://proxy.example.com/' })
+  expect(sandbox.jupyterUrl).toBe('https://proxy.example.com')
+})
+
 test('jupyterUrl honors the E2B_SANDBOX_URL environment variable', () => {
   process.env.E2B_SANDBOX_URL = 'https://env.example.com'
   const sandbox = createSandbox()
