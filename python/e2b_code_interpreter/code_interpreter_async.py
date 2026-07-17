@@ -65,7 +65,7 @@ class AsyncSandbox(BaseAsyncSandbox):
         # variable, same as the base SDK does for envd requests.
         sandbox_url = self.connection_config._sandbox_url
         if sandbox_url:
-            return sandbox_url.rstrip("/")
+            return sandbox_url
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
 
     @property

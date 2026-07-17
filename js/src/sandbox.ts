@@ -138,12 +138,10 @@ export class Sandbox extends BaseSandbox {
     'code-interpreter-v1'
 
   protected get jupyterUrl(): string {
-    return this.connectionConfig
-      .getSandboxDirectUrl(this.sandboxId, {
-        sandboxDomain: this.sandboxDomain,
-        envdPort: JUPYTER_PORT,
-      })
-      .replace(/\/+$/, '')
+    return this.connectionConfig.getSandboxDirectUrl(this.sandboxId, {
+      sandboxDomain: this.sandboxDomain,
+      envdPort: JUPYTER_PORT,
+    })
   }
 
   /**

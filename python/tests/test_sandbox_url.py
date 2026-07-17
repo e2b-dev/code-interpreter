@@ -32,12 +32,6 @@ async def test_jupyter_url_honors_sandbox_url_option(cls):
 
 
 @pytest.mark.parametrize("cls", [Sandbox, AsyncSandbox])
-async def test_jupyter_url_strips_trailing_slashes_from_sandbox_url(cls):
-    sandbox = make_sandbox(cls, sandbox_url="https://proxy.example.com/")
-    assert sandbox._jupyter_url == "https://proxy.example.com"
-
-
-@pytest.mark.parametrize("cls", [Sandbox, AsyncSandbox])
 async def test_jupyter_url_honors_sandbox_url_env_var(cls, monkeypatch):
     monkeypatch.setenv("E2B_SANDBOX_URL", "https://env.example.com")
     sandbox = make_sandbox(cls)
