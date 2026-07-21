@@ -6,7 +6,7 @@ ipython==9.15.0
 orjson==3.11.9
 pandas==2.2.3
 matplotlib==3.10.9
-pillow==12.2.0
+pillow==12.3.0
 
 # Latest version for
 e2b_charts
@@ -19,7 +19,7 @@ gensim==4.4.0
 imageio==2.37.3
 joblib==1.5.3
 librosa==0.11.0
-nltk==3.9.4
+nltk==3.10.0
 numpy==2.3.5
 numba==0.66.0
 opencv-python==4.11.0.86
