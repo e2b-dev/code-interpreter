@@ -270,8 +270,6 @@ class Sandbox(BaseSandbox):
                 "E2b-Sandbox-Id": self.sandbox_id,
                 "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
-            if self._envd_access_token:
-                headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -313,8 +311,6 @@ class Sandbox(BaseSandbox):
                 "E2b-Sandbox-Id": self.sandbox_id,
                 "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
-            if self._envd_access_token:
-                headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -345,8 +341,6 @@ class Sandbox(BaseSandbox):
                 "E2b-Sandbox-Id": self.sandbox_id,
                 "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
-            if self._envd_access_token:
-                headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
@@ -387,8 +381,6 @@ class Sandbox(BaseSandbox):
                 "E2b-Sandbox-Id": self.sandbox_id,
                 "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
-            if self._envd_access_token:
-                headers["X-Access-Token"] = self._envd_access_token
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
 
