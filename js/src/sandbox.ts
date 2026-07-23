@@ -138,9 +138,10 @@ export class Sandbox extends BaseSandbox {
     'code-interpreter-v1'
 
   protected get jupyterUrl(): string {
-    return `${this.connectionConfig.debug ? 'http' : 'https'}://${this.getHost(
-      JUPYTER_PORT
-    )}`
+    return this.connectionConfig.getSandboxDirectUrl(this.sandboxId, {
+      sandboxDomain: this.sandboxDomain,
+      envdPort: JUPYTER_PORT,
+    })
   }
 
   /**
@@ -214,6 +215,8 @@ export class Sandbox extends BaseSandbox {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
+      'E2b-Sandbox-Id': this.sandboxId,
+      'E2b-Sandbox-Port': JUPYTER_PORT.toString(),
     }
 
     if (this.trafficAccessToken) {
@@ -294,6 +297,8 @@ export class Sandbox extends BaseSandbox {
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'E2b-Sandbox-Id': this.sandboxId,
+        'E2b-Sandbox-Port': JUPYTER_PORT.toString(),
       }
 
       if (this.trafficAccessToken) {
@@ -334,6 +339,8 @@ export class Sandbox extends BaseSandbox {
       const id = typeof context === 'string' ? context : context.id
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'E2b-Sandbox-Id': this.sandboxId,
+        'E2b-Sandbox-Port': JUPYTER_PORT.toString(),
       }
 
       if (this.trafficAccessToken) {
@@ -367,6 +374,8 @@ export class Sandbox extends BaseSandbox {
     try {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'E2b-Sandbox-Id': this.sandboxId,
+        'E2b-Sandbox-Port': JUPYTER_PORT.toString(),
       }
 
       if (this.trafficAccessToken) {
@@ -405,6 +414,8 @@ export class Sandbox extends BaseSandbox {
       const id = typeof context === 'string' ? context : context.id
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'E2b-Sandbox-Id': this.sandboxId,
+        'E2b-Sandbox-Port': JUPYTER_PORT.toString(),
       }
 
       if (this.trafficAccessToken) {

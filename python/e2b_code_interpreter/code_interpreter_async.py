@@ -61,6 +61,11 @@ class AsyncSandbox(BaseAsyncSandbox):
 
     @property
     def _jupyter_url(self) -> str:
+        # Honors the `sandbox_url` option and the `E2B_SANDBOX_URL` environment
+        # variable, same as the base SDK does for envd requests.
+        sandbox_url = self.connection_config._sandbox_url
+        if sandbox_url:
+            return sandbox_url
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
 
     @property
@@ -196,6 +201,8 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             headers = {
                 "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
             if self._envd_access_token:
                 headers["X-Access-Token"] = self._envd_access_token
@@ -265,6 +272,8 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             headers = {
                 "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
@@ -304,6 +313,8 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             headers = {
                 "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
@@ -332,6 +343,8 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             headers = {
                 "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
@@ -369,6 +382,8 @@ class AsyncSandbox(BaseAsyncSandbox):
         try:
             headers = {
                 "Content-Type": "application/json",
+                "E2b-Sandbox-Id": self.sandbox_id,
+                "E2b-Sandbox-Port": str(JUPYTER_PORT),
             }
             if self.traffic_access_token:
                 headers["E2B-Traffic-Access-Token"] = self.traffic_access_token
