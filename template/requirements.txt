@@ -5,7 +5,7 @@ ipython==9.15.0
 
 orjson==3.11.9
 pandas==2.2.3
-matplotlib==3.10.9
+matplotlib==3.11.1
 pillow==12.3.0
 
 # Latest version for
