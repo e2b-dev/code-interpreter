@@ -12,7 +12,6 @@ Template.build(
     make_template(
         kernels=["python", "javascript"],
         ready=wait_for_timeout(60_000),
-        debug=True,
     ),
     alias=alias,
     cpu_count=2,

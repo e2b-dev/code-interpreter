@@ -1,0 +1,72 @@
+# Supervises Jupyter Server and the Code Interpreter server.
+#
+# The same file drives both images: the E2B (Firecracker) sandbox, which used
+# to run these as systemd units, and the Docker image, which used to run them
+# from a hand-rolled start-up.sh. Keeping one supervisor means a server that
+# boots under Docker boots the same way in production.
+version: '0.5'
+
+log_level: info
+
+processes:
+  jupyter:
+    description: Jupyter Server
+    # Output goes straight to a file instead of through process-compose. Kernels
+    # inherit Jupyter's stdout and stderr and outlive it, and process-compose
+    # waits for those descriptors to close before it acts on the exit — so
+    # letting it capture them means a killed Jupyter is never restarted as long
+    # as one kernel is still running, which is the case that matters most (OOM).
+    command: exec jupyter server --IdentityProvider.token="" >>/var/log/jupyter.log 2>&1
+    environment:
+      - MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc
+    availability:
+      restart: always
+      backoff_seconds: 1
+    # Kernels die with the server they run under, so a wedged Jupyter has to be
+    # replaced. failure_threshold is deliberately long: process-compose keeps
+    # probing across a restart, so a short one would restart a Jupyter that is
+    # merely slow to boot, over and over.
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        port: 8888
+        path: /api/status
+      period_seconds: 1
+      timeout_seconds: 3
+      failure_threshold: 30
+
+  code-interpreter:
+    description: Code Interpreter Server
+    working_dir: /root/.server
+    # jupyter-healthcheck.sh is the ExecStartPre equivalent: the server opens
+    # its default kernel websockets while starting, so Jupyter has to answer
+    # first or uvicorn exits and we back off into another attempt.
+    command: /root/.jupyter/jupyter-healthcheck.sh && exec .venv/bin/uvicorn main:app --host 0.0.0.0 --port 49999 --workers 1 --no-access-log --no-use-colors --timeout-keep-alive 640
+    log_location: /var/log/code-interpreter.log
+    # log_configuration has to be set per process — a top-level one is not
+    # inherited, and without flush_each_line the file stays empty until
+    # shutdown, which is exactly when it stops being useful.
+    log_configuration:
+      disable_json: true
+      add_timestamp: true
+      no_color: true
+      flush_each_line: true
+      rotation:
+        max_size_mb: 10
+        max_backups: 1
+    depends_on:
+      jupyter:
+        condition: process_healthy
+    availability:
+      restart: always
+      backoff_seconds: 1
+    # jupyter-instance-check.sh fails once Jupyter has been replaced, which is
+    # how this process gets recycled with it (systemd did that with
+    # PartOf=jupyter.service). The threshold leaves room for a restart to
+    # re-record the instance before the check is believed.
+    readiness_probe:
+      exec:
+        command: /root/.jupyter/jupyter-instance-check.sh
+      period_seconds: 1
+      timeout_seconds: 5
+      failure_threshold: 3

@@ -10,11 +10,14 @@ alias = os.getenv("E2B_DEBUG_TEMPLATE", "code-interpreter-debug")
 sbx = Sandbox.create(template=alias, timeout=600)
 print(f"sandbox: {sbx.sandbox_id}")
 
+PC = "process-compose -U -u /var/run/process-compose.sock"
+
 CMDS = [
-    "systemctl --no-pager status jupyter || true",
-    "systemctl --no-pager status code-interpreter || true",
-    "journalctl --no-pager -u jupyter || true",
-    "journalctl --no-pager -u code-interpreter || true",
+    f"{PC} process list || true",
+    # Restarts, probe failures and other supervision decisions.
+    "cat /var/log/process-compose.log || true",
+    "cat /var/log/jupyter.log || true",
+    "cat /var/log/code-interpreter.log || true",
     "curl -s --max-time 3 -o /dev/null -w 'jupyter :8888 -> %{http_code}\\n' http://localhost:8888/api/status || true",
     "curl -s --max-time 3 -o /dev/null -w 'server  :49999 -> %{http_code}\\n' http://localhost:49999/health || true",
 ]

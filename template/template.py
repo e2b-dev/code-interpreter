@@ -5,7 +5,6 @@ def make_template(
     kernels: list[str] = ["python", "r", "javascript", "bash", "java"],
     is_docker: bool = False,
     ready: ReadyCmd | None = None,
-    debug: bool = False,
 ):
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
@@ -23,6 +22,7 @@ def make_template(
                 "JAVA_HOME": "/usr/lib/jvm/jdk-${JAVA_VERSION}",
                 "IJAVA_VERSION": "1.3.0",
                 "R_VERSION": "4.5.*",
+                "PROCESS_COMPOSE_VERSION": "1.120.0",
             }
         )
         .apt_install(
@@ -39,6 +39,14 @@ def make_template(
         )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
         .apt_install("nodejs")
+        # Supervises Jupyter and the Code Interpreter server; see
+        # process-compose.yaml. Built for the image's own architecture so the
+        # Docker path works on arm64 machines too.
+        .run_cmd(
+            "curl -fsSL https://github.com/F1bonacc1/process-compose/releases/download"
+            "/v${PROCESS_COMPOSE_VERSION}/process-compose_linux_$(dpkg --print-architecture).tar.gz"
+            " | tar -xz -C /usr/local/bin process-compose"
+        )
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
     )
@@ -98,30 +106,16 @@ def make_template(
     template = (
         template.copy("matplotlibrc", ".config/matplotlib/.matplotlibrc")
         .copy("jupyter-healthcheck.sh", ".jupyter/jupyter-healthcheck.sh")
-        .run_cmd("chmod +x .jupyter/jupyter-healthcheck.sh")
+        .copy("jupyter-instance-check.sh", ".jupyter/jupyter-instance-check.sh")
+        .run_cmd(
+            "chmod +x .jupyter/jupyter-healthcheck.sh .jupyter/jupyter-instance-check.sh"
+        )
+        .copy("process-compose.yaml", ".jupyter/process-compose.yaml")
         .copy("jupyter_server_config.py", ".jupyter/")
         .make_dir(".ipython/profile_default/startup")
         .copy("ipython_kernel_config.py", ".ipython/profile_default/")
         .copy("startup_scripts", ".ipython/profile_default/startup")
     )
-
-    if not is_docker:
-        template = template.copy(
-            "systemd/jupyter.service", "/etc/systemd/system/jupyter.service"
-        ).copy(
-            "systemd/code-interpreter.service",
-            "/etc/systemd/system/code-interpreter.service",
-        )
-        if debug:
-            # Drop-in that routes Jupyter's stdout to the journal for debugging.
-            template = template.copy(
-                "systemd/jupyter-debug.conf",
-                "/etc/systemd/system/jupyter.service.d/debug.conf",
-            )
-    else:
-        template = template.copy("start-up.sh", ".jupyter/start-up.sh").run_cmd(
-            "chmod +x .jupyter/start-up.sh"
-        )
 
     if is_docker:
         # create user user and /home/user
@@ -135,10 +129,16 @@ def make_template(
 
     template = template.set_user("user").set_workdir("/home/user")
 
-    if is_docker:
-        start_cmd = "sudo --preserve-env=E2B_LOCAL /root/.jupyter/start-up.sh"
-    else:
-        start_cmd = "sudo systemctl start jupyter"
+    # --disable-dotenv keeps a stray .env in the working directory out of the
+    # servers' environment, and the unix socket keeps process-compose's control
+    # API off a TCP port the sandbox would otherwise expose.
+    start_cmd = (
+        "sudo --preserve-env=E2B_LOCAL process-compose up"
+        " --config /root/.jupyter/process-compose.yaml"
+        " --log-file /var/log/process-compose.log"
+        " --unix-socket /var/run/process-compose.sock"
+        " --use-uds --disable-dotenv --ordered-shutdown --tui=false"
+    )
 
     if ready is None:
         ready = wait_for_url("http://localhost:49999/health")

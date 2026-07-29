@@ -91,16 +91,31 @@ execution = sbx.run_code("print('Hello, World!')")
 print(execution.logs.stdout)
 ```
 
+## Process supervision
+
+Jupyter and the code-interpreter server are supervised by
+[process-compose](https://f1bonacc1.github.io/process-compose/), configured in
+`process-compose.yaml`. The same config runs in the E2B sandbox and in the
+Docker image (`make start-template-server`), so a server that boots under
+Docker boots the same way in production.
+
+The two servers are not independent: the code-interpreter server opens kernel
+websockets while starting, so it is gated on Jupyter being up
+(`jupyter-healthcheck.sh`) and is restarted whenever Jupyter is replaced
+(`jupyter-instance-check.sh`, which compares Jupyter's reported start time
+against the one recorded at gate time).
+
+Jupyter writes to its log file directly rather than through process-compose,
+because kernels inherit its stdout and stderr and outlive it — with
+process-compose holding those descriptors, a killed Jupyter is not restarted
+while any kernel is still running. The cost is that `process-compose process
+logs jupyter` shows nothing and the file is not rotated; read
+`/var/log/jupyter.log` instead.
+
 ## Debugging a server that won't start
 
-The template runs Jupyter and the code-interpreter server as **systemd**
-services (`systemd/jupyter.service`, `systemd/code-interpreter.service`). This is
-the path CI and production use — note it is *different* from `make
-start-template-server`, which runs the Docker `start-up.sh` path. The two can
-diverge, so a server that boots fine under Docker may still fail under systemd.
-
 When a build fails its readiness check (`Waiting for template to be ready ...
-timed out`), the real cause is in the service journals. To see them:
+timed out`), the cause is in the process logs. To see them:
 
 ```
 make debug-template
@@ -108,17 +123,19 @@ make debug-template
 
 This builds a debug template (gated on a fixed timeout instead of `/health`, so
 it finalizes even while the server is crash-looping), spawns a sandbox, and
-prints `systemctl status` + the full `journalctl` for both services. It needs
-`template/.env` with your `E2B_API_KEY` and the deps from `requirements-dev.txt`.
+prints the process list and all three logs. It needs `template/.env` with your
+`E2B_API_KEY` and the deps from `requirements-dev.txt`.
 
-The debug build also applies a systemd drop-in that routes Jupyter's stdout to
-the journal (`make_template(debug=True)`). Production builds keep
-`StandardOutput=null`, so Jupyter's request/error logs are only captured in the
-debug template.
-
-Inside a running sandbox you can also inspect things directly:
+Inside a running sandbox you can inspect things directly:
 
 ```
-journalctl -u jupyter -u code-interpreter
-systemctl status code-interpreter
+cat /var/log/process-compose.log   # restarts, probe failures
+cat /var/log/jupyter.log
+cat /var/log/code-interpreter.log
+
+# process-compose listens on a unix socket rather than a TCP port, so its
+# subcommands need to be pointed at it
+alias pc='process-compose -U -u /var/run/process-compose.sock'
+pc process list
+pc process restart code-interpreter
 ```

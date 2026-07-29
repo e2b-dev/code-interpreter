@@ -1,14 +1,19 @@
 #!/bin/bash
-# Custom health check for Jupyter Server
-# Verifies the server is responsive via the /api/status endpoint
+# Blocks until Jupyter Server is responsive, then records which Jupyter
+# instance answered. jupyter-instance-check.sh compares against that recording
+# to notice when Jupyter has been replaced.
 
 MAX_RETRIES=50
 RETRY_INTERVAL=0.2
+INSTANCE_FILE=/run/jupyter-instance
 
 for i in $(seq 1 $MAX_RETRIES); do
-    status_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
+    # /api/status reports the server's start time, which is what identifies
+    # this particular Jupyter process.
+    started=$(curl -fsS -m 2 "http://localhost:8888/api/status" 2>/dev/null | jq -r '.started')
 
-    if [ "$status_code" -eq 200 ]; then
+    if [ -n "$started" ] && [ "$started" != "null" ]; then
+        echo "$started" >"$INSTANCE_FILE"
         echo "Jupyter Server is healthy"
         exit 0
     fi

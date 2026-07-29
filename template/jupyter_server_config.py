@@ -7,8 +7,8 @@ c = get_config()  # noqa
 #
 #         Sessions are created with a relative path (a bare uuid, see
 #         server/contexts.py). Without an explicit root_dir, jupyter-server
-#         inherits the process working directory as its root — which is "/"
-#         under systemd (jupyter.service has no WorkingDirectory). Since
+#         inherits the process working directory as its root, which is
+#         whatever the process manager happened to start it in. Since
 #         jupyter-server 2.18.0 (CVE-2026-35397 path-traversal hardening), a
 #         root_dir of "/" makes every POST /api/sessions fail with
 #         "<uuid> is outside root contents directory", so the server never
