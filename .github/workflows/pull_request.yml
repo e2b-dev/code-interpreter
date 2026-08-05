@@ -49,7 +49,7 @@ jobs:
     needs: [build-template, js-sdk, python-sdk, performance-tests]
     if: always() && !contains(needs.build-template.result, 'failure') && !contains(needs.build-template.result, 'cancelled')
     secrets:
-      E2B_TESTS_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+      E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
       E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}

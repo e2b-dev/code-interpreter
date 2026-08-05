@@ -3,7 +3,7 @@ name: Cleanup Build Template
 on:
   workflow_call:
     secrets:
-      E2B_TESTS_ACCESS_TOKEN:
+      E2B_API_KEY:
         required: true
     inputs:
       E2B_DOMAIN:
@@ -29,5 +29,5 @@ jobs:
         run: |
           e2b template delete -y "${{ inputs.E2B_TESTS_TEMPLATE }}"
         env:
-          E2B_ACCESS_TOKEN: ${{ secrets.E2B_TESTS_ACCESS_TOKEN }}
+          E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
           E2B_DOMAIN: ${{ inputs.E2B_DOMAIN }}
