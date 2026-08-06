@@ -25,10 +25,10 @@ jobs:
       template_id: ${{ steps.build-template.outputs.template_id }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Parse .tool-versions
-        uses: wistia/parse-tool-versions@v2.1.1
+        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
         with:
           filename: '.tool-versions'
           uppercase: 'true'
@@ -41,7 +41,7 @@ jobs:
           echo "Version: $VERSION"
           sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
