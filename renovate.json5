@@ -9,10 +9,19 @@
   //    "0 * * * *"
   //  ],
   timezone: 'UTC',
+  // Keep in sync with `minimumReleaseAge` in pnpm-workspace.yaml (4320 minutes),
+  // otherwise Renovate proposes versions pnpm then refuses to install.
+  minimumReleaseAge: '3 days',
   // Always squash PRs when automerging
   automergeType: 'pr',
   automergeStrategy: 'squash',
   packageRules: [
+    {
+      // Keep in sync with `minimumReleaseAgeExclude` in pnpm-workspace.yaml.
+      description: 'e2b is our own SDK, so it skips the minimum release age',
+      matchPackageNames: ['e2b'],
+      minimumReleaseAge: null,
+    },
     {
       description: 'Group and automerge patch updates after CI passes',
       matchUpdateTypes: ['patch'],
