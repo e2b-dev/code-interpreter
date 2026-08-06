@@ -24,16 +24,16 @@ jobs:
           uppercase: 'true'
           prefix: 'tool_version_'
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         if: ${{ contains( github.event.pull_request.labels.*.name, 'js-rc') }}
         with:
-          node-version: "20.x"
+          node-version: '${{ env.TOOL_VERSION_NODE }}'
           registry-url: https://registry.npmjs.org
           cache: pnpm
 

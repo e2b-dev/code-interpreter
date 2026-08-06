@@ -1,2 +1,11 @@
 python 3.10
 poetry 2.1.1
+# Keep in sync with `packageManager` in package.json, js/package.json and
+# python/package.json — pnpm self-switches to that version at runtime.
+pnpm 10.34.5
+# Baseline Node for build/test/lint. Matches the `engines.node` floor in
+# js/package.json, so CI exercises the oldest version the SDK claims to support.
+# The release job in release.yml deliberately overrides this with Node 24 to get
+# npm 11 for OIDC trusted publishing (see #259).
+node 20
+bun 1.3.14

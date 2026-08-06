@@ -3,3 +3,15 @@ packages:
   - python
   - chart_data_extractor
   - template
+
+# Only install package versions that have been on the registry for at least
+# 3 days, so malicious releases have time to be caught and unpublished.
+minimumReleaseAge: 4320
+
+# `e2b` is our own SDK — we control its releases, so it doesn't need the delay.
+minimumReleaseAgeExclude:
+  - e2b
+
+# pnpm 10 blocks dependency lifecycle scripts unless listed here.
+onlyBuiltDependencies:
+  - esbuild

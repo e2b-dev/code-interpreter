@@ -27,16 +27,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: "20.x"
+          node-version: '${{ env.TOOL_VERSION_NODE }}'
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -62,7 +69,7 @@ jobs:
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.3.14
+          bun-version: ${{ env.TOOL_VERSION_BUN }}
 
       - name: Run Bun tests
         run: pnpm test:bun

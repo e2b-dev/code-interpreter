@@ -21,16 +21,23 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version: '${{ env.TOOL_VERSION_NODE }}'
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -63,16 +70,23 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version: '${{ env.TOOL_VERSION_NODE }}'
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -128,10 +142,10 @@ jobs:
           prefix: 'tool_version_'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -327,9 +341,9 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      - uses: pnpm/action-setup@v3
+      - uses: pnpm/action-setup@v4
         with:
-          version: 9.5
+          version: ${{ env.TOOL_VERSION_PNPM }}
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v6
