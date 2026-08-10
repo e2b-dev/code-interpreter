@@ -29,22 +29,22 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Parse .tool-versions
-        uses: wistia/parse-tool-versions@v2.1.1
+        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
         with:
           filename: '.tool-versions'
           uppercase: 'true'
           prefix: 'tool_version_'
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '${{ env.TOOL_VERSION_PYTHON }}'
 
       - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
+        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
         with:
           version: '${{ env.TOOL_VERSION_POETRY }}'
           virtualenvs-create: true
@@ -62,7 +62,7 @@ jobs:
           E2B_TESTS_TEMPLATE: ${{ inputs.E2B_TESTS_TEMPLATE }}
           E2B_TESTS_BENCHMARK_ITERATIONS_COUNT: ${{ inputs.E2B_TESTS_BENCHMARK_ITERATIONS_COUNT }}
       - name: Upload performance plot artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: performance-plot-${{ github.run_number }}
