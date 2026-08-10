@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  # A release that publishes nothing leaves the changesets intact, so it can be
+  # re-dispatched by hand without another push to main.
+  workflow_dispatch: {}
 
 concurrency: Release-${{ github.ref }}-foxtrot
 
@@ -12,25 +15,35 @@ permissions:
   contents: write
 
 jobs:
-  is_release:
-    name: Is release?
+  preflight:
+    name: Release preflight
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.version.outputs.release }}
+      js: ${{ steps.js.outputs.release }}
+      python: ${{ steps.python.outputs.release }}
+      charts: ${{ steps.charts.outputs.release }}
+      template: ${{ steps.template.outputs.release }}
+      itinerary: ${{ steps.itinerary.outputs.itinerary }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        id: pnpm-install
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@v2.1.1
         with:
-          version: 9.5
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        id: pnpm-install
 
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "22.x"
+          node-version: '${{ env.TOOL_VERSION_NODEJS }}'
           registry-url: "https://registry.npmjs.org"
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
@@ -49,70 +62,63 @@ jobs:
           IS_RELEASE=$(./.github/scripts/is_release.sh)
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-  changes:
-    name: Repository changes
-    needs: [is_release]
-    if: needs.is_release.outputs.release == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      js: ${{ steps.js.outputs.release }}
-      python: ${{ steps.python.outputs.release }}
-      charts: ${{ steps.charts.outputs.release }}
-      template: ${{ steps.template.outputs.release }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        id: pnpm-install
-        with:
-          version: 9.5
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "22.x"
-          registry-url: "https://registry.npmjs.org"
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-
-      - name: Configure pnpm
-        run: |
-          pnpm config set auto-install-peers true
-          pnpm config set exclude-links-from-lockfile true
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Check JavasScript SDK Release
+      - name: Check JavaScript SDK Release
         id: js
+        if: steps.version.outputs.release == 'true'
         run: |
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Check Python SDK Release
         id: python
+        if: steps.version.outputs.release == 'true'
         run: |
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-python")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Check Charts SDK Release
         id: charts
+        if: steps.version.outputs.release == 'true'
         run: |
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/data-extractor")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Check Template SDK Release
         id: template
+        if: steps.version.outputs.release == 'true'
         run: |
           IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/code-interpreter-template")
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
+      - name: Build release itinerary
+        id: itinerary
+        if: steps.version.outputs.release == 'true'
+        run: |
+          pnpm changeset status --output=.cs-status.json
+          ITINERARY=$(node -e '
+            const data = require("./.cs-status.json");
+            const labels = {
+              "@e2b/code-interpreter": "JS SDK (@e2b/code-interpreter)",
+              "@e2b/code-interpreter-python": "Python SDK (e2b-code-interpreter)",
+              "@e2b/data-extractor": "Charts (e2b-charts)",
+              "@e2b/code-interpreter-template": "Sandbox template (code-interpreter)",
+            };
+            const order = Object.keys(labels);
+            const byName = Object.fromEntries(data.releases.map(r => [r.name, r]));
+            const lines = order.filter(n => byName[n]).map(n => `• ${labels[n]} v${byName[n].newVersion}`);
+            process.stdout.write(lines.join("\n") || "• No packages were published");
+          ')
+          rm -f .cs-status.json
+          {
+            echo "itinerary<<EOF"
+            echo "$ITINERARY"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
   charts-release:
     name: Charts release
-    needs: [changes]
-    if: needs.changes.outputs.charts == 'true'
+    needs: [preflight]
+    if: needs.preflight.outputs.charts == 'true'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.output_version.outputs.version }}
@@ -128,10 +134,8 @@ jobs:
           prefix: 'tool_version_'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         id: pnpm-install
-        with:
-          version: 9.5
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -173,16 +177,15 @@ jobs:
         id: output_version
         working-directory: ./chart_data_extractor
         run: |
-          echo "::set-output name=version::$(pnpm pkg get version --workspaces=false | tr -d \\\")"
+          echo "version=$(pnpm pkg get version --workspaces=false | tr -d \\\")" >> "$GITHUB_OUTPUT"
 
   build-docker-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: [changes, charts-release]
-    if: always() &&
+    needs: [preflight, charts-release]
+    if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
+      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -234,11 +237,10 @@ jobs:
   build-template:
     name: Build E2B template
     runs-on: ubuntu-latest
-    needs: [build-docker-image]
-    if: always() &&
+    needs: [preflight, build-docker-image]
+    if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.template == 'true' || needs.changes.outputs.charts == 'true')
+      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -269,30 +271,30 @@ jobs:
 
   python-tests:
     name: Python Tests
-    needs: [changes, build-template]
-    if: always() &&
+    needs: [preflight, build-template]
+    if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      needs.changes.outputs.template == 'true'
+      needs.preflight.outputs.template == 'true'
     uses: ./.github/workflows/python_tests.yml
     secrets: inherit
 
   js-tests:
     name: JS Tests
-    needs: [changes, build-template]
-    if: always() &&
+    needs: [preflight, build-template]
+    if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      needs.changes.outputs.template == 'true'
+      needs.preflight.outputs.template == 'true'
     uses: ./.github/workflows/js_tests.yml
     secrets: inherit
 
   release:
-    needs: [python-tests, js-tests]
-    if: always() &&
+    # Every upstream job is listed, not just the tests: a job that fails makes its
+    # dependents *skip*, and a skipped test job is not a failure — so gating on
+    # `needs.*.result` only works for the jobs this one depends on directly.
+    needs: [preflight, charts-release, build-docker-image, build-template, python-tests, js-tests]
+    if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      !contains(needs.*.result, 'cancelled') &&
-      (needs.changes.outputs.js == 'true' || needs.changes.outputs.python == 'true' || needs.changes.outputs.charts == 'true' || needs.changes.outputs.template == 'true')
+      needs.preflight.outputs.release == 'true'
     name: Release
     runs-on: ubuntu-latest
     steps:
@@ -327,14 +329,12 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 9.5
+      - uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "24.x"
+          node-version: '${{ env.TOOL_VERSION_NODEJS }}'
           registry-url: 'https://registry.npmjs.org'
           cache: pnpm
 
@@ -351,6 +351,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Commit new versions
+        # Commit before publishing, because `changeset publish` tags whatever HEAD
+        # it publishes from — tagging afterwards is what left every tag on the
+        # commit before its own version bump (SDK-298). Nothing in the tree
+        # references the artifacts about to be uploaded — `changeset version`
+        # leaves `pnpm-lock.yaml` untouched here, since no workspace package
+        # depends on another — so the commit is already complete. It stays local
+        # until something is actually published, so a publish that uploads
+        # nothing leaves the branch untouched and the changesets intact for a
+        # re-run.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # `add -A`, not `commit -a`: `changeset version` writes each package's
+          # CHANGELOG.md as a new file the first time, which `-a` would drop.
+          git add -A
+          if git diff --cached --quiet; then
+            echo "::error::'changeset version' produced no changes, so there is no version bump to publish or tag."
+            exit 1
+          fi
+          git commit -m "[skip ci] Release new versions"
+
       - name: Release new versions
         uses: changesets/action@v1
         with:
@@ -361,29 +384,78 @@ jobs:
           NPM_TOKEN: "" # See https://github.com/changesets/changesets/issues/1152#issuecomment-3190884868
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
-      - name: Update lock file
-        run: pnpm i --no-link --no-frozen-lockfile
-
-      - name: Commit new versions
+      - name: Push new versions
+        # Gate on the tags rather than on whether the publish step succeeded: they
+        # are what has to end up reachable. `changeset publish` tags at HEAD and the
+        # step above pushes them to origin, so if any exist — even from a publish
+        # that then failed partway — the commit they point at has to land, or they
+        # hang off no branch, which is the SDK-298 breakage this change prevents.
+        if: always()
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "[skip ci] Release new versions" || exit 0
-          git push
+          if [ -z "$(git tag --points-at HEAD)" ]; then
+            echo "Nothing was published; the version bump stays local and the changesets are intact for a re-run."
+            exit 0
+          fi
+
+          if ! git push; then
+            # A PR merged mid-release. Merge rather than rebase: the tags already
+            # point at this commit and rewriting it would strand them off the branch.
+            git fetch origin "${GITHUB_REF_NAME}"
+            git merge --no-edit FETCH_HEAD
+            git push
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  report-start:
+    needs: [preflight]
+    if: needs.preflight.outputs.release == 'true'
+    name: Code Interpreter Release Started - Slack Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Started - Slack Notification
+        uses: rtCamp/action-slack-notify@33ca3be66c6f378fe1610fd1d5258632dbed5e58 # v2.4.0
+        env:
+          SLACK_COLOR: "#3aa3e3"
+          SLACK_MESSAGE: |
+            :rocket: A new release has been triggered :hourglass_flowing_sand:
+
+            *Releasing:*
+            ${{ needs.preflight.outputs.itinerary }}
+          SLACK_TITLE: Code Interpreter Release Started
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: "monitoring-releases"
+
   report-failure:
-    needs: [python-tests, js-tests, release]
+    needs: [charts-release, build-docker-image, build-template, python-tests, js-tests, release]
     if: failure()
     name: Code Interpreter Release Failed - Slack Notification
     runs-on: ubuntu-latest
     steps:
       - name: Release Failed - Slack Notification
-        uses: rtCamp/action-slack-notify@v2
+        uses: rtCamp/action-slack-notify@33ca3be66c6f378fe1610fd1d5258632dbed5e58 # v2.4.0
         env:
           SLACK_COLOR: "#ff0000"
           SLACK_MESSAGE: ":here-we-go-again: :bob-the-destroyer: We need :fix-parrot: ASAP :pray:"
           SLACK_TITLE: Code Interpreter Release Failed
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: "monitoring-releases"
+
+  report-success:
+    needs: [preflight, release]
+    if: (!cancelled()) && needs.release.result == 'success'
+    name: Code Interpreter Release Succeeded - Slack Notification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release Succeeded - Slack Notification
+        uses: rtCamp/action-slack-notify@33ca3be66c6f378fe1610fd1d5258632dbed5e58 # v2.4.0
+        env:
+          SLACK_COLOR: "#36a64f"
+          SLACK_MESSAGE: |
+            :tada: A new version has been released successfully! :ship-it-parrot:
+
+            *Released:*
+            ${{ needs.preflight.outputs.itinerary }}
+          SLACK_TITLE: Code Interpreter Release Succeeded
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: "monitoring-releases"
