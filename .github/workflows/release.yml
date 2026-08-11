@@ -1,11 +1,10 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - main
-  # A release that publishes nothing leaves the changesets intact, so it can be
-  # re-dispatched by hand without another push to main.
+  # Releases are cut by hand, as in e2b-dev/E2B: merging a changeset to main no
+  # longer publishes on its own, so changesets accumulate until someone
+  # dispatches this. A release that publishes nothing leaves them intact, which
+  # makes a re-dispatch the recovery path too.
   workflow_dispatch: {}
 
 concurrency: Release-${{ github.ref }}-foxtrot
