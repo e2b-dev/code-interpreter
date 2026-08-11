@@ -26,6 +26,17 @@ jobs:
       template: ${{ steps.template.outputs.release }}
       itinerary: ${{ steps.itinerary.outputs.itinerary }}
     steps:
+      - name: Check the ref
+        # `workflow_dispatch` offers every branch in the picker, and a feature
+        # branch carrying changesets would otherwise publish real packages and
+        # push the version bump to that branch.
+        if: github.ref != 'refs/heads/main'
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error::Releases must run on main; this run is on ${REF}."
+          exit 1
+
       - name: Checkout Repo
         uses: actions/checkout@v4
 
@@ -93,21 +104,12 @@ jobs:
       - name: Build release itinerary
         id: itinerary
         if: steps.version.outputs.release == 'true'
+        # This only feeds the Slack notifications, so it must never be the thing
+        # that blocks a release; the messages fall back to a placeholder.
+        continue-on-error: true
         run: |
           pnpm changeset status --output=.cs-status.json
-          ITINERARY=$(node -e '
-            const data = require("./.cs-status.json");
-            const labels = {
-              "@e2b/code-interpreter": "JS SDK (@e2b/code-interpreter)",
-              "@e2b/code-interpreter-python": "Python SDK (e2b-code-interpreter)",
-              "@e2b/data-extractor": "Charts (e2b-charts)",
-              "@e2b/code-interpreter-template": "Sandbox template (code-interpreter)",
-            };
-            const order = Object.keys(labels);
-            const byName = Object.fromEntries(data.releases.map(r => [r.name, r]));
-            const lines = order.filter(n => byName[n]).map(n => `• ${labels[n]} v${byName[n].newVersion}`);
-            process.stdout.write(lines.join("\n") || "• No packages were published");
-          ')
+          ITINERARY=$(node ./.github/scripts/build_release_itinerary.cjs .cs-status.json)
           rm -f .cs-status.json
           {
             echo "itinerary<<EOF"
@@ -404,6 +406,13 @@ jobs:
             git merge --no-edit FETCH_HEAD
             git push
           fi
+
+          # `changesets/action` only pushes the tags it can parse out of
+          # `changeset publish`'s output, so push whatever else ended up at the
+          # release commit. The checkout is shallow and fetches no tags, so the
+          # only local tags are the ones this run created, and re-pushing the
+          # ones the action already sent is a no-op.
+          git push --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -421,7 +430,7 @@ jobs:
             :rocket: A new release has been triggered :hourglass_flowing_sand:
 
             *Releasing:*
-            ${{ needs.preflight.outputs.itinerary }}
+            ${{ needs.preflight.outputs.itinerary || '• (itinerary unavailable)' }}
           SLACK_TITLE: Code Interpreter Release Started
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: "monitoring-releases"
@@ -455,7 +464,7 @@ jobs:
             :tada: A new version has been released successfully! :ship-it-parrot:
 
             *Released:*
-            ${{ needs.preflight.outputs.itinerary }}
+            ${{ needs.preflight.outputs.itinerary || '• (itinerary unavailable)' }}
           SLACK_TITLE: Code Interpreter Release Succeeded
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: "monitoring-releases"
