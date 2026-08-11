@@ -405,13 +405,6 @@ jobs:
             git merge --no-edit FETCH_HEAD
             git push
           fi
-
-          # `changesets/action` only pushes the tags it can parse out of
-          # `changeset publish`'s output, so push whatever else ended up at the
-          # release commit. The checkout is shallow and fetches no tags, so the
-          # only local tags are the ones this run created, and re-pushing the
-          # ones the action already sent is a no-op.
-          git push --tags
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
