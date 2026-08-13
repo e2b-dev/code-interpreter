@@ -214,7 +214,22 @@ class Sandbox(BaseSandbox):
                     "env_vars": envs,
                 },
                 headers=headers,
-                timeout=(request_timeout, timeout, request_timeout, request_timeout),
+                # `timeout` bounds the execution, `request_timeout` only the
+                # connect. Every non-connect phase must carry `timeout`: the
+                # SDK's pyqwest-backed transport collapses the per-phase
+                # timeouts into a single whole-request deadline and takes the
+                # longest of them, so leaving `request_timeout` on the write
+                # and pool phases would raise the floor to
+                # `max(timeout, request_timeout)` and silently ignore any
+                # `timeout` shorter than it. This matches the JS SDK, which
+                # aborts the execution on a `timeout`-long timer.
+                # `timeout=0` disables the deadline entirely; the transport
+                # still bounds connect on its own.
+                timeout=(
+                    httpx.Timeout(timeout, connect=request_timeout)
+                    if timeout is not None
+                    else httpx.Timeout(None)
+                ),
             ) as response:
                 err = extract_exception(response)
                 if err:
