@@ -51,8 +51,8 @@ importers:
   js:
     dependencies:
       e2b:
-        specifier: ^2.38.3
-        version: 2.38.3
+        specifier: ^2.39.0
+        version: 2.39.0
     devDependencies:
       '@types/node':
         specifier: ^20.19.19
@@ -1083,8 +1083,8 @@ packages:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
     engines: {node: '>=12'}
 
-  e2b@2.38.3:
-    resolution: {integrity: sha512-0tOokTvlltpYGO4UAMNcoSSkFEn2VHAGaJtZsMVhPf5GMmdE9RNcfla/KwCpaE8ef7cFKpSXCs+UUDyE/r/fMQ==}
+  e2b@2.39.0:
+    resolution: {integrity: sha512-MUhTgRqznSTs6Py1fU9ji2bHPHptYY6MjopKOqBu6fAQHHjynPjD8nrKPzxtgVkxxFtVkVRt68UGFHGCJgb5bg==}
     engines: {node: '>=20.18.1 <21 || >=22'}
 
   es-module-lexer@2.3.0:
@@ -2782,7 +2782,7 @@ snapshots:
 
   dotenv@16.6.1: {}
 
-  e2b@2.38.3:
+  e2b@2.39.0:
     dependencies:
       '@bufbuild/protobuf': 2.12.1
       '@connectrpc/connect': 2.1.2(@bufbuild/protobuf@2.12.1)
