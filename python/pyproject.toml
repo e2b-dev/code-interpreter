@@ -5,7 +5,7 @@ description = "E2B Code Interpreter - Stateful code execution"
 authors = ["e2b <hello@e2b.dev>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://e2b.dev/"
+homepage = "https://e2b.dev/?utm_source=pypi&utm_medium=referral&utm_campaign=package_homepage&utm_content=e2b-code-interpreter"
 repository = "https://github.com/e2b-dev/code-interpreter/tree/main/python"
 packages = [{ include = "e2b_code_interpreter" }]
 
