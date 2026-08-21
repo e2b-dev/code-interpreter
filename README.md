@@ -68,7 +68,7 @@ with Sandbox.create() as sandbox:
 ```
 
 ### 4. Check docs
-Visit [E2B documentation](https://e2b.dev/docs?utm_source=github&utm_medium=referral&utm_campaign=readme&utm_content=code-interpreter).
+Visit [E2B documentation](https://docs.e2b.dev/?utm_source=github&utm_medium=referral&utm_campaign=readme&utm_content=code-interpreter).
 
 ### 5. E2B cookbook
 Visit our [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) to get inspired by examples with different LLMs and AI frameworks.
