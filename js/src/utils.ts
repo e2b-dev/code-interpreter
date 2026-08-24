@@ -51,32 +51,54 @@ export function isConnectionClosedError(error: unknown): boolean {
 
 export async function* readLines(stream: ReadableStream<Uint8Array>) {
   const reader = stream.getReader()
-  let buffer = ''
+  const decoder = new TextDecoder()
+  // Text accumulated since the last newline, kept as an array of fragments:
+  // appending is O(1), so total work stays linear even when a single line
+  // spans many chunks (growing a string with `buffer += chunk` re-copies the
+  // whole buffer on every chunk, which is O(n²) and can OOM on large stdout).
+  const pending: string[] = []
 
   try {
     while (true) {
       const { done, value } = await reader.read()
 
       if (value !== undefined) {
-        buffer += new TextDecoder().decode(value)
+        // { stream: true } keeps multi-byte UTF-8 sequences split across
+        // chunk boundaries intact instead of decoding them as U+FFFD.
+        const chunk = decoder.decode(value, { stream: true })
+        let newlineIdx = chunk.indexOf('\n')
+
+        if (newlineIdx === -1) {
+          if (chunk.length > 0) {
+            pending.push(chunk)
+          }
+        } else {
+          pending.push(chunk.slice(0, newlineIdx))
+          yield pending.join('')
+          pending.length = 0
+
+          let start = newlineIdx + 1
+          while ((newlineIdx = chunk.indexOf('\n', start)) !== -1) {
+            yield chunk.slice(start, newlineIdx)
+            start = newlineIdx + 1
+          }
+
+          if (start < chunk.length) {
+            pending.push(chunk.slice(start))
+          }
+        }
       }
 
       if (done) {
-        if (buffer.length > 0) {
-          yield buffer
+        const trailing = decoder.decode()
+        if (trailing) {
+          pending.push(trailing)
+        }
+        if (pending.length > 0) {
+          yield pending.join('')
         }
         break
       }
-
-      let newlineIdx = -1
-
-      do {
-        newlineIdx = buffer.indexOf('\n')
-        if (newlineIdx !== -1) {
-          yield buffer.slice(0, newlineIdx)
-          buffer = buffer.slice(newlineIdx + 1)
-        }
-      } while (newlineIdx !== -1)
     }
   } finally {
     reader.releaseLock()
