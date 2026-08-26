@@ -54,7 +54,7 @@ jobs:
           installer-parallel: true
 
       - name: Install Python dependencies
-        working-directory: python
+        working-directory: chart_data_extractor
         run: |
           poetry install --with dev
           pip install ruff=="0.11.12"
