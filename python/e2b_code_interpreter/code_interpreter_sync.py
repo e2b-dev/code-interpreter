@@ -1,7 +1,7 @@
 import logging
 import httpx
 
-from typing import Optional, Dict, overload, Union, List
+from typing import cast, Optional, Dict, overload, Union, List
 from httpx import Client
 from e2b import Sandbox as BaseSandbox, InvalidArgumentException
 from e2b.api.client_sync import get_transport
@@ -60,7 +60,7 @@ class Sandbox(BaseSandbox):
     def _jupyter_url(self) -> str:
         # Honors the `sandbox_url` option and the `E2B_SANDBOX_URL` environment
         # variable, same as the base SDK does for envd requests.
-        sandbox_url = self.connection_config._sandbox_url
+        sandbox_url = cast(Optional[str], self.connection_config._sandbox_url)
         if sandbox_url:
             return sandbox_url
         return f"{'http' if self.connection_config.debug else 'https'}://{self.get_host(JUPYTER_PORT)}"
