@@ -207,7 +207,7 @@ class Result:
 
         return formats
 
-    def __str__(self) -> Optional[str]:
+    def __str__(self) -> str:
         """
         Returns the text representation of the data.
 
@@ -305,7 +305,12 @@ class Logs:
     stderr: List[str] = field(default_factory=list)
     """List of strings printed to stderr by prints, subprocesses, etc."""
 
-    def __init__(self, stdout: List[str] = None, stderr: List[str] = None, **kwargs):
+    def __init__(
+        self,
+        stdout: Optional[List[str]] = None,
+        stderr: Optional[List[str]] = None,
+        **kwargs,
+    ):
         self.stdout = stdout or []
         self.stderr = stderr or []
 
@@ -329,7 +334,9 @@ def serialize_results(results: List[Result]) -> List[Dict[str, str]]:
         serialized_dict = {}
         for key in result.formats():
             if key == "chart":
-                serialized_dict[key] = result.chart.to_dict()
+                chart = result.chart
+                if chart is not None:
+                    serialized_dict[key] = chart.to_dict()
             else:
                 serialized_dict[key] = result[key]
 
@@ -356,8 +363,8 @@ class Execution:
 
     def __init__(
         self,
-        results: List[Result] = None,
-        logs: Logs = None,
+        results: Optional[List[Result]] = None,
+        logs: Optional[Logs] = None,
         error: Optional[ExecutionError] = None,
         execution_count: Optional[int] = None,
         **kwargs,
@@ -510,7 +517,7 @@ class Context:
     @classmethod
     def from_json(cls, data: Dict[str, str]):
         return cls(
-            context_id=data.get("id"),
-            language=data.get("language"),
-            cwd=data.get("cwd"),
+            context_id=data["id"],
+            language=data["language"],
+            cwd=data["cwd"],
         )

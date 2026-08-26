@@ -194,17 +194,19 @@ class BoxAndWhiskerChart(Chart2D):
 class SuperChart(Chart):
     type = ChartType.SUPERCHART
 
-    elements: List[
-        Union[LineChart, ScatterChart, BarChart, PieChart, BoxAndWhiskerChart]
-    ]
+    elements: List[Chart]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.elements = [_deserialize_chart(g) for g in kwargs["elements"]]
+        self.elements = []
+        for raw_chart in kwargs["elements"]:
+            chart = _deserialize_chart(raw_chart)
+            if chart is not None:
+                self.elements.append(chart)
 
 
 ChartTypes = Union[
-    LineChart, ScatterChart, BarChart, PieChart, BoxAndWhiskerChart, SuperChart
+    Chart, LineChart, ScatterChart, BarChart, PieChart, BoxAndWhiskerChart, SuperChart
 ]
 
 
