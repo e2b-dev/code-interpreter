@@ -1,6 +1,4 @@
 packages:
-  - js
-  - python
   - chart_data_extractor
   - template
 
@@ -11,7 +9,3 @@ minimumReleaseAge: 4320
 # `e2b` is our own SDK — we control its releases, so it doesn't need the delay.
 minimumReleaseAgeExclude:
   - e2b
-
-# pnpm 10 blocks dependency lifecycle scripts unless listed here.
-onlyBuiltDependencies:
-  - esbuild

@@ -12,20 +12,9 @@
   "packageManager": "pnpm@10.34.5",
   "devDependencies": {
     "@changesets/read": "^0.6.2",
-    "changeset": "^0.2.6",
-    "@typescript-eslint/eslint-plugin": "^6.7.2",
-    "@typescript-eslint/parser": "^6.7.2",
-    "eslint": "^8.57.1",
-    "eslint-plugin-unused-imports": "^3.0.0",
-    "@stylistic/eslint-plugin-ts": "^1.6.2",
-    "prettier": "^3.6.2"
+    "changeset": "^0.2.6"
   },
   "engines": {
     "pnpm": ">=10.16.0 <11"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild@<0.28.1": ">=0.28.1"
-    }
   }
 }

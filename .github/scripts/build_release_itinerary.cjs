@@ -8,8 +8,6 @@ const path = require('path')
 // Packages are listed in this order; anything not named here still shows up,
 // under its workspace name, after the ones that are.
 const labels = {
-  '@e2b/code-interpreter': 'JS SDK (@e2b/code-interpreter)',
-  '@e2b/code-interpreter-python': 'Python SDK (e2b-code-interpreter)',
   '@e2b/data-extractor': 'Charts (e2b-charts)',
   '@e2b/code-interpreter-template': 'Sandbox template (code-interpreter)',
 }
