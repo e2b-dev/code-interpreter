@@ -1,5 +1,13 @@
 # @e2b/code-interpreter-python
 
+## 2.9.2
+
+### Patch Changes
+
+- 7df1757: Point the README documentation links at `docs.e2b.dev` instead of `e2b.dev/docs`. The docs site moved to its own subdomain and the old path has no `/docs` prefix there, so `e2b.dev/docs` now serves a 308 to `docs.e2b.dev/`. The UTM parameters are unchanged and survived the redirect, so this removes a redirect hop rather than fixing broken attribution.
+- 2677aab: Improve Python model typing and safely handle optional chart and sandbox URL values.
+- 0fb4a02: Tag the e2b.dev links in the README and the package homepage field with UTM parameters so registry-page traffic attributes to its source
+
 ## 2.9.1
 
 ### Patch Changes
