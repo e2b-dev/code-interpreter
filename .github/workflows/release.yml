@@ -226,48 +226,18 @@ jobs:
             --push \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest -f - .
 
-  # The template is built on every production cluster. Clusters are separate
-  # tenancies with separate template registries, so each needs its own build.
-  # One job per cluster, each naming its secret statically, so a build job
-  # only ever receives the one key it needs.
-  build-template-foxtrot:
-    name: Build E2B template (foxtrot)
+  # Builds the template on every production cluster; a failure on any of them
+  # blocks the release.
+  build-template:
+    name: Build E2B template
     needs: [preflight, build-docker-image]
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
       (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
-    uses: ./.github/workflows/build_prod_template_cluster.yml
+    uses: ./.github/workflows/build_prod_template_clusters.yml
     with:
-      cluster: foxtrot
-      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
-
-  build-template-juliett:
-    name: Build E2B template (juliett)
-    needs: [preflight, build-docker-image]
-    if: (!cancelled()) &&
-      !contains(needs.*.result, 'failure') &&
-      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
-    uses: ./.github/workflows/build_prod_template_cluster.yml
-    with:
-      cluster: juliett
-      E2B_DOMAIN: e2b-juliett.dev
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
-
-  build-template-tango:
-    name: Build E2B template (tango)
-    needs: [preflight, build-docker-image]
-    if: (!cancelled()) &&
-      !contains(needs.*.result, 'failure') &&
-      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
-    uses: ./.github/workflows/build_prod_template_cluster.yml
-    with:
-      cluster: tango
-      E2B_DOMAIN: e2b-tango.dev
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
+      target: all
+    secrets: inherit
 
   release:
     # Every upstream job is listed, not just the last one: a job that fails makes
@@ -277,9 +247,7 @@ jobs:
       - preflight
       - charts-release
       - build-docker-image
-      - build-template-foxtrot
-      - build-template-juliett
-      - build-template-tango
+      - build-template
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
       needs.preflight.outputs.release == 'true'
@@ -425,9 +393,7 @@ jobs:
       - preflight
       - charts-release
       - build-docker-image
-      - build-template-foxtrot
-      - build-template-juliett
-      - build-template-tango
+      - build-template
       - release
     if: failure()
     name: Code Interpreter Release Failed - Slack Notification

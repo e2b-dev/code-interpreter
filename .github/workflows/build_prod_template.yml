@@ -23,50 +23,11 @@ on:
 permissions:
   contents: read
 
-# One job per cluster, each naming its secret statically, so a build job only
-# ever receives the one key it needs. Builds on the same cluster serialize via
-# the concurrency group inside the called workflow.
 jobs:
-  foxtrot:
-    name: foxtrot
-    if: ${{ inputs.target_environment == 'all' || inputs.target_environment == 'foxtrot' }}
-    uses: ./.github/workflows/build_prod_template_cluster.yml
+  build-template:
+    name: Build
+    uses: ./.github/workflows/build_prod_template_clusters.yml
     with:
-      cluster: foxtrot
-      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      target: ${{ inputs.target_environment }}
       skip_cache: ${{ inputs.skip_cache }}
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
-
-  juliett:
-    name: juliett
-    if: ${{ inputs.target_environment == 'all' || inputs.target_environment == 'juliett' }}
-    uses: ./.github/workflows/build_prod_template_cluster.yml
-    with:
-      cluster: juliett
-      E2B_DOMAIN: e2b-juliett.dev
-      skip_cache: ${{ inputs.skip_cache }}
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
-
-  tango:
-    name: tango
-    if: ${{ inputs.target_environment == 'all' || inputs.target_environment == 'tango' }}
-    uses: ./.github/workflows/build_prod_template_cluster.yml
-    with:
-      cluster: tango
-      E2B_DOMAIN: e2b-tango.dev
-      skip_cache: ${{ inputs.skip_cache }}
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
-
-  staging:
-    name: staging
-    if: ${{ inputs.target_environment == 'staging' }}
-    uses: ./.github/workflows/build_prod_template_cluster.yml
-    with:
-      cluster: staging
-      E2B_DOMAIN: e2b-staging.dev
-      skip_cache: ${{ inputs.skip_cache }}
-    secrets:
-      E2B_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}
+    secrets: inherit
