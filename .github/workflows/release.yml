@@ -7,7 +7,10 @@ on:
   # makes a re-dispatch the recovery path too.
   workflow_dispatch: {}
 
-concurrency: Release-${{ github.ref }}-foxtrot
+# One release at a time. The per-cluster template builds serialize against
+# manual `Build Prod Template` runs through their own groups, inside the
+# called workflow.
+concurrency: Release-${{ github.ref }}
 
 permissions:
   id-token: write
@@ -223,46 +226,60 @@ jobs:
             --push \
             --tag ${{ secrets.DOCKERHUB_USERNAME }}/code-interpreter:latest -f - .
 
-  build-template:
-    name: Build E2B template
-    runs-on: ubuntu-latest
+  # The template is built on every production cluster. Clusters are separate
+  # tenancies with separate template registries, so each needs its own build.
+  # One job per cluster, each naming its secret statically, so a build job
+  # only ever receives the one key it needs.
+  build-template-foxtrot:
+    name: Build E2B template (foxtrot)
     needs: [preflight, build-docker-image]
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
       (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+    uses: ./.github/workflows/build_prod_template_cluster.yml
+    with:
+      cluster: foxtrot
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
 
-      - name: Parse .tool-versions
-        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
-        with:
-          filename: '.tool-versions'
-          uppercase: 'true'
-          prefix: 'tool_version_'
+  build-template-juliett:
+    name: Build E2B template (juliett)
+    needs: [preflight, build-docker-image]
+    if: (!cancelled()) &&
+      !contains(needs.*.result, 'failure') &&
+      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
+    uses: ./.github/workflows/build_prod_template_cluster.yml
+    with:
+      cluster: juliett
+      E2B_DOMAIN: e2b-juliett.dev
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
 
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
-
-      - name: Install development dependencies
-        working-directory: ./template
-        run: pip install -r requirements-dev.txt
-
-      - name: Build E2B template
-        id: build-template
-        working-directory: ./template
-        run: |
-          python build_prod.py
-        env:
-          E2B_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
-          E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+  build-template-tango:
+    name: Build E2B template (tango)
+    needs: [preflight, build-docker-image]
+    if: (!cancelled()) &&
+      !contains(needs.*.result, 'failure') &&
+      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
+    uses: ./.github/workflows/build_prod_template_cluster.yml
+    with:
+      cluster: tango
+      E2B_DOMAIN: e2b-tango.dev
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
 
   release:
     # Every upstream job is listed, not just the last one: a job that fails makes
     # its dependents *skip*, and a skipped job is not a failure — so gating on
     # `needs.*.result` only works for the jobs this one depends on directly.
-    needs: [preflight, charts-release, build-docker-image, build-template]
+    needs:
+      - preflight
+      - charts-release
+      - build-docker-image
+      - build-template-foxtrot
+      - build-template-juliett
+      - build-template-tango
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
       needs.preflight.outputs.release == 'true'
@@ -404,7 +421,14 @@ jobs:
   report-failure:
     # `preflight` included so a failure there is reported too, whether or not
     # `failure()` looks past this job's direct dependencies.
-    needs: [preflight, charts-release, build-docker-image, build-template, release]
+    needs:
+      - preflight
+      - charts-release
+      - build-docker-image
+      - build-template-foxtrot
+      - build-template-juliett
+      - build-template-tango
+      - release
     if: failure()
     name: Code Interpreter Release Failed - Slack Notification
     runs-on: ubuntu-latest
