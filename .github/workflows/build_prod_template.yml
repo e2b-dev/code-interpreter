@@ -4,107 +4,30 @@ on:
   workflow_dispatch:
     inputs:
       target_environment:
-        description: Target environment
+        description: Target environment (`all` = every production cluster)
         required: true
         type: choice
-        default: foxtrot
+        default: all
         options:
+          - all
           - foxtrot
-          - staging
           - juliett
+          - tango
+          - staging
       skip_cache:
         description: Skip build cache
         required: false
         type: boolean
         default: false
 
-concurrency:
-  group: Release-${{ github.ref }}-${{ inputs.target_environment }}
-  cancel-in-progress: false
-
 permissions:
   contents: read
 
 jobs:
   build-template:
-    name: Build E2B template
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Parse .tool-versions
-        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
-        with:
-          filename: '.tool-versions'
-          uppercase: 'true'
-          prefix: 'tool_version_'
-
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
-        with:
-          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
-
-      - name: Install development dependencies
-        working-directory: ./template
-        run: pip install -r requirements-dev.txt
-
-      - name: Resolve target environment
-        env:
-          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
-          FOXTROT_DOMAIN: ${{ vars.E2B_DOMAIN }}
-          FOXTROT_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
-          STAGING_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}
-          JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
-        run: |
-          set -eu
-
-          case "$TARGET_ENVIRONMENT" in
-            foxtrot)
-              E2B_DOMAIN="$FOXTROT_DOMAIN"
-              E2B_API_KEY="$FOXTROT_API_KEY"
-              ;;
-            staging)
-              E2B_DOMAIN="e2b-staging.dev"
-              E2B_API_KEY="$STAGING_API_KEY"
-              ;;
-            juliett)
-              E2B_DOMAIN="e2b-juliett.dev"
-              E2B_API_KEY="$JULIETT_API_KEY"
-              ;;
-            *)
-              echo "Unknown target environment: $TARGET_ENVIRONMENT" >&2
-              exit 1
-              ;;
-          esac
-
-          if [ -z "$E2B_DOMAIN" ]; then
-            echo "Missing E2B domain for target environment: $TARGET_ENVIRONMENT" >&2
-            exit 1
-          fi
-
-          if [ -z "$E2B_API_KEY" ]; then
-            echo "Missing API key secret for target environment: $TARGET_ENVIRONMENT" >&2
-            exit 1
-          fi
-
-          echo "::add-mask::$E2B_API_KEY"
-
-          {
-            echo "E2B_DOMAIN=$E2B_DOMAIN"
-            echo "E2B_API_KEY=$E2B_API_KEY"
-          } >> "$GITHUB_ENV"
-
-          {
-            echo "### Build target"
-            echo
-            echo "Target: $TARGET_ENVIRONMENT"
-            echo "Domain: $E2B_DOMAIN"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Build E2B template
-        id: build-template
-        working-directory: ./template
-        run: |
-          python build_prod.py
-        env:
-          SKIP_CACHE: ${{ inputs.skip_cache }}
+    name: Build
+    uses: ./.github/workflows/build_prod_template_clusters.yml
+    with:
+      target: ${{ inputs.target_environment }}
+      skip_cache: ${{ inputs.skip_cache }}
+    secrets: inherit
