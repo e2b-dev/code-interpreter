@@ -32,11 +32,10 @@ jobs:
       - id: plan
         env:
           TARGET: ${{ inputs.target }}
-          FOXTROT_DOMAIN: ${{ vars.E2B_DOMAIN }}
         run: |
-          MATRIX=$(jq -nc --arg target "$TARGET" --arg foxtrot_domain "$FOXTROT_DOMAIN" '
+          MATRIX=$(jq -nc --arg target "$TARGET" '
             [
-              { cluster: "foxtrot", domain: $foxtrot_domain,  api_key_secret: "E2B_PROD_API_KEY",    production: true },
+              { cluster: "foxtrot", domain: "e2b.dev",         api_key_secret: "E2B_PROD_API_KEY",    production: true },
               { cluster: "juliett", domain: "e2b-juliett.dev", api_key_secret: "E2B_JULIETT_API_KEY", production: true },
               { cluster: "tango",   domain: "e2b-tango.dev",   api_key_secret: "E2B_TANGO_API_KEY",   production: true },
               { cluster: "staging", domain: "e2b-staging.dev", api_key_secret: "E2B_STAGING_API_KEY", production: false }
