@@ -426,7 +426,43 @@ class ContextWebSocket:
 
         try:
             async for message in self._ws:
-                await self._process_message(json.loads(message))
+                try:
+                    data = json.loads(message)
+                    await self._process_message(data)
+                except (ConnectionClosedError, WebSocketException):
+                    # Connection-level failures are handled below and must
+                    # terminate the receive loop so ongoing executions are
+                    # cancelled instead of hanging forever.
+                    raise
+                except Exception as e:
+                    # A single malformed or unexpected message must not kill
+                    # the receive loop nor be silently swallowed. Log the full
+                    # stack trace together with the raw message so it can be
+                    # diagnosed, and notify the affected execution so it does
+                    # not hang waiting for results.
+                    logger.exception(
+                        "Error while processing WebSocket message: %s (message: %s)",
+                        e,
+                        message[:500],
+                    )
+                    parent_msg_id = None
+                    try:
+                        parent_msg_id = json.loads(message).get(
+                            "parent_header", {}
+                        ).get("msg_id")
+                    except Exception:
+                        pass
+                    if parent_msg_id:
+                        execution = self._executions.get(parent_msg_id)
+                        if execution:
+                            await execution.queue.put(
+                                Error(
+                                    name="MessageProcessingError",
+                                    value=f"Failed to process kernel message: {e}",
+                                    traceback="",
+                                )
+                            )
+                            await execution.queue.put(EndOfExecution())
         except Exception as e:
             logger.error(f"WebSocket received error while receiving messages: {str(e)}")
         finally:
