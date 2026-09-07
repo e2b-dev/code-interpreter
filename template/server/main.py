@@ -123,6 +123,7 @@ async def post_execute(request: Request, exec_request: ExecutionRequest):
             exec_request.code,
             env_vars=exec_request.env_vars,
             access_token=request.headers.get("X-Access-Token", None),
+            request=request,
         )
     )
 
