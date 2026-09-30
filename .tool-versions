@@ -1,5 +1,5 @@
 python 3.10
-poetry 2.1.1
+uv 0.10.0
 # Keep in sync with `packageManager` in package.json — pnpm self-switches to
 # that version at runtime.
 pnpm 10.34.5
