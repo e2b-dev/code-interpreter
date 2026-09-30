@@ -40,24 +40,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
+          version: '${{ env.TOOL_VERSION_UV }}'
           python-version: '${{ env.TOOL_VERSION_PYTHON }}'
-
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@a783c322200f0519c7926aa6faa857c4e23e9263 # v1.4.2
-        with:
-          version: '${{ env.TOOL_VERSION_POETRY }}'
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
+          enable-cache: true
 
       - name: Install Python dependencies
         working-directory: chart_data_extractor
         run: |
-          poetry install --with dev
-          pip install ruff=="0.11.12"
+          uv sync --locked
+          uv tool install ruff==0.11.12
 
       - name: Run linting
         run: |
