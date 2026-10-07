@@ -6,6 +6,8 @@ StartLimitBurst=0
 
 [Service]
 Type=simple
+RuntimeDirectory=e2b-jupyter
+RuntimeDirectoryMode=0700
 Environment=MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc
 ExecStart=/usr/local/bin/jupyter server --IdentityProvider.token=""
 ExecStartPost=-/usr/bin/systemctl reset-failed code-interpreter

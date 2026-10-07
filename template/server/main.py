@@ -12,7 +12,7 @@ from fastapi.responses import PlainTextResponse
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
-from consts import JUPYTER_BASE_URL
+from consts import JUPYTER_BASE_URL, JUPYTER_SOCKET_PATH
 from contexts import create_context, normalize_language
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
@@ -32,7 +32,9 @@ global client
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global client
-    client = httpx.AsyncClient()
+    client = httpx.AsyncClient(
+        transport=httpx.AsyncHTTPTransport(uds=JUPYTER_SOCKET_PATH), trust_env=False
+    )
 
     try:
         python_context = await create_context(

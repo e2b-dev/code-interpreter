@@ -1,5 +1,7 @@
 #!/bin/bash
 
+install -d -m 0700 /run/e2b-jupyter
+
 function start_code_interpreter() {
 	/root/.jupyter/jupyter-healthcheck.sh
 	if [ $? -ne 0 ]; then

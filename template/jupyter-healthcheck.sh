@@ -6,7 +6,7 @@ MAX_RETRIES=50
 RETRY_INTERVAL=0.2
 
 for i in $(seq 1 $MAX_RETRIES); do
-    status_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8888/api/status")
+    status_code=$(curl --unix-socket /run/e2b-jupyter/server.sock -s -o /dev/null -w "%{http_code}" "http://localhost/api/status")
 
     if [ "$status_code" -eq 200 ]; then
         echo "Jupyter Server is healthy"
