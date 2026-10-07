@@ -13,7 +13,7 @@ from typing import (
     Union,
 )
 from pydantic import StrictStr
-from websockets.client import WebSocketClientProtocol, unix_connect
+from websockets.client import WebSocketClientProtocol, connect
 from websockets.exceptions import (
     ConnectionClosedError,
     WebSocketException,
@@ -28,7 +28,7 @@ from api.models.output import (
     OutputType,
     UnexpectedEndOfExecution,
 )
-from consts import JUPYTER_BASE_URL, JUPYTER_SOCKET_PATH
+from consts import JUPYTER_BASE_URL
 from errors import ExecutionError
 from envs import get_envs
 
@@ -67,7 +67,7 @@ class ContextWebSocket:
         self.language = language
         self.cwd = cwd
         self.context_id = context_id
-        self.url = f"ws://localhost/api/kernels/{context_id}/channels"
+        self.url = f"ws://localhost:8888/api/kernels/{context_id}/channels"
         self.session_id = session_id
         self._executions: Dict[str, Execution] = {}
         self._lock = asyncio.Lock()
@@ -87,9 +87,8 @@ class ContextWebSocket:
         ws_logger = logger.getChild("websockets.client")
         ws_logger.setLevel(logging.ERROR)
 
-        self._ws = await unix_connect(
-            JUPYTER_SOCKET_PATH,
-            uri=self.url,
+        self._ws = await connect(
+            self.url,
             ping_timeout=PING_TIMEOUT,
             max_size=None,
             max_queue=None,
@@ -105,10 +104,7 @@ class ContextWebSocket:
     async def interrupt(self):
         """Interrupt the current kernel execution via the Jupyter REST API."""
         try:
-            async with httpx.AsyncClient(
-                transport=httpx.AsyncHTTPTransport(uds=JUPYTER_SOCKET_PATH),
-                trust_env=False,
-            ) as client:
+            async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{JUPYTER_BASE_URL}/api/kernels/{self.context_id}/interrupt"
                 )

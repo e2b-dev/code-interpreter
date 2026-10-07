@@ -2,9 +2,6 @@
 
 c = get_config()  # noqa
 
-c.ServerApp.sock = "/run/e2b-jupyter/server.sock"
-c.ServerApp.sock_mode = "0600"
-
 
 # Pin the contents root directory.
 #
@@ -25,7 +22,7 @@ c.ServerApp.root_dir = "/home/user"
 #
 #          Takes precedence over allow_origin_pat.
 #  Default: ''
-c.ServerApp.allow_origin = ""
+c.ServerApp.allow_origin = "*"
 
 
 # Allow requests where the Host header doesn't point to a local server
@@ -41,7 +38,7 @@ c.ServerApp.allow_origin = ""
 #         Local IP addresses (such as 127.0.0.1 and ::1) are allowed as local,
 #         along with hostnames configured in local_hostnames.
 #  Default: False
-c.ServerApp.allow_remote_access = False
+c.ServerApp.allow_remote_access = True
 
 # Disable cross-site-request-forgery protection
 #

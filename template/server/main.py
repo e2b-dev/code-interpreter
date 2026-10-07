@@ -14,7 +14,7 @@ from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
 from auth import AccessToken, EnvdAuthMiddleware
-from consts import JUPYTER_BASE_URL, JUPYTER_SOCKET_PATH
+from consts import JUPYTER_BASE_URL
 from contexts import create_context, normalize_language
 from envs import LOCAL
 from messaging import ContextWebSocket
@@ -37,9 +37,7 @@ access_token = AccessToken()
 async def lifespan(app: FastAPI):
     global client
     auth_task = None if LOCAL else asyncio.create_task(access_token.subscribe())
-    client = httpx.AsyncClient(
-        transport=httpx.AsyncHTTPTransport(uds=JUPYTER_SOCKET_PATH), trust_env=False
-    )
+    client = httpx.AsyncClient()
 
     try:
         python_context = await create_context(
