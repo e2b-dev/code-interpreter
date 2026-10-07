@@ -1,6 +1,7 @@
 packages:
   - chart_data_extractor
   - template
+  - tests
 
 # Only install package versions that have been on the registry for at least
 # 3 days, so malicious releases have time to be caught and unpublished.
