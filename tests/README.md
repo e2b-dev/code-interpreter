@@ -14,3 +14,7 @@ E2B_API_KEY=... uv run pytest
 Set `E2B_DEBUG=true` to run against a local server started with
 `make start-template-server`; tests marked `skip_debug` (sandbox provisioning,
 optional kernels, recovery) are skipped in that mode.
+
+A few checks need a shell inside the sandbox (systemd restarts, the private
+Jupyter Unix socket in `test_jupyter_socket.py`); those use the SDK's
+`sandbox.commands.run` and are otherwise asserted the same way.
