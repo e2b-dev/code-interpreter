@@ -37,8 +37,8 @@ seaborn==0.13.2
 soundfile==0.13.1
 spacy==3.8.14
 textblob==0.19.0
-tornado==6.5.8
-urllib3==2.7.0
+tornado==6.5.9
+urllib3==2.8.0
 xarray==2025.4.0
 xlrd==2.0.2
 sympy==1.14.0
