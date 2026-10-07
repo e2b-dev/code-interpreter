@@ -26,8 +26,9 @@ def test_cwd_r(client: CodeInterpreter):
     assert execution.results[0].text.strip() == '[1] "/home/user"'
 
 
-def test_cwd_java(java_client: CodeInterpreter):
-    execution = java_client.run_code('System.getProperty("user.dir")', language="java")
+def test_cwd_java(client: CodeInterpreter):
+    client.wait_for_kernel("java")
+    execution = client.run_code('System.getProperty("user.dir")', language="java")
     assert execution.results[0].text.strip() == "/home/user"
 
 
