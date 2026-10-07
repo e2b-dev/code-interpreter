@@ -1,10 +1,11 @@
+import asyncio
 import logging
 import sys
 import httpx
 
 from typing import Dict, Union, Literal, List
 
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
@@ -12,8 +13,10 @@ from fastapi.responses import PlainTextResponse
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
-from consts import JUPYTER_BASE_URL
+from auth import AccessToken, EnvdAuthMiddleware
+from consts import JUPYTER_BASE_URL, JUPYTER_SOCKET_PATH
 from contexts import create_context, normalize_language
+from envs import LOCAL
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
@@ -27,12 +30,16 @@ http_logger.setLevel(logging.WARNING)
 websockets: Dict[Union[str, Literal["default"]], ContextWebSocket] = {}
 default_websockets = LockedMap()
 global client
+access_token = AccessToken()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global client
-    client = httpx.AsyncClient()
+    auth_task = None if LOCAL else asyncio.create_task(access_token.subscribe())
+    client = httpx.AsyncClient(
+        transport=httpx.AsyncHTTPTransport(uds=JUPYTER_SOCKET_PATH), trust_env=False
+    )
 
     try:
         python_context = await create_context(
@@ -57,10 +64,16 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize default context: {e}")
         raise
+    finally:
+        if auth_task is not None:
+            auth_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await auth_task
 
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(EnvdAuthMiddleware, access_token=access_token, local=LOCAL)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -73,6 +86,8 @@ logger.info("Starting Code Interpreter server")
 
 @app.get("/health")
 async def get_health():
+    if not LOCAL and not access_token.connected:
+        return PlainTextResponse("Authentication unavailable", status_code=503)
     return "OK"
 
 
@@ -122,7 +137,7 @@ async def post_execute(request: Request, exec_request: ExecutionRequest):
         ws.execute(
             exec_request.code,
             env_vars=exec_request.env_vars,
-            access_token=request.headers.get("X-Access-Token", None),
+            access_token=request.headers.get("X-Access-Token"),
         )
     )
 

@@ -1,5 +1,32 @@
 # Code Interpreter
 
+## Authentication and networking
+
+The template requires envd 0.9.1 or later with the local token delivery socket.
+The server receives a SHA-512 token verifier over `/run/e2b-auth/token.sock` and
+validates `X-Access-Token` locally. It rejects requests before provisioning and
+after disconnecting. `/health` needs no bearer token, but remains unavailable
+until the auth connection is established. Tokenless sandboxes cannot execute code.
+
+The systemd service creates `/etc/e2b/code-interpreter-auth` when first started.
+This marker contains no credentials; it makes envd wait for token delivery to be
+acknowledged during initialization, including resume and fork. The auth connection
+is also reestablished after an interpreter or envd restart.
+
+Jupyter listens only on `/run/e2b-jupyter/server.sock` (mode `0600`, directory
+mode `0700`), including kernel WebSocket channels. Port `49999` remains the
+authenticated interpreter API; Jupyter no longer listens on port `8888`.
+
+Deploy envd and SDK context-auth updates before rebuilding this template. Local
+Docker development explicitly sets `E2B_LOCAL=true`, which disables auth; do not
+use that setting in deployed templates.
+
+Run the server tests locally with:
+
+```sh
+uv run --with-requirements template/requirements-test.txt pytest template/tests
+```
+
 ## Building the production template
 
 To build the official `code-interpreter-v1` template from this repo, use

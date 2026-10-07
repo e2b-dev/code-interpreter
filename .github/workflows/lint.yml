@@ -57,6 +57,9 @@ jobs:
         run: |
           pnpm run lint
 
+      - name: Test interpreter authentication and Jupyter transport
+        run: uv run --with-requirements template/requirements-test.txt pytest template/tests
+
       - name: Run formatting
         run: |
           pnpm run format
