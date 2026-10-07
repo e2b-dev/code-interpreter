@@ -1,22 +1,5 @@
 # Code Interpreter
 
-## Jupyter networking
-
-Jupyter listens only on `/run/e2b-jupyter/server.sock` (mode `0600`, directory
-mode `0700`). The interpreter uses that socket for HTTP requests, kernel
-WebSocket channels, and interrupts; Jupyter no longer listens on port `8888`.
-Binding only to loopback is not sufficient: envd forwards loopback TCP listeners
-onto the sandbox interface.
-
-Port `49999` remains the interpreter API. This transport change does not add
-interpreter authentication and requires no envd or SDK updates.
-
-Run the server tests locally with:
-
-```sh
-uv run --with-requirements template/requirements-test.txt pytest template/tests
-```
-
 ## Building the production template
 
 To build the official `code-interpreter-v1` template from this repo, use
