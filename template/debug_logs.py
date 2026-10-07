@@ -15,7 +15,7 @@ CMDS = [
     "systemctl --no-pager status code-interpreter || true",
     "journalctl --no-pager -u jupyter || true",
     "journalctl --no-pager -u code-interpreter || true",
-    "curl -s --max-time 3 -o /dev/null -w 'jupyter :8888 -> %{http_code}\\n' http://localhost:8888/api/status || true",
+    "curl --unix-socket /run/e2b-jupyter/server.sock -s --max-time 3 -o /dev/null -w 'jupyter socket -> %{http_code}\\n' http://localhost/api/status || true",
     "curl -s --max-time 3 -o /dev/null -w 'server  :49999 -> %{http_code}\\n' http://localhost:49999/health || true",
 ]
 
