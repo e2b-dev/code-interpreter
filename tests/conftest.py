@@ -33,15 +33,16 @@ def template() -> str:
 def sandbox_factory(
     request: pytest.FixtureRequest, template: str, sandbox_test_id: str
 ) -> Callable[..., Sandbox]:
-    if is_debug():
-        pytest.skip("Sandbox provisioning is not available in debug mode")
-
+    # Skip lazily, on use: the debug branches of `client`/`async_client`
+    # depend on this fixture without ever calling it.
     def factory(
         *,
         timeout: int = DEFAULT_TEST_SANDBOX_TIMEOUT,
         envs: Optional[dict[str, str]] = None,
         allow_public_traffic: bool = True,
     ) -> Sandbox:
+        if is_debug():
+            pytest.skip("Sandbox provisioning is not available in debug mode")
         sandbox = Sandbox.create(
             template,
             timeout=timeout,
