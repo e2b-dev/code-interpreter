@@ -12,8 +12,10 @@ from fastapi.responses import PlainTextResponse
 from api.models.context import Context
 from api.models.create_context import CreateContext
 from api.models.execution_request import ExecutionRequest
+from auth import AccessTokenVerifier, EnvdAuthMiddleware
 from consts import JUPYTER_BASE_URL, JUPYTER_SOCKET_PATH
 from contexts import create_context, normalize_language
+from envs import LOCAL
 from messaging import ContextWebSocket
 from stream import StreamingListJsonResponse
 from utils.locks import LockedMap
@@ -35,6 +37,8 @@ async def lifespan(app: FastAPI):
     client = httpx.AsyncClient(
         transport=httpx.AsyncHTTPTransport(uds=JUPYTER_SOCKET_PATH), trust_env=False
     )
+    auth_client = httpx.AsyncClient(trust_env=False, timeout=5.0)
+    app.state.access_token_verifier = AccessTokenVerifier(auth_client)
 
     try:
         python_context = await create_context(
@@ -59,10 +63,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize default context: {e}")
         raise
+    finally:
+        del app.state.access_token_verifier
+        await auth_client.aclose()
 
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(EnvdAuthMiddleware, local=LOCAL)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
