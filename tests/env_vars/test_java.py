@@ -13,11 +13,12 @@ def test_env_vars_on_sandbox(client_factory):
     assert execution.text.strip() == "supertest"
 
 
-def test_env_vars_per_execution(java_client: CodeInterpreter):
-    execution = java_client.run_code(
+def test_env_vars_per_execution(client: CodeInterpreter):
+    client.wait_for_kernel("java")
+    execution = client.run_code(
         'System.getProperty("FOO")', envs={"FOO": "bar"}, language="java"
     )
-    execution_empty = java_client.run_code(
+    execution_empty = client.run_code(
         'System.getProperty("FOO", "default")', language="java"
     )
 

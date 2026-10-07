@@ -110,12 +110,6 @@ async def async_client(request: pytest.FixtureRequest, sandbox_factory):
     await client.aclose()
 
 
-@pytest.fixture()
-def java_client(client: CodeInterpreter) -> CodeInterpreter:
-    client.wait_for_kernel("java")
-    return client
-
-
 @pytest.fixture(autouse=True)
 def skip_debug(request: pytest.FixtureRequest):
     if request.node.get_closest_marker("skip_debug") and is_debug():

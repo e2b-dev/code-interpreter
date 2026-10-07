@@ -40,10 +40,9 @@ def test_r_kernel(client: CodeInterpreter):
 
 
 @pytest.mark.skip_debug
-def test_java_kernel(java_client: CodeInterpreter):
-    execution = java_client.run_code(
-        'System.out.println("Hello, World!")', language="java"
-    )
+def test_java_kernel(client: CodeInterpreter):
+    client.wait_for_kernel("java")
+    execution = client.run_code('System.out.println("Hello, World!")', language="java")
     assert execution.stdout[0] == "Hello, World!"
 
 
