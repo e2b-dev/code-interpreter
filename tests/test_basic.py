@@ -1,5 +1,7 @@
 import pytest
+from e2b import Sandbox
 
+from conftest import make_client
 from harness import CodeInterpreter
 
 
@@ -62,14 +64,12 @@ def test_secure_access(client_factory):
 
 
 @pytest.mark.skip_debug
-def test_second_client_can_connect(sandbox):
-    from conftest import make_client
-
+def test_reconnected_sandbox_keeps_state(sandbox: Sandbox):
     first = make_client(sandbox)
     first.run_code("x = 1")
     first.close()
 
-    second = make_client(sandbox)
+    second = make_client(Sandbox.connect(sandbox.sandbox_id))
     execution = second.run_code("x")
     second.close()
     assert execution.text == "1"

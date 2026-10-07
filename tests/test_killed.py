@@ -3,17 +3,16 @@ import time
 
 import httpx
 import pytest
+from e2b import Sandbox
 
 from conftest import make_client
-from harness import Execution, SandboxApi, SandboxInfo
+from harness import Execution
 
 
 @pytest.mark.skip_debug
-def test_execution_ends_when_sandbox_is_killed(
-    sandbox: SandboxInfo, sandbox_api: SandboxApi
-):
+def test_execution_ends_when_sandbox_is_killed(sandbox: Sandbox):
     client = make_client(sandbox)
-    timer = threading.Timer(2.0, sandbox_api.kill, args=[sandbox.sandbox_id])
+    timer = threading.Timer(2.0, sandbox.kill)
     timer.start()
 
     execution = Execution()
@@ -32,4 +31,4 @@ def test_execution_ends_when_sandbox_is_killed(
 
     assert time.monotonic() - started < 60
     assert not execution.completed
-    assert sandbox_api.get(sandbox.sandbox_id) is None
+    assert not sandbox.is_running()

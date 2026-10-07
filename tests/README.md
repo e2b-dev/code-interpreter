@@ -1,9 +1,10 @@
 # Code Interpreter HTTP tests
 
-End-to-end tests for the Code Interpreter template, written against the server's
-HTTP API on port `49999` with `httpx` only (no E2B SDK). Sandboxes are created
-through the E2B control-plane API from `E2B_TESTS_TEMPLATE` (defaults to
-`code-interpreter-v1`); see `.env.example` for configuration.
+End-to-end tests for the Code Interpreter template. Sandboxes are created with
+the `e2b` SDK from `E2B_TESTS_TEMPLATE` (defaults to `code-interpreter-v1`);
+everything else talks to the server's HTTP API on port `49999` directly with
+`httpx`, so the server protocol is what's under test, not the SDK. See
+`.env.example` for configuration.
 
 ```bash
 uv sync --locked

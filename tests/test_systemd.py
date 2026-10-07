@@ -2,8 +2,10 @@ import time
 
 import httpx
 import pytest
+from e2b import Sandbox
 
-from harness import CodeInterpreter, CodeInterpreterError
+from conftest import make_client
+from harness import CodeInterpreter
 
 pytestmark = pytest.mark.skip_debug
 
@@ -19,34 +21,25 @@ def wait_for_health(client: CodeInterpreter, max_retries=10, interval_ms=100) ->
     return False
 
 
-def kill_process(client: CodeInterpreter, pattern: str) -> None:
-    # The request itself is expected to die with the process (killing jupyter
-    # cascades to the code-interpreter service), so errors are ignored.
+def kill_process(sandbox: Sandbox, pattern: str) -> None:
+    # The command handle may get killed too (killing jupyter cascades to the
+    # code-interpreter service), so errors are ignored.
     try:
-        client.run_code(f"!sudo kill -9 $(pgrep -f '{pattern}')", timeout=15)
-    except (httpx.HTTPError, CodeInterpreterError):
+        sandbox.commands.run(f"kill -9 $(pgrep -f '{pattern}')", user="root")
+    except Exception:
         pass
 
 
-def test_restart_after_jupyter_kill(client: CodeInterpreter):
+@pytest.mark.parametrize("pattern", ["jupyter server", "uvicorn main:app"])
+def test_restart_after_kill(sandbox: Sandbox, pattern: str):
+    client = make_client(sandbox)
     assert wait_for_health(client)
 
-    kill_process(client, "jupyter server")
+    kill_process(sandbox, pattern)
 
-    # Wait for systemd to restart both services
+    # Wait for systemd to restart the service(s) and health to come back
     assert wait_for_health(client, 60, 500)
 
     execution = client.run_code("x = 1; x")
     assert execution.text == "1"
-
-
-def test_restart_after_code_interpreter_kill(client: CodeInterpreter):
-    assert wait_for_health(client)
-
-    kill_process(client, "uvicorn main:app")
-
-    # Wait for systemd to restart it and health to come back
-    assert wait_for_health(client, 60, 500)
-
-    execution = client.run_code("x = 1; x")
-    assert execution.text == "1"
+    client.close()

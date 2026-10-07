@@ -4,13 +4,15 @@ from typing import Callable, Optional
 
 import pytest
 from dotenv import load_dotenv
+from e2b import Sandbox
 
-from harness import AsyncCodeInterpreter, CodeInterpreter, SandboxApi, SandboxInfo
+from harness import AsyncCodeInterpreter, CodeInterpreter
 
 load_dotenv()
 
 DEFAULT_TEST_SANDBOX_TIMEOUT = 120
-LOCAL_SERVER_URL = "http://localhost:49999"
+CODE_INTERPRETER_PORT = 49999
+LOCAL_SERVER_URL = f"http://localhost:{CODE_INTERPRETER_PORT}"
 
 
 def is_debug() -> bool:
@@ -27,61 +29,54 @@ def template() -> str:
     return os.getenv("E2B_TESTS_TEMPLATE") or "code-interpreter-v1"
 
 
-@pytest.fixture(scope="session")
-def sandbox_api() -> SandboxApi:
-    api = SandboxApi(
-        api_key=os.environ["E2B_API_KEY"],
-        domain=os.getenv("E2B_DOMAIN") or "e2b.app",
-    )
-    yield api
-    api.close()
-
-
 @pytest.fixture()
 def sandbox_factory(
     request: pytest.FixtureRequest, template: str, sandbox_test_id: str
-) -> Callable[..., SandboxInfo]:
+) -> Callable[..., Sandbox]:
     if is_debug():
         pytest.skip("Sandbox provisioning is not available in debug mode")
-
-    api: SandboxApi = request.getfixturevalue("sandbox_api")
 
     def factory(
         *,
         timeout: int = DEFAULT_TEST_SANDBOX_TIMEOUT,
         envs: Optional[dict[str, str]] = None,
         allow_public_traffic: bool = True,
-    ) -> SandboxInfo:
-        sandbox = api.create(
+    ) -> Sandbox:
+        sandbox = Sandbox.create(
             template,
             timeout=timeout,
             metadata={"sandbox_test_id": sandbox_test_id},
             envs=envs,
-            allow_public_traffic=allow_public_traffic,
+            network={"allow_public_traffic": allow_public_traffic},
         )
-        request.addfinalizer(lambda: api.kill(sandbox.sandbox_id))
+        request.addfinalizer(sandbox.kill)
         return sandbox
 
     return factory
 
 
 @pytest.fixture()
-def sandbox(sandbox_factory) -> SandboxInfo:
+def sandbox(sandbox_factory) -> Sandbox:
     return sandbox_factory()
 
 
-def make_client(sandbox: SandboxInfo) -> CodeInterpreter:
+def code_interpreter_url(sandbox: Sandbox) -> str:
+    scheme = "http" if sandbox.connection_config.debug else "https"
+    return f"{scheme}://{sandbox.get_host(CODE_INTERPRETER_PORT)}"
+
+
+def make_client(sandbox: Sandbox) -> CodeInterpreter:
     return CodeInterpreter(
-        sandbox.code_interpreter_url,
-        envd_access_token=sandbox.envd_access_token,
+        code_interpreter_url(sandbox),
+        envd_access_token=sandbox._envd_access_token,
         traffic_access_token=sandbox.traffic_access_token,
     )
 
 
-def make_async_client(sandbox: SandboxInfo) -> AsyncCodeInterpreter:
+def make_async_client(sandbox: Sandbox) -> AsyncCodeInterpreter:
     return AsyncCodeInterpreter(
-        sandbox.code_interpreter_url,
-        envd_access_token=sandbox.envd_access_token,
+        code_interpreter_url(sandbox),
+        envd_access_token=sandbox._envd_access_token,
         traffic_access_token=sandbox.traffic_access_token,
     )
 

@@ -1,4 +1,3 @@
-from .api import SandboxApi, SandboxInfo
 from .code_interpreter import (
     AsyncCodeInterpreter,
     CodeInterpreter,
@@ -15,6 +14,4 @@ __all__ = [
     "Execution",
     "ExecutionError",
     "Result",
-    "SandboxApi",
-    "SandboxInfo",
 ]
