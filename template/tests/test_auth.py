@@ -12,27 +12,13 @@ import main
 
 @pytest.fixture
 async def server(monkeypatch):
-    state = SimpleNamespace(
-        token="valid-token",
-        calls=[],
-        status=None,
-        monotonic=100.0,
-        wall=1000.0,
-        latency=0,
-    )
-    monkeypatch.setattr(
-        auth,
-        "time",
-        SimpleNamespace(monotonic=lambda: state.monotonic, time=lambda: state.wall),
-    )
+    state = SimpleNamespace(token="valid-token", calls=[], status=None)
     monkeypatch.setattr(main, "websockets", {})
 
     async def envd(request):
         assert str(request.url) == "http://127.0.0.1:49983/auth"
         state.calls.append(request)
         await asyncio.sleep(0)
-        state.monotonic += state.latency
-        state.wall += state.latency
         if isinstance(state.status, Exception):
             raise state.status
         status = state.status
@@ -73,7 +59,18 @@ async def test_requests_require_auth_before_route_handling(server, method, path)
     assert len(state.calls) == 1
 
 
-async def test_cache_expires_without_sliding_and_replaces_rotated_token(server):
+async def test_each_request_is_validated(server):
+    client, state = server
+    for _ in range(2):
+        response = await client.get(
+            "/contexts", headers={"X-Access-Token": state.token}
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+    assert len(state.calls) == 2
+
+
+async def test_token_rotation_and_revocation_apply_to_next_request(server):
     client, state = server
     headers = {"X-Access-Token": state.token}
     response = await client.get("/contexts", headers=headers)
@@ -81,13 +78,6 @@ async def test_cache_expires_without_sliding_and_replaces_rotated_token(server):
     assert response.json() == []
     state.token = "rotated-token"
 
-    state.monotonic += 4
-    state.wall += 4
-    assert (await client.get("/contexts", headers=headers)).status_code == 200
-    assert len(state.calls) == 1
-
-    state.monotonic += 1
-    state.wall += 1
     assert (await client.get("/contexts", headers=headers)).status_code == 401
     assert len(state.calls) == 2
     assert (
@@ -95,11 +85,13 @@ async def test_cache_expires_without_sliding_and_replaces_rotated_token(server):
     ).status_code == 200
     assert len(state.calls) == 3
     assert (await client.get("/contexts", headers=headers)).status_code == 401
+    headers = {"X-Access-Token": state.token}
+    state.token = None
+    assert (await client.get("/contexts", headers=headers)).status_code == 401
+    assert len(state.calls) == 5
 
 
-async def test_concurrent_requests_share_validation_and_wrong_tokens_cannot_hit_cache(
-    server,
-):
+async def test_concurrent_requests_are_validated_individually(server):
     client, state = server
     responses = await asyncio.gather(
         *[
@@ -108,27 +100,16 @@ async def test_concurrent_requests_share_validation_and_wrong_tokens_cannot_hit_
         ]
     )
     assert all(response.status_code == 200 for response in responses)
-    assert len(state.calls) == 1
-    for _ in range(2):
-        assert (
-            await client.get("/contexts", headers={"X-Access-Token": "wrong"})
-        ).status_code == 401
-    assert len(state.calls) == 3
-    assert (
-        await client.get("/contexts", headers={"X-Access-Token": state.token})
-    ).status_code == 200
-    assert len(state.calls) == 3
+    assert len(state.calls) == 10
 
 
 @pytest.mark.parametrize(
     "failure", [200, 302, 404, 500, 503, httpx.ConnectError("offline")]
 )
-async def test_expired_cache_fails_closed_and_recovers(server, failure):
+async def test_envd_failures_reject_previously_valid_token_and_recover(server, failure):
     client, state = server
     headers = {"X-Access-Token": state.token}
     assert (await client.get("/contexts", headers=headers)).status_code == 200
-    state.monotonic += 5
-    state.wall += 5
     state.status = failure
     for _ in range(2):
         assert (await client.get("/contexts", headers=headers)).status_code == 503
@@ -136,19 +117,6 @@ async def test_expired_cache_fails_closed_and_recovers(server, failure):
     state.status = None
     assert (await client.get("/contexts", headers=headers)).status_code == 200
     assert len(state.calls) == 4
-
-
-@pytest.mark.parametrize(
-    "clock,delta", [("wall", 10), ("wall", -10), ("monotonic", -10)]
-)
-async def test_clock_jumps_invalidate_cached_validation(server, clock, delta):
-    client, state = server
-    headers = {"X-Access-Token": state.token}
-    assert (await client.get("/contexts", headers=headers)).status_code == 200
-    setattr(state, clock, getattr(state, clock) + delta)
-    state.token = "rotated-token"
-    assert (await client.get("/contexts", headers=headers)).status_code == 401
-    assert len(state.calls) == 2
 
 
 async def test_health_and_cors_preflight_do_not_require_auth(server):
@@ -168,17 +136,7 @@ async def test_health_and_cors_preflight_do_not_require_auth(server):
     assert not state.calls
 
 
-async def test_slow_response_does_not_extend_cache_lifetime(server):
-    client, state = server
-    state.latency = 5
-    headers = {"X-Access-Token": state.token}
-    assert (await client.get("/contexts", headers=headers)).status_code == 200
-    state.token = "rotated-token"
-    assert (await client.get("/contexts", headers=headers)).status_code == 401
-    assert len(state.calls) == 2
-
-
-async def test_malformed_headers_cannot_use_cached_validation(server):
+async def test_malformed_headers_are_rejected_without_calling_envd(server):
     client, state = server
     assert (
         await client.get("/contexts", headers={"X-Access-Token": state.token})
