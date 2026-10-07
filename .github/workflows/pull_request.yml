@@ -20,9 +20,17 @@ jobs:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
     with:
       E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+  code-interpreter-tests:
+    uses: ./.github/workflows/code_interpreter_tests.yml
+    needs: [build-template]
+    secrets:
+      E2B_API_KEY: ${{ secrets.E2B_API_KEY }}
+    with:
+      E2B_DOMAIN: ${{ vars.E2B_DOMAIN }}
+      E2B_TESTS_TEMPLATE: ${{ needs.build-template.outputs.template_id }}
   cleanup-build-template:
     uses: ./.github/workflows/cleanup_build_template.yml
-    needs: [build-template]
+    needs: [build-template, code-interpreter-tests]
     if: always() && !contains(needs.build-template.result, 'failure') && !contains(needs.build-template.result, 'cancelled')
     secrets:
       E2B_API_KEY: ${{ secrets.E2B_API_KEY }}

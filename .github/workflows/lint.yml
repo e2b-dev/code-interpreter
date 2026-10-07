@@ -48,9 +48,9 @@ jobs:
           enable-cache: true
 
       - name: Install Python dependencies
-        working-directory: chart_data_extractor
         run: |
-          uv sync --locked
+          (cd chart_data_extractor && uv sync --locked)
+          (cd tests && uv sync --locked)
           uv tool install ruff==0.11.12
 
       - name: Run linting

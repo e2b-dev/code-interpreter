@@ -29,6 +29,8 @@ importers:
 
   template: {}
 
+  tests: {}
+
 packages:
 
   '@babel/runtime@7.29.7':
