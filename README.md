@@ -20,7 +20,7 @@
 <img width="100%" src="/readme-assets/preview.png" alt="Cover image">
 --->
 > [!NOTE]
-> The `@e2b/code-interpreter` and `e2b-code-interpreter` SDK sources now live in the [E2B monorepo](https://github.com/e2b-dev/E2B), under `packages/code-interpreter-js` and `packages/code-interpreter-python`. Open SDK issues and pull requests there. This repository keeps the sandbox template and the chart data extractor.
+> All source code now lives in the [E2B monorepo](https://github.com/e2b-dev/E2B): the JavaScript SDK is in [`packages/code-interpreter-js`](https://github.com/e2b-dev/E2B/tree/main/packages/code-interpreter-js), the Python SDK is in [`packages/code-interpreter-python`](https://github.com/e2b-dev/E2B/tree/main/packages/code-interpreter-python), the sandbox template is in [`templates/code-interpreter`](https://github.com/e2b-dev/E2B/tree/main/templates/code-interpreter), and `e2b-charts` is in [`packages/charts-python`](https://github.com/e2b-dev/E2B/tree/main/packages/charts-python). Please open issues and pull requests there.
 
 ## What is E2B?
 [E2B](https://e2b.dev/?utm_source=github&utm_medium=referral&utm_campaign=readme&utm_content=code-interpreter) is an open-source infrastructure that allows you to run AI-generated code in secure isolated sandboxes in the cloud. To start and control sandboxes, use our [JavaScript SDK](https://www.npmjs.com/package/@e2b/code-interpreter) or [Python SDK](https://pypi.org/project/e2b_code_interpreter).
@@ -77,4 +77,4 @@ Visit [E2B documentation](https://docs.e2b.dev/?utm_source=github&utm_medium=ref
 Visit our [Cookbook](https://github.com/e2b-dev/e2b-cookbook/tree/main) to get inspired by examples with different LLMs and AI frameworks.
 
 ## Customizing the sandbox template
-Need extra packages or a different runtime? You can build your own Code Interpreter sandbox template. See the [template guide](/template/README.md) for a step-by-step walkthrough of creating, building, and using a custom template (as well as building the production `code-interpreter-v1` template).
+Need extra packages or a different runtime? You can build your own Code Interpreter sandbox template. See the [template guide](https://github.com/e2b-dev/E2B/blob/main/templates/code-interpreter/README.md) for a step-by-step walkthrough of creating, building, and using a custom template (as well as building the production `code-interpreter-v1` template).
