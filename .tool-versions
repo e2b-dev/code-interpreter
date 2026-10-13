@@ -1,4 +1,4 @@
-python 3.10
+python 3.11
 uv 0.10.0
 # Keep in sync with `packageManager` in package.json — pnpm self-switches to
 # that version at runtime.
