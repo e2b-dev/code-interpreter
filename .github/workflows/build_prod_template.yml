@@ -30,4 +30,8 @@ jobs:
     with:
       target: ${{ inputs.target_environment }}
       skip_cache: ${{ inputs.skip_cache }}
-    secrets: inherit
+    secrets:
+      E2B_PROD_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
+      E2B_JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
+      E2B_TANGO_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
+      E2B_STAGING_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}

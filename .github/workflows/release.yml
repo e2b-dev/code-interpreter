@@ -233,7 +233,10 @@ jobs:
     uses: ./.github/workflows/build_prod_template_clusters.yml
     with:
       target: all
-    secrets: inherit
+    secrets:
+      E2B_PROD_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
+      E2B_JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
+      E2B_TANGO_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
 
   release:
     # Every upstream job is listed, not just the last one: a job that fails makes
