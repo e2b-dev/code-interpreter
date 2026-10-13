@@ -1,0 +1,128 @@
+name: Build Prod Template (clusters)
+
+# Builds the production `code-interpreter-v1` template on E2B clusters. Every
+# cluster is a separate tenancy with its own team, API key and template
+# registry, so a template built on one cluster does not exist on the others.
+# The cluster map (name, domain) lives in the `plan` job; the API keys are
+# declared as optional secrets and selected statically in the build step, so a
+# build job only ever receives the keys the caller passed.
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: Cluster to build on, or `all` for every production cluster.
+        required: false
+        type: string
+        default: all
+      skip_cache:
+        description: Skip build cache
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      E2B_PROD_API_KEY:
+        description: API key for a team on the foxtrot cluster.
+        required: false
+      E2B_JULIETT_API_KEY:
+        description: API key for a team on the juliett cluster.
+        required: false
+      E2B_TANGO_API_KEY:
+        description: API key for a team on the tango cluster.
+        required: false
+      E2B_STAGING_API_KEY:
+        description: API key for a team on the staging cluster.
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Select clusters
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - id: plan
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          MATRIX=$(jq -nc --arg target "$TARGET" '
+            [
+              { cluster: "foxtrot", domain: "e2b.dev",         production: true },
+              { cluster: "juliett", domain: "e2b-juliett.dev", production: true },
+              { cluster: "tango",   domain: "e2b-tango.dev",   production: true },
+              { cluster: "staging", domain: "e2b-staging.dev", production: false }
+            ]
+            | map(select(if $target == "all" then .production else .cluster == $target end))
+            | map(del(.production))
+          ')
+          if [ "$MATRIX" = "[]" ]; then
+            echo "::error::Unknown cluster: $TARGET" >&2
+            exit 1
+          fi
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+
+  build-template:
+    name: Build E2B template (${{ matrix.cluster }})
+    needs: plan
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    # Builds on the same cluster serialize, across the release workflow and
+    # manual dispatches alike; different clusters run concurrently.
+    concurrency:
+      group: Release-${{ github.ref }}-${{ matrix.cluster }}
+      cancel-in-progress: false
+    env:
+      E2B_DOMAIN: ${{ matrix.domain }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Parse .tool-versions
+        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
+        with:
+          filename: '.tool-versions'
+          uppercase: 'true'
+          prefix: 'tool_version_'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: '${{ env.TOOL_VERSION_UV }}'
+          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
+          activate-environment: true
+
+      - name: Install development dependencies
+        working-directory: ./template
+        run: uv pip install -r requirements-dev.txt
+
+      - name: Build E2B template
+        working-directory: ./template
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+          SKIP_CACHE: ${{ inputs.skip_cache }}
+          # Static secret references: a dynamic secrets[...] index would hand this
+          # job every organization and repository secret instead of one cluster key.
+          E2B_API_KEY: ${{ (matrix.cluster == 'foxtrot' && secrets.E2B_PROD_API_KEY) || (matrix.cluster == 'juliett' && secrets.E2B_JULIETT_API_KEY) || (matrix.cluster == 'tango' && secrets.E2B_TANGO_API_KEY) || (matrix.cluster == 'staging' && secrets.E2B_STAGING_API_KEY) || '' }}
+        run: |
+          if [ -z "$E2B_API_KEY" ]; then
+            echo "::error::Missing API key secret for cluster: $CLUSTER" >&2
+            exit 1
+          fi
+          python build_prod.py
+
+      - name: Summarize
+        env:
+          CLUSTER: ${{ matrix.cluster }}
+        run: |
+          {
+            echo "### Build target"
+            echo
+            echo "Cluster: $CLUSTER"
+            echo "Domain: ${E2B_DOMAIN:-(default)}"
+          } >> "$GITHUB_STEP_SUMMARY"
