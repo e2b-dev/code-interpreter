@@ -40,13 +40,17 @@ def make_template(
         )
         .run_cmd(
             r"sed -i -E '/^mozilla\/(emSign_ECC_Root_CA_-_G3|Comodo_AAA_Services_root)\.crt$/s/^/!/' /etc/ca-certificates.conf"
+            " && rm -f /etc/ssl/certs/emSign_ECC_Root_CA_-_G3.pem /etc/ssl/certs/Comodo_AAA_Services_root.pem"
             " && update-ca-certificates --fresh"
         )
-        .run_cmd("python -m pip install --upgrade pip==26.2.2")
+        .run_cmd(
+            "python -m pip install --use-deprecated=legacy-certs"
+            " --cert /etc/ssl/certs/ca-certificates.crt --upgrade pip==26.2.2"
+        )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
         .apt_install("nodejs")
         .run_cmd(
-            "echo 'export NODE_OPTIONS=--use-openssl-ca' > /etc/profile.d/node-ca.sh"
+            "echo 'export NODE_OPTIONS=\"--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}\"' > /etc/profile.d/node-ca.sh"
         )
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
@@ -98,7 +102,10 @@ def make_template(
         # Create server virtual environment
         .copy("server", ".server")
         .run_cmd("python -m venv .server/.venv")
-        .run_cmd(".server/.venv/bin/python -m pip install --upgrade pip==26.2.2")
+        .run_cmd(
+            ".server/.venv/bin/python -m pip install --use-deprecated=legacy-certs"
+            " --cert /etc/ssl/certs/ca-certificates.crt --upgrade pip==26.2.2"
+        )
         # Copy and install server requirements
         .run_cmd(
             ".server/.venv/bin/pip install --no-cache-dir -r .server/requirements.txt"
