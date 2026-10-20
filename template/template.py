@@ -35,17 +35,8 @@ def make_template(
                 "jq",
                 "sudo",
                 "fonts-noto-cjk",
-                "ca-certificates",
+                "ca-certificates=20250419+deb13u1",
             ]
-        )
-        .copy(
-            "remove-blocked-certs.sh",
-            "/etc/ca-certificates/update.d/remove-blocked-certs",
-        )
-        .run_cmd("chmod +x /etc/ca-certificates/update.d/remove-blocked-certs")
-        .run_cmd(
-            r"sed -i -E '/^mozilla\/(emSign_ECC_Root_CA_-_G3|Comodo_AAA_Services_root)\.crt$/s/^/!/' /etc/ca-certificates.conf"
-            " && update-ca-certificates --fresh"
         )
         .run_cmd(
             "python -m pip install --use-deprecated=legacy-certs"

@@ -11,6 +11,7 @@ pytestmark = pytest.mark.skip_debug
 CHECK_CERTIFICATES = """
 import ssl
 from importlib.metadata import version
+from pathlib import Path
 
 import certifi
 from pip._vendor import certifi as pip_certifi
@@ -21,6 +22,13 @@ assert tuple(map(int, version('pip').split('.'))) >= (26, 2, 2)
 blocked = {'emSign ECC Root CA - G3', 'AAA Certificate Services'}
 for bundle in (None, certifi.where(), pip_certifi.where()):
     context = ssl.create_default_context(cafile=bundle)
+    if bundle is None:
+        for path in Path('/etc/ssl/certs').iterdir():
+            if path.is_file():
+                try:
+                    context.load_verify_locations(cafile=str(path))
+                except ssl.SSLError:
+                    pass
     certificates = context.get_ca_certs()
     assert certificates, f'Empty trust store: {bundle}'
     names = {
