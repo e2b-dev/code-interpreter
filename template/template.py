@@ -17,6 +17,7 @@ def make_template(
         .set_envs(
             {
                 "PIP_DEFAULT_TIMEOUT": "100",
+                "NODE_OPTIONS": "--use-openssl-ca",
                 "PIP_DISABLE_PIP_VERSION_CHECK": "1",
                 "PIP_NO_CACHE_DIR": "1",
                 "JAVA_VERSION": "11",

@@ -1,7 +1,10 @@
+import json
 import shlex
 
 import pytest
 from e2b import Sandbox
+
+from harness import CodeInterpreter
 
 pytestmark = pytest.mark.skip_debug
 
@@ -39,3 +42,46 @@ def test_certificate_stores(sandbox: Sandbox, python: str):
     )
     assert result.exit_code == 0
     assert "Certificate stores verified" in result.stdout
+
+
+CHECK_NODE_HTTPS = """
+(async () => {
+const https = require('node:https');
+const probe = (host) => new Promise((resolve, reject) => {
+    const request = https.get(`https://${host}/`, (response) => {
+        response.resume();
+        resolve('connected');
+    });
+    request.setTimeout(15000, () => request.destroy(new Error('TLS probe timed out')));
+    request.on('error', (error) => {
+        if (error.code === 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' ||
+            error.code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' ||
+            error.code === 'SELF_SIGNED_CERT_IN_CHAIN') {
+            resolve('untrusted');
+        } else {
+            reject(error);
+        }
+    });
+});
+const results = await Promise.all([
+    probe('dv-g3b-emudhra.we-have-a-problem.com'),
+    probe('dv-g3b-aaa-emudhra.we-have-a-problem.com'),
+    probe('nodejs.org'),
+]);
+console.log(JSON.stringify(results));
+})()
+"""
+
+
+def test_node_certificate_stores(sandbox: Sandbox, client: CodeInterpreter):
+    command = CHECK_NODE_HTTPS
+    result = sandbox.commands.run(f"node -e {shlex.quote(command)}")
+    assert json.loads(result.stdout) == ["untrusted", "untrusted", "connected"]
+
+    execution = client.run_code("await " + command, language="js")
+    assert execution.error is None
+    assert json.loads("".join(execution.stdout)) == [
+        "untrusted",
+        "untrusted",
+        "connected",
+    ]
