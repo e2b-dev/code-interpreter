@@ -89,13 +89,13 @@ async def post_execute(request: Request, exec_request: ExecutionRequest):
         )
 
     context_id = None
-    if exec_request.language:
+    if exec_request.language or not exec_request.context_id:
         language = normalize_language(exec_request.language)
 
         async with await default_websockets.get_lock(language):
             context_id = default_websockets.get(language)
 
-            if not context_id:
+            if not context_id or context_id not in websockets:
                 try:
                     context = await create_context(
                         client, websockets, language, "/home/user"
@@ -105,6 +105,8 @@ async def post_execute(request: Request, exec_request: ExecutionRequest):
 
                 context_id = context.id
                 default_websockets[language] = context_id
+                if language == "python":
+                    websockets["default"] = websockets[context_id]
 
     elif exec_request.context_id:
         context_id = exec_request.context_id

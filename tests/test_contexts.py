@@ -116,3 +116,36 @@ def test_contexts_secure_traffic(client_factory):
 
     client.remove_context(context["id"])
     assert context["id"] not in [ctx["id"] for ctx in client.list_contexts()]
+
+
+def test_execute_default_context_after_restart(client: CodeInterpreter):
+    context = next(ctx for ctx in client.list_contexts() if ctx["language"] == "python")
+    client.run_code("restart_marker = 42")
+    client.restart_context(context["id"])
+
+    execution = client.run_code("restart_marker")
+
+    assert execution.error is not None
+    assert execution.error.name == "NameError"
+    assert client.run_code("1 + 1").text == "2"
+
+
+def test_restart_other_context_preserves_default_context(client: CodeInterpreter):
+    client.run_code("default_marker = 42")
+    context = client.create_context()
+    client.run_code("other_marker = 7", context_id=context["id"])
+
+    client.restart_context(context["id"])
+
+    assert client.run_code("default_marker").text == "42"
+    execution = client.run_code("other_marker", context_id=context["id"])
+    assert execution.error is not None
+    assert execution.error.name == "NameError"
+
+
+@pytest.mark.parametrize("options", [{}, {"language": "python"}])
+def test_execute_recreates_removed_default_context(client: CodeInterpreter, options):
+    context = next(ctx for ctx in client.list_contexts() if ctx["language"] == "python")
+    client.remove_context(context["id"])
+
+    assert client.run_code("1 + 1", **options).text == "2"
