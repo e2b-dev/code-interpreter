@@ -1,5 +1,5 @@
 python 3.11
-uv 0.10.0
+uv 0.13.4
 # Keep in sync with `packageManager` in package.json — pnpm self-switches to
 # that version at runtime.
 pnpm 10.34.5

@@ -8,6 +8,7 @@ StartLimitBurst=0
 Type=simple
 RuntimeDirectory=e2b-jupyter
 RuntimeDirectoryMode=0700
+Environment=NODE_OPTIONS=--use-openssl-ca
 Environment=MATPLOTLIBRC=/root/.config/matplotlib/.matplotlibrc
 ExecStart=/usr/local/bin/jupyter server --IdentityProvider.token=""
 ExecStartPost=-/usr/bin/systemctl reset-failed code-interpreter

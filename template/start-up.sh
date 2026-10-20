@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export NODE_OPTIONS="--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}"
+
 install -d -m 0700 /run/e2b-jupyter
 
 function start_code_interpreter() {

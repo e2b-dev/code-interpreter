@@ -42,3 +42,4 @@ urllib3==2.7.0
 xarray==2025.4.0
 xlrd==2.0.2
 sympy==1.14.0
+certifi==2026.10.19

@@ -17,6 +17,7 @@ def make_template(
         .set_envs(
             {
                 "PIP_DEFAULT_TIMEOUT": "100",
+                "NODE_OPTIONS": "--use-openssl-ca",
                 "PIP_DISABLE_PIP_VERSION_CHECK": "1",
                 "PIP_NO_CACHE_DIR": "1",
                 "JAVA_VERSION": "11",
@@ -34,11 +35,18 @@ def make_template(
                 "jq",
                 "sudo",
                 "fonts-noto-cjk",
-                "ca-certificates",
+                "ca-certificates=20250419+deb13u1",
             ]
+        )
+        .run_cmd(
+            "python -m pip install --use-deprecated=legacy-certs"
+            " --cert /etc/ssl/certs/ca-certificates.crt --upgrade pip==26.2.2"
         )
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
         .apt_install("nodejs")
+        .run_cmd(
+            "echo 'export NODE_OPTIONS=\"--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}\"' > /etc/profile.d/node-ca.sh"
+        )
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
     )
@@ -74,6 +82,7 @@ def make_template(
             [
                 "mkdir -p /usr/lib/jvm",
                 "curl -fsSL https://download.java.net/java/ga/jdk${JAVA_VERSION}/openjdk-${JAVA_VERSION}_linux-x64_bin.tar.gz | tar -xz -C /usr/lib/jvm",
+                "/usr/lib/jvm/jdk-${JAVA_VERSION}/bin/keytool -delete -cacerts -storepass changeit -alias 'comodoaaaca [jdk]'",
                 "update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/java 1",
                 "update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/javac 1",
                 "wget https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip",
@@ -88,6 +97,10 @@ def make_template(
         # Create server virtual environment
         .copy("server", ".server")
         .run_cmd("python -m venv .server/.venv")
+        .run_cmd(
+            ".server/.venv/bin/python -m pip install --use-deprecated=legacy-certs"
+            " --cert /etc/ssl/certs/ca-certificates.crt --upgrade pip==26.2.2"
+        )
         # Copy and install server requirements
         .run_cmd(
             ".server/.venv/bin/pip install --no-cache-dir -r .server/requirements.txt"
