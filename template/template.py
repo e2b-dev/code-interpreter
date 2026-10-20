@@ -45,6 +45,9 @@ def make_template(
         .run_cmd("python -m pip install --upgrade pip==26.2.2")
         .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
         .apt_install("nodejs")
+        .run_cmd(
+            "echo 'export NODE_OPTIONS=--use-openssl-ca' > /etc/profile.d/node-ca.sh"
+        )
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
     )
@@ -80,6 +83,7 @@ def make_template(
             [
                 "mkdir -p /usr/lib/jvm",
                 "curl -fsSL https://download.java.net/java/ga/jdk${JAVA_VERSION}/openjdk-${JAVA_VERSION}_linux-x64_bin.tar.gz | tar -xz -C /usr/lib/jvm",
+                "/usr/lib/jvm/jdk-${JAVA_VERSION}/bin/keytool -delete -cacerts -storepass changeit -alias 'comodoaaaca [jdk]'",
                 "update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/java 1",
                 "update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk-${JAVA_VERSION}/bin/javac 1",
                 "wget https://github.com/SpencerPark/IJava/releases/download/v${IJAVA_VERSION}/ijava-${IJAVA_VERSION}.zip",

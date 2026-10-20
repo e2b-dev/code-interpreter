@@ -85,3 +85,14 @@ def test_node_certificate_stores(sandbox: Sandbox, client: CodeInterpreter):
         "untrusted",
         "connected",
     ]
+
+
+def test_java_certificate_store(sandbox: Sandbox):
+    result = sandbox.commands.run(
+        "/usr/lib/jvm/jdk-11/bin/keytool -J-Duser.language=en -list -v -cacerts -storepass changeit",
+        user="root",
+    )
+    assert result.exit_code == 0
+    assert "trustedCertEntry" in result.stdout
+    assert "CN=AAA Certificate Services," not in result.stdout
+    assert "CN=emSign ECC Root CA - G3," not in result.stdout
