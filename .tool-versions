@@ -4,4 +4,4 @@ uv 0.13.4
 # that version at runtime.
 pnpm 10.34.5
 # Node is only used to run Changesets in CI.
-node 20
+node 22.23.4
