@@ -1,7 +1,7 @@
 {
   "name": "@e2b/data-extractor",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "scripts": {
     "test": "uv run pytest -n 4 --verbose -x",
     "example": "uv run python3 example.py",

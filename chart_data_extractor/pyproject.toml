@@ -1,6 +1,6 @@
 [project]
 name = "e2b-charts"
-version = "1.0.0"
+version = "1.1.0"
 description = "Package for extracting data for E2B Code Interpreter"
 authors = [{ name = "e2b", email = "hello@e2b.dev" }]
 requires-python = ">=3.11"
