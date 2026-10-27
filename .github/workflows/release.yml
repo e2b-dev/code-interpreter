@@ -147,13 +147,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release new versions
+        # OIDC trusted publishing (`id-token: write` above), as in e2b-dev/E2B,
+        # instead of a long-lived PyPI token that expires and 403s the release.
         run: |
           uv build
-          uv publish --check-url https://pypi.org/simple/
+          uv publish --trusted-publishing always --check-url https://pypi.org/simple/
         working-directory: ./chart_data_extractor
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UV_PUBLISH_TOKEN: ${{ secrets.CHARTS_PYPI_TOKEN }}
 
       - name: Output new version
         id: output_version
@@ -350,7 +349,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: "" # See https://github.com/changesets/changesets/issues/1152#issuecomment-3190884868
-          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
       - name: Push new versions
         # Gate on the tags rather than on whether the publish step succeeded: they
