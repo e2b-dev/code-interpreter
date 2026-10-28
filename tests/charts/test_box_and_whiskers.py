@@ -18,7 +18,7 @@ ax.set_xlabel('Class')
 ax.set_ylabel('Score')
 
 # Set custom colors
-ax.boxplot(data.values(), labels=data.keys(), patch_artist=True)
+ax.boxplot(data.values(), tick_labels=data.keys(), patch_artist=True)
 
 # Add legend
 ax.legend()
