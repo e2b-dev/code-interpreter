@@ -34,13 +34,6 @@ jobs:
           uppercase: 'true'
           prefix: 'tool_version_'
 
-      - name: Set package version
-        working-directory: ./template
-        run: |
-          VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
-          echo "Version: $VERSION"
-          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
-
       - name: Install uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:

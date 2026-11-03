@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release: ${{ steps.version.outputs.release }}
-      charts: ${{ steps.charts.outputs.release }}
       template: ${{ steps.template.outputs.release }}
       itinerary: ${{ steps.itinerary.outputs.itinerary }}
     steps:
@@ -72,13 +71,6 @@ jobs:
           IS_RELEASE=$(./.github/scripts/is_release.sh)
           echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
 
-      - name: Check Charts SDK Release
-        id: charts
-        if: steps.version.outputs.release == 'true'
-        run: |
-          IS_RELEASE=$(./.github/scripts/is_release_for_package.sh "@e2b/data-extractor")
-          echo "release=$IS_RELEASE" >> "$GITHUB_OUTPUT"
-
       - name: Check Template SDK Release
         id: template
         if: steps.version.outputs.release == 'true'
@@ -102,71 +94,13 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-  charts-release:
-    name: Charts release
-    needs: [preflight]
-    if: needs.preflight.outputs.charts == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.output_version.outputs.version }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-
-      - name: Parse .tool-versions
-        uses: wistia/parse-tool-versions@32f568a4ffd4bfa7720ebf93f171597d1ebc979a # v2.1.1
-        with:
-          filename: '.tool-versions'
-          uppercase: 'true'
-          prefix: 'tool_version_'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
-        id: pnpm-install
-        with:
-          version: ${{ env.TOOL_VERSION_PNPM }}
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
-        with:
-          version: '${{ env.TOOL_VERSION_UV }}'
-          python-version: '${{ env.TOOL_VERSION_PYTHON }}'
-          enable-cache: true
-
-      - name: Configure pnpm
-        run: |
-          pnpm config set auto-install-peers true
-          pnpm config set exclude-links-from-lockfile true
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Create new versions
-        run: pnpm run version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release new versions
-        # OIDC trusted publishing (`id-token: write` above), as in e2b-dev/E2B,
-        # instead of a long-lived PyPI token that expires and 403s the release.
-        run: |
-          uv build
-          uv publish --trusted-publishing always --check-url https://pypi.org/simple/
-        working-directory: ./chart_data_extractor
-
-      - name: Output new version
-        id: output_version
-        working-directory: ./chart_data_extractor
-        run: |
-          echo "version=$(pnpm pkg get version --workspaces=false | tr -d \\\")" >> "$GITHUB_OUTPUT"
-
   build-docker-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: [preflight, charts-release]
+    needs: [preflight]
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
+      needs.preflight.outputs.template == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -186,18 +120,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Set package version
-        working-directory: ./template
-        run: |
-          if [ -z "${{ needs.charts-release.outputs.version }}" ]; then
-            VERSION=$(cat ../chart_data_extractor/pyproject.toml | grep version | cut -d '"' -f 2)
-          else
-            VERSION=${{ needs.charts-release.outputs.version }}
-          fi
-          echo "Version: $VERSION"
-
-          sed -i "s/e2b_charts/e2b_charts==${VERSION}/g" requirements.txt
 
       - name: Install uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
@@ -224,7 +146,7 @@ jobs:
     needs: [preflight, build-docker-image]
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
-      (needs.preflight.outputs.template == 'true' || needs.preflight.outputs.charts == 'true')
+      needs.preflight.outputs.template == 'true'
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -260,7 +182,7 @@ jobs:
     # Every upstream job is listed, not just the last one: a job that fails makes
     # its dependents *skip*, and a skipped job is not a failure — so gating on
     # `needs.*.result` only works for the jobs this one depends on directly.
-    needs: [preflight, charts-release, build-docker-image, build-template]
+    needs: [preflight, build-docker-image, build-template]
     if: (!cancelled()) &&
       !contains(needs.*.result, 'failure') &&
       needs.preflight.outputs.release == 'true'
@@ -395,7 +317,7 @@ jobs:
   report-failure:
     # `preflight` included so a failure there is reported too, whether or not
     # `failure()` looks past this job's direct dependencies.
-    needs: [preflight, charts-release, build-docker-image, build-template, release]
+    needs: [preflight, build-docker-image, build-template, release]
     if: failure()
     name: Code Interpreter Release Failed - Slack Notification
     runs-on: ubuntu-latest

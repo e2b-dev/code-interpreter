@@ -10,7 +10,7 @@ jobs:
   publish:
     defaults:
       run:
-        working-directory: ./chart_data_extractor
+        working-directory: ./template/charts
     name: Chart Data Extractor - Build and test
     runs-on: ubuntu-22.04
     steps:
