@@ -47,6 +47,7 @@ def make_template(
         .run_cmd(
             "echo 'export NODE_OPTIONS=\"--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}\"' > /etc/profile.d/node-ca.sh"
         )
+        .copy("charts", "charts")
         .copy("requirements.txt", "requirements.txt")
         .pip_install("--no-cache-dir -r requirements.txt")
     )

@@ -1,5 +1,4 @@
 packages:
-  - chart_data_extractor
   - template
   - tests
 

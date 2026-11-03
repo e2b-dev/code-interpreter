@@ -49,7 +49,6 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          (cd chart_data_extractor && uv sync --locked)
           (cd tests && uv sync --locked)
           uv tool install ruff==0.11.12
 

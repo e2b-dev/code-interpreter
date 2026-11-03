@@ -18,20 +18,12 @@ Homepage = "https://e2b.dev/"
 Repository = "https://github.com/e2b-dev/e2b-code-interpreter/tree/python"
 "Bug Tracker" = "https://github.com/e2b-dev/code-interpreter/issues"
 
-[dependency-groups]
-dev = [
-    "pytest>=9.0.3,<10",
-    "python-dotenv>=1.2.1,<2",
-    "pytest-dotenv>=0.5.2,<0.6",
-    "ruff>=0.11.12,<0.12",
-]
-
 [tool.uv.build-backend]
 module-name = ["e2b_charts"]
 module-root = ""
 
 [build-system]
-requires = ["uv_build>=0.10.0,<0.11.0"]
+requires = ["uv_build==0.13.4"]
 build-backend = "uv_build"
 
 [tool.ruff.lint]

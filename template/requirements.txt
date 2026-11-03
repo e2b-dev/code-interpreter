@@ -8,8 +8,8 @@ pandas==2.2.3
 matplotlib==3.11.2
 pillow==13.0.0
 
-# Latest version for
-e2b_charts
+# Chart data extractor, installed from ./charts
+./charts
 
 # Other packages
 aiohttp==3.14.5
