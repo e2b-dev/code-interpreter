@@ -569,7 +569,7 @@ class ContextWebSocket:
                         traceback="".join(data["content"].get("traceback", [])),
                     )
                 )
-            elif data["content"]["status"] == "abort":
+            elif data["content"]["status"] in ("abort", "aborted"):
                 logger.debug(f"Execution {parent_msg_ig} was aborted")
                 await queue.put(
                     Error(
