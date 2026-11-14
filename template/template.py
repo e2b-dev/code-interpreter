@@ -6,12 +6,22 @@ def make_template(
     is_docker: bool = False,
     ready: ReadyCmd | None = None,
     debug: bool = False,
+    base_image: str = "python:3.13",
+    node_major: int = 20,
 ):
+    """Build the Code Interpreter template.
+
+    ``base_image`` and ``node_major`` default to what ``code-interpreter-v1``
+    ships, so the official build is unchanged. Overriding them lets a custom
+    template start from another Debian 13 Python image (for example a pinned
+    ``python:3.14-slim`` digest) or a newer Node.js LTS without copying the
+    server into a separate recipe.
+    """
     enabled_kernels = set(["python", "javascript"] + kernels)
     # Start with base template
     template = (
         Template()
-        .from_image("python:3.13")
+        .from_image(base_image)
         .set_user("root")
         .set_workdir("/root")
         .set_envs(
@@ -42,7 +52,7 @@ def make_template(
             "python -m pip install --use-deprecated=legacy-certs"
             " --cert /etc/ssl/certs/ca-certificates.crt --upgrade pip==26.2.2"
         )
-        .run_cmd("curl -fsSL https://deb.nodesource.com/setup_20.x | bash -")
+        .run_cmd(f"curl -fsSL https://deb.nodesource.com/setup_{node_major}.x | bash -")
         .apt_install("nodejs")
         .run_cmd(
             "echo 'export NODE_OPTIONS=\"--use-openssl-ca${NODE_OPTIONS:+ $NODE_OPTIONS}\"' > /etc/profile.d/node-ca.sh"
@@ -79,7 +89,8 @@ def make_template(
 
     # Install Java and Java Kernel if requested
     if "java" in enabled_kernels:
-        template = template.run_cmd(
+        # wget and unzip ship with the full python image but not with -slim.
+        template = template.apt_install(["wget", "unzip"]).run_cmd(
             [
                 "mkdir -p /usr/lib/jvm",
                 "curl -fsSL https://download.java.net/java/ga/jdk${JAVA_VERSION}/openjdk-${JAVA_VERSION}_linux-x64_bin.tar.gz | tar -xz -C /usr/lib/jvm",
