@@ -2,6 +2,7 @@ from typing import Optional, List, Literal
 
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
+from matplotlib.container import BarContainer, ErrorbarContainer
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle, Wedge, PathPatch
 from matplotlib.pyplot import Figure
@@ -37,6 +38,17 @@ class SuperChart(Chart):
 def _get_type_of_chart(ax: Axes) -> ChartType:
     objects = list(filter(lambda obj: not isinstance(obj, Text), ax._children))
 
+    # Exclude errorbar artists so bars (or lines) with error bars keep their chart type.
+    has_bar_container = any(isinstance(c, BarContainer) for c in ax.containers)
+    errorbar_artists = set()
+    for container in ax.containers:
+        if isinstance(container, ErrorbarContainer):
+            data_line, caplines, barlinecols = container.lines
+            if data_line is not None and has_bar_container:
+                errorbar_artists.add(data_line)
+            errorbar_artists.update(caplines)
+            errorbar_artists.update(barlinecols)
+
     # Check for Line plots
     if all(isinstance(line, Line2D) for line in objects):
         return ChartType.LINE
@@ -46,6 +58,8 @@ def _get_type_of_chart(ax: Axes) -> ChartType:
 
     filtered = []
     for obj in objects:
+        if obj in errorbar_artists:
+            continue
         if isinstance(obj, Line2D) and is_grid_line(obj):
             continue
         filtered.append(obj)

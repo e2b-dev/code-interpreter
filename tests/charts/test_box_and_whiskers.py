@@ -51,3 +51,37 @@ def test_box_and_whiskers(run_chart):
     assert [bar["third_quartile"] for bar in bars] == [90, 90.5, 86]
     assert [bar["max"] for bar in bars] == [92, 95, 88]
     assert [bar["label"] for bar in bars] == ["Class A", "Class B", "Class C"]
+
+
+single_class_code = """
+import matplotlib.pyplot as plt
+
+data = [10, 20, 30, 40, 50]
+
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.set_title('Single Class Box Plot')
+ax.set_xlabel('Group')
+ax.set_ylabel('Value')
+ax.boxplot(data, tick_labels=['Only Class'], patch_artist=True)
+plt.tight_layout()
+plt.show()
+"""
+
+
+def test_single_class_box_and_whiskers(run_chart):
+    chart = run_chart(single_class_code)
+
+    assert chart["type"] == "box_and_whisker"
+    assert chart["title"] == "Single Class Box Plot"
+    assert chart["x_label"] == "Group"
+    assert chart["y_label"] == "Value"
+
+    bars = chart["elements"]
+    assert len(bars) == 1
+    assert bars[0]["label"] == "Only Class"
+    assert bars[0]["min"] == 10
+    assert bars[0]["first_quartile"] == 20
+    assert bars[0]["median"] == 30
+    assert bars[0]["third_quartile"] == 40
+    assert bars[0]["max"] == 50
+    assert bars[0]["outliers"] == []
