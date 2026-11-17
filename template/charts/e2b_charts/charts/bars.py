@@ -96,8 +96,8 @@ class BoxAndWhiskerChart(Chart2D):
                     and xdata[0] == xdata[1]
                     and ydata[0] != ydata[1]
                     and box["x"] <= xdata[0] <= box["x"] + box["width"]
-                    and min(ydata) == box["y"]
-                    and max(ydata) == box["y"] + box["height"]
+                    and box["y"] <= min(ydata)
+                    and max(ydata) <= box["y"] + box["height"]
                 ):
                     orientation = "vertical"
                     break

@@ -85,3 +85,36 @@ def test_single_class_box_and_whiskers(run_chart):
     assert bars[0]["third_quartile"] == 40
     assert bars[0]["max"] == 50
     assert bars[0]["outliers"] == []
+
+
+single_class_horizontal_notched_code = """
+import matplotlib.pyplot as plt
+
+data = list(range(1, 21))
+
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.set_title('Single Class Horizontal Notched Box Plot')
+ax.set_xlabel('Value')
+ax.set_ylabel('Group')
+ax.boxplot(data, orientation='horizontal', notch=True, patch_artist=True)
+plt.tight_layout()
+plt.show()
+"""
+
+
+def test_single_class_horizontal_notched_box_and_whiskers(run_chart):
+    chart = run_chart(single_class_horizontal_notched_code)
+
+    assert chart["type"] == "box_and_whisker"
+    assert chart["title"] == "Single Class Horizontal Notched Box Plot"
+    assert chart["x_label"] == "Group"
+    assert chart["y_label"] == "Value"
+
+    bars = chart["elements"]
+    assert len(bars) == 1
+    assert bars[0]["min"] == 1
+    assert bars[0]["first_quartile"] == 5.75
+    assert bars[0]["median"] == 10.5
+    assert bars[0]["third_quartile"] == 15.25
+    assert bars[0]["max"] == 20
+    assert bars[0]["outliers"] == []
