@@ -12,6 +12,7 @@ on:
           - foxtrot
           - staging
           - juliett
+          - tango
       skip_cache:
         description: Skip build cache
         required: false
@@ -58,6 +59,7 @@ jobs:
           FOXTROT_API_KEY: ${{ secrets.E2B_PROD_API_KEY }}
           STAGING_API_KEY: ${{ secrets.E2B_STAGING_API_KEY }}
           JULIETT_API_KEY: ${{ secrets.E2B_JULIETT_API_KEY }}
+          TANGO_API_KEY: ${{ secrets.E2B_TANGO_API_KEY }}
         run: |
           set -eu
 
@@ -73,6 +75,10 @@ jobs:
             juliett)
               E2B_DOMAIN="e2b-juliett.dev"
               E2B_API_KEY="$JULIETT_API_KEY"
+              ;;
+            tango)
+              E2B_DOMAIN="e2b-tango.dev"
+              E2B_API_KEY="$TANGO_API_KEY"
               ;;
             *)
               echo "Unknown target environment: $TARGET_ENVIRONMENT" >&2
