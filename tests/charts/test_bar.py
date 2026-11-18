@@ -41,3 +41,35 @@ def test_chart_bar(run_chart):
         "Author D",
     ]
     assert [bar["group"] for bar in bars] == ["Books Sold"] * 4
+
+
+code_with_yerr = """
+import matplotlib.pyplot as plt
+
+categories = ['A', 'B', 'C']
+values = [10, 15, 7]
+errors = [1.5, 2.0, 0.8]
+
+plt.figure(figsize=(6, 4))
+plt.bar(categories, values, yerr=errors, capsize=5, label='Measurement')
+plt.xlabel('Category')
+plt.ylabel('Value')
+plt.title('Bar Plot with Error Bars')
+plt.tight_layout()
+plt.show()
+"""
+
+
+def test_chart_bar_with_error_bars(run_chart):
+    chart = run_chart(code_with_yerr)
+
+    assert chart["type"] == "bar"
+    assert chart["title"] == "Bar Plot with Error Bars"
+    assert chart["x_label"] == "Category"
+    assert chart["y_label"] == "Value"
+
+    bars = chart["elements"]
+    assert len(bars) == 3
+    assert [bar["value"] for bar in bars] == [10, 15, 7]
+    assert [bar["label"] for bar in bars] == ["A", "B", "C"]
+    assert [bar["group"] for bar in bars] == ["Measurement"] * 3

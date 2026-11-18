@@ -1,6 +1,7 @@
 from typing import Literal, List
 
 from matplotlib.axes import Axes
+from matplotlib.container import BarContainer
 from pydantic import BaseModel, Field
 
 from .base import Chart2D, ChartType
@@ -21,6 +22,8 @@ class BarChart(Chart2D):
     def _extract_info(self, ax: Axes) -> None:
         super()._extract_info(ax)
         for container in ax.containers:
+            if not isinstance(container, BarContainer):
+                continue
             group_label = container.get_label()
             if group_label.startswith("_container"):
                 number = int(group_label[10:])
@@ -79,8 +82,25 @@ class BoxAndWhiskerChart(Chart2D):
             )
 
         orientation = "horizontal"
-        if all(box["height"] == boxes[0]["height"] for box in boxes):
-            orientation = "vertical"
+        if len(boxes) > 1:
+            if all(box["height"] == boxes[0]["height"] for box in boxes):
+                orientation = "vertical"
+        elif len(boxes) == 1:
+            box = boxes[0]
+            for line in ax.lines:
+                xdata = [dynamic_round(x) for x in line.get_xdata()]
+                ydata = [dynamic_round(y) for y in line.get_ydata()]
+                if (
+                    len(xdata) == 2
+                    and len(ydata) == 2
+                    and xdata[0] == xdata[1]
+                    and ydata[0] != ydata[1]
+                    and box["x"] <= xdata[0] <= box["x"] + box["width"]
+                    and box["y"] <= min(ydata)
+                    and max(ydata) <= box["y"] + box["height"]
+                ):
+                    orientation = "vertical"
+                    break
 
         if orientation == "vertical":
             self._change_orientation()
