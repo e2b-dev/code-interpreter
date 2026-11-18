@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+import shlex
 import uuid
 import asyncio
 
@@ -155,29 +156,32 @@ class ContextWebSocket:
     def _set_env_var_snippet(self, key: str, value: str) -> str:
         """Get environment variable set command for the current language."""
         if self.language == "python":
-            return f"import os; os.environ['{key}'] = '{value}'"
+            return f"import os; os.environ[{key!r}] = {value!r}"
         elif self.language in ["javascript", "typescript"]:
-            return f"process.env['{key}'] = '{value}'"
+            return f"process.env[{json.dumps(key)}] = {json.dumps(value)}"
         elif self.language == "r":
-            return f'Sys.setenv({key} = "{value}")'
+            return (
+                f"do.call(Sys.setenv, setNames(list({json.dumps(value, ensure_ascii=False)}), "
+                f"{json.dumps(key, ensure_ascii=False)}))"
+            )
         elif self.language == "java":
-            return f'System.setProperty("{key}", "{value}");'
+            return f"System.setProperty({json.dumps(key)}, {json.dumps(value)});"
         elif self.language == "bash":
-            return f"export {key}='{value}'"
+            return f"export {shlex.quote(key + '=' + value)}"
         return ""
 
     def _delete_env_var_snippet(self, key: str) -> str:
         """Get environment variable delete command for the current language."""
         if self.language == "python":
-            return f"import os; del os.environ['{key}']"
+            return f"import os; del os.environ[{key!r}]"
         elif self.language in ["javascript", "typescript"]:
-            return f"delete process.env['{key}']"
+            return f"delete process.env[{json.dumps(key)}]"
         elif self.language == "r":
-            return f"Sys.unsetenv('{key}')"
+            return f"Sys.unsetenv({json.dumps(key, ensure_ascii=False)})"
         elif self.language == "java":
-            return f'System.clearProperty("{key}");'
+            return f"System.clearProperty({json.dumps(key)});"
         elif self.language == "bash":
-            return f"unset {key}"
+            return f"unset {shlex.quote(key)}"
         return ""
 
     def _set_env_vars_code(self, env_vars: Dict[StrictStr, str]) -> str:
