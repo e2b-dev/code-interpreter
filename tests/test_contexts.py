@@ -116,3 +116,27 @@ def test_contexts_secure_traffic(client_factory):
 
     client.remove_context(context["id"])
     assert context["id"] not in [ctx["id"] for ctx in client.list_contexts()]
+
+
+@pytest.mark.parametrize("name", ["with spaces", "it's working"])
+def test_bash_context_cwd_with_quotes(client: CodeInterpreter, name):
+    setup = client.run_code(
+        "from pathlib import Path; import tempfile; "
+        f"cwd = Path(tempfile.mkdtemp()) / {name!r}; "
+        "cwd.mkdir(); print(cwd)"
+    )
+    assert setup.error is None
+    directory = "".join(setup.stdout).strip()
+    assert directory.endswith("/" + name)
+    try:
+        context = client.create_context(language="bash", cwd=directory)
+        execution = client.run_code("pwd", context_id=context["id"])
+        assert execution.error is None
+        assert "".join(execution.stdout).strip() == directory
+    finally:
+        for context in client.list_contexts():
+            if context["cwd"] == directory:
+                client.remove_context(context["id"])
+        client.run_code(
+            f"import shutil; from pathlib import Path; shutil.rmtree(Path({directory!r}).parent)"
+        )
