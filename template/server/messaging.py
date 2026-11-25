@@ -363,7 +363,7 @@ class ContextWebSocket:
 
             if self._interrupt_task and not self._interrupt_task.done():
                 logger.debug("Waiting for the interrupted execution to end")
-                await self._interrupt_task
+                await asyncio.shield(self._interrupt_task)
             self._interrupt_task = None
 
             # Get the indentation level from the code
