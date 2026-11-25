@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 MAX_RECONNECT_RETRIES = 3
 PING_TIMEOUT = 30
 KEEPALIVE_INTERVAL = 5  # seconds between keepalive pings during streaming
+INTERRUPT_TIMEOUT = 10  # seconds to wait for an interrupted execution to end
 
 
 class Execution:
@@ -62,6 +63,7 @@ class ContextWebSocket:
     _receive_task: Optional[asyncio.Task] = None
     _global_env_vars: Optional[Dict[StrictStr, str]] = None
     _cleanup_task: Optional[asyncio.Task] = None
+    _interrupt_task: Optional[asyncio.Task] = None
 
     def __init__(self, context_id: str, session_id: str, language: str, cwd: str):
         self.language = language
@@ -120,6 +122,26 @@ class ContextWebSocket:
                     )
         except Exception as e:
             logger.error(f"Error interrupting kernel {self.context_id}: {e}")
+
+    async def _interrupt_execution(self, message_id: str):
+        """Interrupt the kernel and wait until the execution ends.
+
+        A request sent to the kernel before the interrupted execution ends
+        would be aborted with it.
+        """
+        queue = self._executions[message_id].queue
+        try:
+            await self.interrupt()
+            async with asyncio.timeout(INTERRUPT_TIMEOUT):
+                while (await queue.get()).type not in (
+                    OutputType.END_OF_EXECUTION,
+                    OutputType.UNEXPECTED_END_OF_EXECUTION,
+                ):
+                    pass
+        except TimeoutError:
+            logger.warning(f"Interrupted execution ({message_id}) did not end in time")
+        finally:
+            self._executions.pop(message_id, None)
 
     def _get_execute_request(
         self, msg_id: str, code: Union[str, StrictStr], background: bool
@@ -339,6 +361,11 @@ class ContextWebSocket:
                 finally:
                     self._cleanup_task = None
 
+            if self._interrupt_task and not self._interrupt_task.done():
+                logger.debug("Waiting for the interrupted execution to end")
+                await asyncio.shield(self._interrupt_task)
+            self._interrupt_task = None
+
             # Get the indentation level from the code
             code_indent = self._get_code_indentation(code)
 
@@ -399,6 +426,9 @@ class ContextWebSocket:
             # Stream the results.
             # If the client disconnects (Starlette cancels the task), we
             # interrupt the kernel so the next execution isn't blocked (#213).
+            # Starlette keeps cancelling this task, so the interrupt runs in
+            # its own task, which the next execution waits for.
+            abandoned = False
             try:
                 async for item in self._wait_for_result(message_id):
                     yield item
@@ -406,15 +436,13 @@ class ContextWebSocket:
                 logger.warning(
                     f"Client disconnected during execution ({message_id}), interrupting kernel"
                 )
-                # Shield the interrupt from the ongoing cancellation so
-                # the HTTP request to the kernel actually completes.
-                try:
-                    await asyncio.shield(self.interrupt())
-                except asyncio.CancelledError:
-                    pass
+                abandoned = True
+                self._interrupt_task = asyncio.create_task(
+                    self._interrupt_execution(message_id)
+                )
                 raise
             finally:
-                if message_id in self._executions:
+                if not abandoned and message_id in self._executions:
                     del self._executions[message_id]
 
             # Clean up env vars in a separate request after the main code has run
@@ -569,7 +597,7 @@ class ContextWebSocket:
                         traceback="".join(data["content"].get("traceback", [])),
                     )
                 )
-            elif data["content"]["status"] == "abort":
+            elif data["content"]["status"] == "aborted":
                 logger.debug(f"Execution {parent_msg_ig} was aborted")
                 await queue.put(
                     Error(
